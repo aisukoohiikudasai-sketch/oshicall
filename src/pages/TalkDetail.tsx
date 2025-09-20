@@ -73,8 +73,11 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
       <div className="relative h-[calc(100vh-160px)] md:h-[calc(100vh-140px)] overflow-hidden">
         {/* Background Image */}
         <div 
-          className="absolute inset-0 bg-cover bg-top"
-          style={{ backgroundImage: `url(${talk.influencer.avatar_url})` }}
+          className="absolute inset-0 bg-cover"
+          style={{ 
+            backgroundImage: `url(${talk.influencer.avatar_url})`,
+            backgroundPosition: 'center top'
+          }}
         />
         
         {/* Gradient Overlay */}

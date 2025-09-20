@@ -55,8 +55,11 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
       <div className="relative h-full">
         {/* Background Video/Image */}
         <div 
-          className="absolute inset-0 bg-cover bg-top"
-          style={{ backgroundImage: `url(${activeTalk.influencer.avatar_url})` }}
+          className="absolute inset-0 bg-cover"
+          style={{ 
+            backgroundImage: `url(${activeTalk.influencer.avatar_url})`,
+            backgroundPosition: 'center top'
+          }}
         />
         
         {/* Dark Overlay */}
