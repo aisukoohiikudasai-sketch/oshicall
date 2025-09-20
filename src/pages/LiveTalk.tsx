@@ -50,15 +50,16 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
   };
 
   return (
-    <div className="bg-black -mx-4 sm:-mx-6 lg:-mx-8 -my-8 -mt-24 pb-20 md:pb-8 h-screen overflow-hidden">
+    <div className="bg-black -mx-4 sm:-mx-6 lg:-mx-8 -my-8 pb-20 md:pb-8 h-screen overflow-hidden">
       {/* Main Video Area */}
-      <div className="relative h-full">
+      <div className="relative h-full mt-16">
         {/* Background Video/Image */}
         <div 
           className="absolute inset-0 bg-cover"
           style={{ 
             backgroundImage: `url(${activeTalk.influencer.avatar_url})`,
-            backgroundPosition: 'center top'
+            backgroundPosition: 'center top',
+            backgroundAttachment: 'scroll'
           }}
         />
         

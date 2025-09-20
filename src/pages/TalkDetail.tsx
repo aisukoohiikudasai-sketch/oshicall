@@ -68,15 +68,16 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
   const quickBidOptions = [10, 100, 1000];
 
   return (
-    <div className="bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 -my-8 -mt-24 pb-20 md:pb-8">
+    <div className="bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 -my-8 pb-20 md:pb-8">
       {/* Hero Section with Host Photo */}
-      <div className="relative h-[calc(100vh-160px)] md:h-[calc(100vh-140px)] overflow-hidden">
+      <div className="relative h-[calc(100vh-160px)] md:h-[calc(100vh-140px)] overflow-hidden mt-16">
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover"
           style={{ 
             backgroundImage: `url(${talk.influencer.avatar_url})`,
-            backgroundPosition: 'center top'
+            backgroundPosition: 'center top',
+            backgroundAttachment: 'scroll'
           }}
         />
         
