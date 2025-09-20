@@ -65,7 +65,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
   return (
     <div className="min-h-screen flex flex-col -mx-4 sm:-mx-6 lg:-mx-8 -mt-12">
       {/* Hero Section with Host Photo */}
-      <div className="relative flex-1 min-h-[calc(100vh-48px)] overflow-hidden">
+      <div className="relative flex-1 min-h-[calc(100vh-48px-48px)] overflow-hidden">
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover"
@@ -155,7 +155,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
       </div>
 
       {/* Talk Schedule - Below Photo */}
-      <div className="bg-white p-4 md:p-6 flex-shrink-0">
+      <div className="bg-white p-4 md:p-6 flex-shrink-0 mb-12 md:mb-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Calendar className="h-5 w-5 text-pink-500" />
