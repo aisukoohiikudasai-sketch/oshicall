@@ -80,20 +80,20 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 md:pb-8 pt-24">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16 md:pb-8 pt-24">
         {children}
       </main>
 
       {/* Mobile Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-        <div className="flex justify-evenly py-2">
+        <div className="flex justify-evenly py-1">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => onNavigate?.(item.id)}
-              className="flex flex-col items-center py-2 text-gray-600 hover:text-pink-600 transition-colors duration-200 flex-1"
+              className="flex flex-col items-center py-1.5 text-gray-600 hover:text-pink-600 transition-colors duration-200 flex-1"
             >
-              <item.icon className="h-6 w-6 mb-1" />
+              <item.icon className="h-4 w-4 mb-0.5" />
               <span className="text-xs font-medium">{item.label}</span>
             </button>
           ))}
