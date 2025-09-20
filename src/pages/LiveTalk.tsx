@@ -50,7 +50,7 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
   };
 
   return (
-    <div className="bg-black min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 -mt-12 -mb-16 md:mb-0">
+    <div className="bg-black min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 -mt-12 pb-12 md:pb-0">
       {/* Main Video Area */}
       <div className="relative min-h-[calc(100vh-48px-48px)]">
         {/* Background Video/Image */}

@@ -95,8 +95,8 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
           {children}
         </div>
         
-        {/* Mobile Footer - Sticky to bottom */}
-        <div className="md:hidden sticky bottom-0 bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-t border-white/20 shadow-lg backdrop-blur-sm">
+        {/* Mobile Footer - Fixed to bottom */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-t border-white/20 shadow-lg backdrop-blur-sm z-40">
           <div className="flex justify-evenly h-12">
             {navItems.map((item) => (
               <button
