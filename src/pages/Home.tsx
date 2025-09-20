@@ -22,7 +22,7 @@ export default function Home({ onTalkSelect }: HomeProps) {
   return (
     <div className="space-y-3">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
+      <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0 pt-6">
         <div className="text-center md:text-left w-full md:w-auto">
           <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-3 whitespace-nowrap">
             推しとの特別な時間を
