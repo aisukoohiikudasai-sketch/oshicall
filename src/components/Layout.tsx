@@ -26,9 +26,9 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
   ];
 
   return (
-    <div className="h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100">
       {/* Fixed Header */}
-      <header className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 fixed top-0 left-0 right-0 z-50 h-12 flex-shrink-0 border-b border-white/20 backdrop-blur-sm">
+      <header className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 fixed top-0 left-0 right-0 z-50 h-12 border-b border-white/20 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex justify-between items-center h-full">
             <button 
@@ -89,26 +89,26 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
         </div>
       </header>
 
-      {/* Fixed Footer (Mobile) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-t border-white/20 shadow-lg z-50 h-12 flex-shrink-0 backdrop-blur-sm">
-        <div className="flex justify-evenly h-full">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onNavigate?.(item.id)}
-              className="flex flex-col items-center justify-center text-gray-600 hover:text-pink-600 transition-colors duration-200 flex-1"
-            >
-              <item.icon className="h-4 w-4 mb-0.5" />
-              <span className="text-xs font-medium">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Body Content Area */}
-      <main className="flex-1 overflow-y-auto pt-12 pb-12 md:pb-0">
-        <div className="h-full">
+      <main className="pt-12 pb-16 md:pb-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {children}
+        </div>
+        
+        {/* Mobile Footer - Sticky to bottom */}
+        <div className="md:hidden sticky bottom-0 bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-t border-white/20 shadow-lg backdrop-blur-sm">
+          <div className="flex justify-evenly h-12">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate?.(item.id)}
+                className="flex flex-col items-center justify-center text-gray-600 hover:text-pink-600 transition-colors duration-200 flex-1"
+              >
+                <item.icon className="h-4 w-4 mb-0.5" />
+                <span className="text-xs font-medium">{item.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </main>
     </div>
