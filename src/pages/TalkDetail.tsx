@@ -13,15 +13,18 @@ interface TalkDetailProps {
 
 export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: TalkDetailProps) {
   const { user } = useAuth();
-  const [bidAmount, setBidAmount] = useState<number>(0);
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customAmount, setCustomAmount] = useState<string>('');
+  const [isMyBid, setIsMyBid] = useState<boolean>(false);
   
   const talk = mockTalkSessions.find(t => t.id === talkId);
 
   if (!talk) {
     return <div>Talk not found</div>;
   }
+
+  // 現在の最高価格を状態として管理
+  const [currentHighestBid, setCurrentHighestBid] = useState<number>(talk.current_highest_bid);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -38,25 +41,17 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
   };
 
   const handleBid = (increment: number) => {
-    if (!user) {
-      alert('サインインページに遷移します');
-      return;
-    }
-    
-    const newBidAmount = talk.current_highest_bid + increment;
-    setBidAmount(newBidAmount);
+    const newBidAmount = currentHighestBid + increment;
+    setCurrentHighestBid(newBidAmount);
+    setIsMyBid(true);
     alert(`¥${formatPrice(newBidAmount)} で入札しました！`);
   };
 
   const handleCustomBid = () => {
-    if (!user) {
-      alert('サインインページに遷移します');
-      return;
-    }
-    
     const amount = parseInt(customAmount);
-    if (amount > talk.current_highest_bid) {
-      setBidAmount(amount);
+    if (amount > currentHighestBid) {
+      setCurrentHighestBid(amount);
+      setIsMyBid(true);
       alert(`¥${formatPrice(amount)} で入札しました！`);
       setShowCustomInput(false);
       setCustomAmount('');
@@ -122,7 +117,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
                 onClick={() => handleBid(increment)}
                 className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-5 py-3 rounded-full font-bold hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg text-base"
               >
-                +{increment}
+                +¥{increment}
               </button>
             ))}
             <button
@@ -134,11 +129,18 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
           </div>
 
           {/* Current Highest Price */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-lg">
+          <div className={`backdrop-blur-sm rounded-xl p-3 shadow-lg transition-colors duration-300 ${
+            isMyBid ? 'bg-green-100 border-2 border-green-300' : 'bg-white/90'
+          }`}>
             <div className="flex items-center">
               <div className="text-center flex-1">
                 <p className="text-xs text-gray-600 mb-1">現在の最高価格</p>
-                <p className="text-xl font-bold text-pink-600">¥{formatPrice(talk.current_highest_bid)}</p>
+                <p className={`text-xl font-bold flex items-center justify-center ${
+                  isMyBid ? 'text-green-600' : 'text-pink-600'
+                }`}>
+                  ¥{formatPrice(currentHighestBid)}
+                  {isMyBid && <span className="ml-2 text-sm bg-green-200 text-green-800 px-2 py-1 rounded-full">You</span>}
+                </p>
               </div>
               <button
                 onClick={() => onNavigateToBidHistory?.(talkId)}
@@ -172,7 +174,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
             <h3 className="text-xl font-bold text-gray-800 mb-4">カスタム入札</h3>
             <p className="text-sm text-gray-600 mb-4">
-              現在の最高価格: ¥{formatPrice(talk.current_highest_bid)}
+              現在の最高価格: ¥{formatPrice(currentHighestBid)}
             </p>
             <input
               type="number"
@@ -180,7 +182,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
               onChange={(e) => setCustomAmount(e.target.value)}
               placeholder="入札金額を入力"
               className="w-full p-3 border border-gray-200 rounded-lg mb-4 text-lg"
-              min={talk.current_highest_bid + 1}
+              min={currentHighestBid + 1}
             />
             <div className="flex space-x-3">
               <button
