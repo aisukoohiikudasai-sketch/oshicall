@@ -28,7 +28,7 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
   return (
     <div className="h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 flex flex-col">
       {/* Fixed Header */}
-      <header className="bg-white fixed top-0 left-0 right-0 z-50 h-12 flex-shrink-0">
+      <header className="bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 fixed top-0 left-0 right-0 z-50 h-12 flex-shrink-0 border-b border-white/20 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex justify-between items-center h-full">
             <button 
@@ -90,7 +90,7 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
       </header>
 
       {/* Fixed Footer (Mobile) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 h-12 flex-shrink-0">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 border-t border-white/20 shadow-lg z-50 h-12 flex-shrink-0 backdrop-blur-sm">
         <div className="flex justify-evenly h-full">
           {navItems.map((item) => (
             <button
