@@ -50,9 +50,9 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
   };
 
   return (
-    <div className="bg-black -mx-4 sm:-mx-6 lg:-mx-8 -my-8 pb-20 md:pb-8 h-screen overflow-hidden">
+    <div className="bg-black h-full">
       {/* Main Video Area */}
-      <div className="relative h-full mt-16">
+      <div className="relative h-full">
         {/* Background Video/Image */}
         <div 
           className="absolute inset-0 bg-cover"

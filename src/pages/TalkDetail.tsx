@@ -68,9 +68,9 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
   const quickBidOptions = [10, 100, 1000];
 
   return (
-    <div className="bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 -my-8 pb-20 md:pb-8">
+    <div className="h-full flex flex-col">
       {/* Hero Section with Host Photo */}
-      <div className="relative h-[calc(100vh-160px)] md:h-[calc(100vh-140px)] overflow-hidden mt-16">
+      <div className="relative flex-1 overflow-hidden">
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover"
@@ -84,22 +84,25 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
         
-        {/* Back Button */}
-        <button
-          onClick={onBack}
-          className="absolute top-4 left-4 z-10 bg-black/50 backdrop-blur-sm text-white p-3 rounded-full hover:bg-black/70 transition-all duration-200"
-        >
-          <ArrowLeft className="h-6 w-6" />
-        </button>
+        {/* Top Bar with Back Button and Host Name */}
+        <div className="absolute top-4 left-4 right-4 z-10 flex items-center space-x-4">
+          {/* Back Button */}
+          <button
+            onClick={onBack}
+            className="bg-black/50 backdrop-blur-sm text-white p-3 rounded-full hover:bg-black/70 transition-all duration-200 flex-shrink-0"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
 
-        {/* Host Name - Top */}
-        <div className="absolute top-20 left-4 right-4 z-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
-            {talk.influencer.name}
-            <span className="text-xl md:text-2xl text-white/90 drop-shadow-md ml-3">
-              @{talk.influencer.username}
-            </span>
-          </h1>
+          {/* Host Name */}
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-lg truncate">
+              {talk.influencer.name}
+              <span className="text-lg md:text-xl lg:text-2xl text-white/90 drop-shadow-md ml-2 md:ml-3">
+                @{talk.influencer.username}
+              </span>
+            </h1>
+          </div>
         </div>
 
         {/* Host Message and Bidding Section - Bottom */}
@@ -150,7 +153,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
       </div>
 
       {/* Talk Schedule - Below Photo */}
-      <div className="bg-white p-4 md:p-6">
+      <div className="bg-white p-4 md:p-6 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Calendar className="h-5 w-5 text-pink-500" />

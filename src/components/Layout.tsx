@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Heart, User, Crown, Calendar, Video } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -10,6 +10,14 @@ interface LayoutProps {
 export default function Layout({ children, onNavigate }: LayoutProps) {
   const { user, signOut } = useAuth();
 
+  // ページ遷移時にスクロール位置をリセット
+  useEffect(() => {
+    const mainElement = document.querySelector('main');
+    if (mainElement) {
+      mainElement.scrollTop = 0;
+    }
+  }, [children]);
+
   const navItems = [
     { id: 'home', label: 'ホーム', icon: Calendar },
     { id: 'talk', label: 'Talk', icon: Video },
@@ -18,10 +26,11 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100">
-      <header className="bg-white fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+    <div className="h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 flex flex-col">
+      {/* Fixed Header */}
+      <header className="bg-white fixed top-0 left-0 right-0 z-50 h-12 flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+          <div className="flex justify-between items-center h-full">
             <button 
               onClick={() => onNavigate?.('home')}
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity duration-200"
@@ -80,18 +89,14 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16 md:pb-8 pt-24">
-        {children}
-      </main>
-
-      {/* Mobile Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-        <div className="flex justify-evenly py-1">
+      {/* Fixed Footer (Mobile) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 h-12 flex-shrink-0">
+        <div className="flex justify-evenly h-full">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => onNavigate?.(item.id)}
-              className="flex flex-col items-center py-1.5 text-gray-600 hover:text-pink-600 transition-colors duration-200 flex-1"
+              className="flex flex-col items-center justify-center text-gray-600 hover:text-pink-600 transition-colors duration-200 flex-1"
             >
               <item.icon className="h-4 w-4 mb-0.5" />
               <span className="text-xs font-medium">{item.label}</span>
@@ -99,6 +104,13 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
           ))}
         </div>
       </div>
+
+      {/* Body Content Area */}
+      <main className="flex-1 overflow-y-auto pt-12 pb-12 md:pb-0">
+        <div className="h-full">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }
