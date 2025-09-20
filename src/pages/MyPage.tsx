@@ -1,29 +1,21 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   User, 
-  Trophy, 
   Calendar, 
   Pen as EditIcon, 
   Video, 
-  MessageSquare, 
-  Star,
   Crown,
   Award,
   Camera,
   Plus,
   X,
-  Settings,
   Eye,
   EyeOff,
-  Filter,
-  Search,
   Heart,
   Clock,
   DollarSign,
   Users,
-  Target,
   Sparkles,
-  Badge,
   Shield,
   Lock,
   Globe
@@ -33,11 +25,9 @@ import {
   mockUserProfile, 
   mockBadges, 
   mockActivityLogs, 
-  mockCollections,
-  calculateOshiRank,
-  calculatePoints
+  mockCollections
 } from '../data/mockData';
-import { UserProfile, Badge as BadgeType, ActivityLog, Collection } from '../types';
+import { UserProfile, Badge as BadgeType } from '../types';
 
 export default function MyPage() {
   const { user } = useAuth();
@@ -49,18 +39,8 @@ export default function MyPage() {
   const [activityFilter, setActivityFilter] = useState<'all' | 'call' | 'bid' | 'event'>('all');
   const [activitySort, setActivitySort] = useState<'date' | 'type'>('date');
 
-  if (!user) {
-    return (
-      <div className="text-center py-12">
-        <User className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">ログインが必要です</h2>
-        <p className="text-gray-600 mb-6">マイページを表示するにはログインしてください</p>
-        <button className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-pink-600 hover:to-purple-700 transition-all duration-200">
-          ログイン
-        </button>
-      </div>
-    );
-  }
+  // デモモード: ログイン無しでもダミーデータでマイページを表示
+  const isDemoMode = !user;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -132,6 +112,17 @@ export default function MyPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 px-4 md:px-6">
+      {/* Demo Mode Notice */}
+      {isDemoMode && (
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
+          <div className="flex items-center justify-center space-x-2 text-yellow-800">
+            <Sparkles className="h-5 w-5" />
+            <span className="font-medium">デモモード - サンプルデータで表示中</span>
+            <Sparkles className="h-5 w-5" />
+          </div>
+        </div>
+      )}
+
       {/* Profile Header */}
       <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-50 rounded-3xl shadow-2xl border-2 border-pink-200 p-6 md:p-8">
         <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
@@ -158,21 +149,25 @@ export default function MyPage() {
               <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
                 {profile.nickname || profile.username}
               </h1>
-              {isEditingProfile ? (
-                <button
-                  onClick={() => setIsEditingProfile(false)}
-                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                >
-                  保存
-                </button>
-              ) : (
-                <button
-                  onClick={() => setIsEditingProfile(true)}
-                  className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200"
-                >
-                  <EditIcon className="h-4 w-4 inline mr-2" />
-                  編集
-                </button>
+              {!isDemoMode && (
+                <>
+                  {isEditingProfile ? (
+                    <button
+                      onClick={() => setIsEditingProfile(false)}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                    >
+                      保存
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setIsEditingProfile(true)}
+                      className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200"
+                    >
+                      <EditIcon className="h-4 w-4 inline mr-2" />
+                      編集
+                    </button>
+                  )}
+                </>
               )}
             </div>
             
@@ -227,7 +222,15 @@ export default function MyPage() {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">プロフィール設定</h2>
               
-              {isEditingProfile ? (
+              {isDemoMode && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <p className="text-blue-800 text-sm">
+                    💡 デモモードでは編集機能は表示されません。実際のアプリケーションでは、ここでプロフィールを編集できます。
+                  </p>
+                </div>
+              )}
+              
+              {isEditingProfile && !isDemoMode ? (
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">ニックネーム</label>
@@ -591,6 +594,14 @@ export default function MyPage() {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">プライバシー設定</h2>
               
+              {isDemoMode && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <p className="text-blue-800 text-sm">
+                    💡 デモモードでは設定変更は無効です。実際のアプリケーションでは、ここでプライバシー設定を変更できます。
+                  </p>
+                </div>
+              )}
+              
               <div className="space-y-6">
                 <div className="bg-white rounded-xl p-6 shadow-lg">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">マイページ公開範囲</h3>
@@ -601,13 +612,14 @@ export default function MyPage() {
                         name="profile_visibility"
                         value="public"
                         checked={profile.privacy_settings.profile_visibility === 'public'}
-                        onChange={(e) => setProfile({
+                        onChange={(e) => !isDemoMode && setProfile({
                           ...profile,
                           privacy_settings: {
                             ...profile.privacy_settings,
                             profile_visibility: e.target.value as any
                           }
                         })}
+                        disabled={isDemoMode}
                         className="text-pink-500"
                       />
                       <Globe className="h-5 w-5 text-green-500" />
@@ -619,13 +631,14 @@ export default function MyPage() {
                         name="profile_visibility"
                         value="link_only"
                         checked={profile.privacy_settings.profile_visibility === 'link_only'}
-                        onChange={(e) => setProfile({
+                        onChange={(e) => !isDemoMode && setProfile({
                           ...profile,
                           privacy_settings: {
                             ...profile.privacy_settings,
                             profile_visibility: e.target.value as any
                           }
                         })}
+                        disabled={isDemoMode}
                         className="text-pink-500"
                       />
                       <Eye className="h-5 w-5 text-yellow-500" />
@@ -637,13 +650,14 @@ export default function MyPage() {
                         name="profile_visibility"
                         value="private"
                         checked={profile.privacy_settings.profile_visibility === 'private'}
-                        onChange={(e) => setProfile({
+                        onChange={(e) => !isDemoMode && setProfile({
                           ...profile,
                           privacy_settings: {
                             ...profile.privacy_settings,
                             profile_visibility: e.target.value as any
                           }
                         })}
+                        disabled={isDemoMode}
                         className="text-pink-500"
                       />
                       <Lock className="h-5 w-5 text-red-500" />
@@ -661,13 +675,14 @@ export default function MyPage() {
                         name="call_history_visibility"
                         value="public"
                         checked={profile.privacy_settings.call_history_visibility === 'public'}
-                        onChange={(e) => setProfile({
+                        onChange={(e) => !isDemoMode && setProfile({
                           ...profile,
                           privacy_settings: {
                             ...profile.privacy_settings,
                             call_history_visibility: e.target.value as any
                           }
                         })}
+                        disabled={isDemoMode}
                         className="text-pink-500"
                       />
                       <Eye className="h-5 w-5 text-green-500" />
@@ -679,13 +694,14 @@ export default function MyPage() {
                         name="call_history_visibility"
                         value="private"
                         checked={profile.privacy_settings.call_history_visibility === 'private'}
-                        onChange={(e) => setProfile({
+                        onChange={(e) => !isDemoMode && setProfile({
                           ...profile,
                           privacy_settings: {
                             ...profile.privacy_settings,
                             call_history_visibility: e.target.value as any
                           }
                         })}
+                        disabled={isDemoMode}
                         className="text-pink-500"
                       />
                       <EyeOff className="h-5 w-5 text-red-500" />
