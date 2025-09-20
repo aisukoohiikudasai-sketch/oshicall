@@ -335,7 +335,7 @@ export const mockUserProfile: UserProfile = {
   id: '1',
   username: 'oshi_fan_2024',
   email: 'user@example.com',
-  avatar_url: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=200',
+  avatar_url: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiaUmSaPioY0hi9AhrhgdGjxtnPzDyCIOdGgPuC87Ck2ciscjLmZIGPt1o7kQ0MIJOjhR_PupyvcMNHemfTcT0pDnzio1Dggb9sqdjOT1zAL2trJAlkhXbaHa__2UmWVyY-nmYJIJRHvp0/s450/otaku_winter.png',
   nickname: '推し活マスター',
   bio: 'アイドル推し歴10年の古参ファンです！ライブは必ず参戦、グッズ収集も趣味の一つ。新しい推しとの出会いをいつも楽しみにしています✨',
   oshi_tags: ['#乃木坂46', '#地下アイドル', '#あいりちゃん', '#みくちゃん'],
