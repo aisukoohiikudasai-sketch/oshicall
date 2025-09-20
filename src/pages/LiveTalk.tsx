@@ -50,7 +50,7 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
   };
 
   return (
-    <div className="bg-black min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 -mt-12">
+    <div className="bg-black min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 -mt-12 -mb-16 md:mb-0">
       {/* Main Video Area */}
       <div className="relative min-h-[calc(100vh-48px-48px)]">
         {/* Background Video/Image */}
@@ -118,7 +118,7 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
         </div>
 
         {/* Bottom Bar - Time Remaining */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 to-transparent p-4 pb-18 md:pb-4">
+        <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 to-transparent p-4 pb-6 md:pb-4">
           {/* Host Message */}
           <div className="text-left mb-4">
             <p className="text-white/90 text-sm drop-shadow-md">
