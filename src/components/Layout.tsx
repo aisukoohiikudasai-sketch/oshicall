@@ -22,12 +22,15 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
       <header className="bg-white fixed top-0 left-0 right-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => onNavigate?.('home')}
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity duration-200"
+            >
               <Heart className="h-8 w-8 text-pink-500 fill-current" />
               <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
                 OshiCall
               </h1>
-            </div>
+            </button>
             
             <nav className="hidden md:flex space-x-8">
               {navItems.map((item) => (
