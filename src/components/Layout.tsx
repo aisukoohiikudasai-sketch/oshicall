@@ -12,10 +12,18 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
 
   // ページ遷移時にスクロール位置をリセット
   useEffect(() => {
+    // ウィンドウのスクロール位置をリセット
+    window.scrollTo(0, 0);
+    
+    // main要素のスクロール位置もリセット
     const mainElement = document.querySelector('main');
     if (mainElement) {
       mainElement.scrollTop = 0;
     }
+    
+    // ルート要素のスクロール位置もリセット
+    const rootElement = document.documentElement;
+    rootElement.scrollTop = 0;
   }, [children]);
 
   const navItems = [

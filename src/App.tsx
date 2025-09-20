@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Talk from './pages/Talk';
@@ -15,6 +15,19 @@ type Page = 'home' | 'talk' | 'live-talk' | 'talk-detail' | 'bid-history' | 'myp
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedTalkId, setSelectedTalkId] = useState<string | null>(null);
+
+  // ページ遷移時にスクロール位置をリセット
+  useEffect(() => {
+    // ウィンドウのスクロール位置をリセット
+    window.scrollTo(0, 0);
+    
+    // ルート要素のスクロール位置もリセット
+    const rootElement = document.documentElement;
+    rootElement.scrollTop = 0;
+    
+    // body要素のスクロール位置もリセット
+    document.body.scrollTop = 0;
+  }, [currentPage]);
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page as Page);
