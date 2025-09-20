@@ -50,9 +50,9 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
   };
 
   return (
-    <div className="bg-black h-full">
+    <div className="bg-black min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 -mt-12">
       {/* Main Video Area */}
-      <div className="relative h-full">
+      <div className="relative min-h-[calc(100vh-48px)]">
         {/* Background Video/Image */}
         <div 
           className="absolute inset-0 bg-cover"
@@ -67,7 +67,7 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
         <div className="absolute inset-0 bg-black/30" />
 
         {/* Top Bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/60 to-transparent p-4">
+        <div className="absolute top-12 left-0 right-0 z-20 bg-gradient-to-b from-black/60 to-transparent p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <button 

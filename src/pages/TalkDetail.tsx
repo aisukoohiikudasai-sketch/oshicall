@@ -63,9 +63,9 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
   const quickBidOptions = [10, 100, 1000];
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="min-h-screen flex flex-col -mx-4 sm:-mx-6 lg:-mx-8 -mt-12">
       {/* Hero Section with Host Photo */}
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative flex-1 min-h-[calc(100vh-48px)] overflow-hidden">
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover"
@@ -80,7 +80,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
         
         {/* Top Bar with Back Button and Host Name */}
-        <div className="absolute top-4 left-4 right-4 z-10 flex items-center space-x-4">
+        <div className="absolute top-16 left-4 right-4 z-10 flex items-center space-x-4">
           {/* Back Button */}
           <button
             onClick={onBack}
