@@ -243,7 +243,7 @@ export default function MyPage() {
                     />
                   </div>
                   
-                  <div>
+                          <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">自己紹介 (最大200文字)</label>
                     <textarea
                       value={profile.bio || ''}
@@ -254,9 +254,9 @@ export default function MyPage() {
                     />
                     <div className="text-right text-sm text-gray-500 mt-1">
                       {(profile.bio || '').length}/200
-                    </div>
-                  </div>
-                  
+                        </div>
+                      </div>
+                      
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">推しタグ</label>
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -290,9 +290,9 @@ export default function MyPage() {
                       >
                         <Plus className="h-4 w-4" />
                       </button>
-                    </div>
-                  </div>
-                  
+                        </div>
+                      </div>
+                      
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">ファンタグ</label>
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -307,7 +307,7 @@ export default function MyPage() {
                             className="text-purple-500 hover:text-purple-700"
                           >
                             <X className="h-3 w-3" />
-                          </button>
+                        </button>
                         </span>
                       ))}
                     </div>
@@ -325,9 +325,9 @@ export default function MyPage() {
                         className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors"
                       >
                         <Plus className="h-4 w-4" />
-                      </button>
+                        </button>
+                      </div>
                     </div>
-                  </div>
                 </div>
               ) : (
                 <div className="space-y-6">
