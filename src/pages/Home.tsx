@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Calendar, Grid } from 'lucide-react';
 import { mockTalkSessions } from '../data/mockData';
 import { TalkSession } from '../types';
 import TalkCard from '../components/TalkCard';
@@ -9,7 +8,6 @@ interface HomeProps {
 }
 
 export default function Home({ onTalkSelect }: HomeProps) {
-  const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('grid');
   const [selectedTalk, setSelectedTalk] = useState<TalkSession | null>(null);
 
   const handleTalkSelect = (talk: TalkSession) => {
@@ -24,67 +22,11 @@ export default function Home({ onTalkSelect }: HomeProps) {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0 pt-6">
         <div className="text-center md:text-left w-full md:w-auto">
-          <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-3 whitespace-nowrap">
+          <h1 className="text-xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-3">
             推しとつながる、あなただけの時間
           </h1>
         </div>
 
-        {/* Mobile Tabs */}
-        <div className="md:hidden w-full">
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`flex-1 flex items-center justify-center space-x-1 px-2 py-2 rounded-md transition-all duration-200 ${
-                viewMode === 'grid'
-                  ? 'bg-white shadow-sm text-pink-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <Grid className="h-3 w-3" />
-              <span className="text-xs font-medium">グリッド</span>
-            </button>
-            <button
-              onClick={() => setViewMode('calendar')}
-              className={`flex-1 flex items-center justify-center space-x-1 px-2 py-2 rounded-md transition-all duration-200 ${
-                viewMode === 'calendar'
-                  ? 'bg-white shadow-sm text-pink-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <Calendar className="h-3 w-3" />
-              <span className="text-xs font-medium">カレンダー</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Desktop Controls */}
-        <div className="hidden md:flex space-x-4">
-          {/* View Mode Toggle */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
-                viewMode === 'grid'
-                  ? 'bg-white shadow-sm text-pink-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <Grid className="h-4 w-4" />
-              <span className="text-sm font-medium">グリッド</span>
-            </button>
-            <button
-              onClick={() => setViewMode('calendar')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
-                viewMode === 'calendar'
-                  ? 'bg-white shadow-sm text-pink-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <Calendar className="h-4 w-4" />
-              <span className="text-sm font-medium">カレンダー</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Active Talks Count */}

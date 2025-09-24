@@ -40,9 +40,6 @@ export default function TalkCard({ talk, onSelect }: TalkCardProps) {
         <div className="absolute top-4 left-4 right-4">
           <h3 className="text-xl font-bold text-white drop-shadow-lg">
             {talk.influencer.name}
-            <span className="text-base text-white/90 drop-shadow-md ml-2">
-              @{talk.influencer.username}
-            </span>
           </h3>
         </div>
 
