@@ -158,7 +158,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
             <Calendar className="h-5 w-5 text-pink-500" />
             <span className="font-medium text-gray-700">Talk予定時間</span>
             {talk.is_female_only && (
-              <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm font-medium">
+              <span className="bg-pink-100 text-pink-600 px-2 py-1 rounded-full text-xs font-medium">
                 女性限定
               </span>
             )}

@@ -86,6 +86,11 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
                   <h2 className="text-white font-bold text-lg">
                     {activeTalk.influencer.name}
                   </h2>
+                  {activeTalk.is_female_only && (
+                    <span className="bg-pink-500/80 text-white px-2 py-0.5 rounded-full text-xs font-medium">
+                      女性限定
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
