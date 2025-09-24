@@ -70,7 +70,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
         <div 
           className="absolute inset-0 bg-cover"
           style={{ 
-            backgroundImage: `url(${talk.detail_image_url})`,
+            backgroundImage: `url(${talk.influencer.avatar_url})`,
             backgroundPosition: 'center top',
             backgroundAttachment: 'scroll'
           }}
