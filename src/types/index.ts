@@ -96,6 +96,7 @@ export interface TalkSession {
   winner_id?: string;
   status: 'upcoming' | 'active' | 'completed' | 'cancelled';
   created_at: string;
+  detail_image_url: string;
 }
 
 export interface Bid {

@@ -138,6 +138,7 @@ export const mockTalkSessions: TalkSession[] = [
     current_highest_bid: 8500,
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
+    detail_image_url: '/images/talk_details/T1.jpg',
   },
   {
     id: '2',
@@ -153,6 +154,7 @@ export const mockTalkSessions: TalkSession[] = [
     current_highest_bid: 12000,
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
+    detail_image_url: '/images/talk_details/T2.jpg',
   },
   {
     id: '3',
@@ -168,6 +170,7 @@ export const mockTalkSessions: TalkSession[] = [
     current_highest_bid: 18000,
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
+    detail_image_url: '/images/talk_details/T3.jpg',
   },
   {
     id: '4',
@@ -183,6 +186,7 @@ export const mockTalkSessions: TalkSession[] = [
     current_highest_bid: 9500,
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
+    detail_image_url: '/images/talk_details/T4.jpg',
   },
   {
     id: '5',
@@ -198,6 +202,7 @@ export const mockTalkSessions: TalkSession[] = [
     current_highest_bid: 13500,
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
+    detail_image_url: '/images/talk_details/T5.jpg',
   },
   {
     id: '6',
@@ -213,6 +218,7 @@ export const mockTalkSessions: TalkSession[] = [
     current_highest_bid: 7500,
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
+    detail_image_url: '/images/talk_details/T6.jpg',
   },
   {
     id: '7',
@@ -228,6 +234,7 @@ export const mockTalkSessions: TalkSession[] = [
     current_highest_bid: 11000,
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
+    detail_image_url: '/images/talk_details/T7.jpg',
   },
   {
     id: '8',
@@ -243,6 +250,7 @@ export const mockTalkSessions: TalkSession[] = [
     current_highest_bid: 8000,
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
+    detail_image_url: '/images/talk_details/T8.jpg',
   },
   {
     id: '9',
@@ -258,6 +266,7 @@ export const mockTalkSessions: TalkSession[] = [
     current_highest_bid: 15500,
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
+    detail_image_url: '/images/talk_details/T9.jpg',
   },
   {
     id: '10',
@@ -273,6 +282,7 @@ export const mockTalkSessions: TalkSession[] = [
     current_highest_bid: 10500,
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
+    detail_image_url: '/images/talk_details/T10.jpg',
   },
 ];
 

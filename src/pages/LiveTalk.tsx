@@ -57,7 +57,7 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
         <div 
           className="absolute inset-0 bg-cover"
           style={{ 
-            backgroundImage: `url(${activeTalk.influencer.avatar_url})`,
+            backgroundImage: `url(${activeTalk.detail_image_url})`,
             backgroundPosition: 'center top',
             backgroundAttachment: 'scroll'
           }}

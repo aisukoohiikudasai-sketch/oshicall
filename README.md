@@ -4,7 +4,7 @@
 
 ## 概要
 
-OshiCallは、アイドルファンが推しのアイドルとオンラインでトークできるアプリケーションです。オークション形式で入札し、最高価格を入札した人が推しとの特別な時間を楽しむことができます。
+OshiCall は、アイドルファンが推しのアイドルとオンラインでトークできるアプリケーションです。オークション形式で入札し、最高価格を入札した人が推しとの特別な時間を楽しむことができます。
 
 ## 機能
 
@@ -40,13 +40,13 @@ npm run dev
 
 ### GitHub Pages
 
-1. GitHubリポジトリのSettings > Pagesでソースを「GitHub Actions」に設定
+1. GitHub リポジトリの Settings > Pages でソースを「GitHub Actions」に設定
 2. メインブランチにプッシュすると自動デプロイ
 
 ### Netlify
 
-1. Netlifyアカウントを作成
-2. GitHubリポジトリと連携
+1. Netlify アカウントを作成
+2. GitHub リポジトリと連携
 3. ビルド設定：
    - Build command: `npm run build`
    - Publish directory: `dist`
