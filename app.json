@@ -1,6 +1,6 @@
 {
   "name": "OshiCall",
-  "description": "推しとの特別な時間を",
+  "description": "推しとつながる、あなただけの時間",
   "repository": "https://github.com/yamadayub/oshicall",
   "logo": "",
   "keywords": ["react", "vite", "typescript", "tailwindcss"],
