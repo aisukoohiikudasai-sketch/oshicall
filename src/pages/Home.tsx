@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Calendar } from 'lucide-react';
 import { mockTalkSessions } from '../data/mockData';
 import { TalkSession } from '../types';
 import TalkCard from '../components/TalkCard';
@@ -26,7 +27,6 @@ export default function Home({ onTalkSelect }: HomeProps) {
             推しとつながる、あなただけの時間
           </h1>
         </div>
-
       </div>
 
       {/* Active Talks Count */}
@@ -37,135 +37,11 @@ export default function Home({ onTalkSelect }: HomeProps) {
       </div>
 
       {/* Content */}
-      {viewMode === 'grid' ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sortedTalks.map((talk) => (
-            <TalkCard key={talk.id} talk={talk} onSelect={handleTalkSelect} />
-          ))}
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-6">カレンダー表示</h3>
-          
-          {/* Calendar Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h4 className="text-lg font-semibold text-gray-700">
-              {new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
-            </h4>
-            <div className="flex space-x-2">
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <span className="text-gray-600">‹</span>
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <span className="text-gray-600">›</span>
-              </button>
-            </div>
-          </div>
-          
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-2 mb-4">
-            {['日', '月', '火', '水', '木', '金', '土'].map((day) => (
-              <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
-                {day}
-              </div>
-            ))}
-            
-            {/* Calendar Days */}
-            {Array.from({ length: 35 }, (_, i) => {
-              const date = new Date();
-              const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-              const startDate = new Date(firstDay);
-              startDate.setDate(startDate.getDate() - firstDay.getDay());
-              const currentDate = new Date(startDate);
-              currentDate.setDate(currentDate.getDate() + i);
-              
-              const isCurrentMonth = currentDate.getMonth() === date.getMonth();
-              const isToday = currentDate.toDateString() === date.toDateString();
-              
-              // Check if there are talks on this date
-              const talksOnDate = sortedTalks.filter(talk => {
-                const talkDate = new Date(talk.start_time);
-                return talkDate.toDateString() === currentDate.toDateString();
-              });
-              
-              return (
-                <div
-                  key={i}
-                  className={`relative p-2 text-center text-sm cursor-pointer rounded-lg transition-all duration-200 ${
-                    isCurrentMonth
-                      ? isToday
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold'
-                        : 'text-gray-700 hover:bg-gray-100'
-                      : 'text-gray-300'
-                  }`}
-                >
-                  {currentDate.getDate()}
-                  {talksOnDate.length > 0 && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                      {talksOnDate.slice(0, 3).map((_, index) => (
-                        <div
-                          key={index}
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            isToday ? 'bg-white' : 'bg-pink-400'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          
-          {/* Today's Talks */}
-          <div className="border-t pt-4">
-            <h5 className="font-semibold text-gray-700 mb-3">今日のTalk枠</h5>
-            {sortedTalks
-              .filter(talk => {
-                const talkDate = new Date(talk.start_time);
-                const today = new Date();
-                return talkDate.toDateString() === today.toDateString();
-              })
-              .slice(0, 3)
-              .map(talk => (
-                <div
-                  key={talk.id}
-                  onClick={() => handleTalkSelect(talk)}
-                  className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-                >
-                  <img
-                    src={talk.influencer.avatar_url}
-                    alt={talk.influencer.name}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800">{talk.influencer.name}</p>
-                    <p className="text-sm text-gray-600">
-                      {new Date(talk.start_time).toLocaleTimeString('ja-JP', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })} - {new Date(talk.end_time).toLocaleTimeString('ja-JP', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-green-600">¥{formatPrice(talk.current_highest_bid)}</p>
-                  </div>
-                </div>
-              ))}
-            
-            {sortedTalks.filter(talk => {
-              const talkDate = new Date(talk.start_time);
-              const today = new Date();
-              return talkDate.toDateString() === today.toDateString();
-            }).length === 0 && (
-              <p className="text-gray-500 text-center py-4">今日のTalk枠はありません</p>
-            )}
-          </div>
-        </div>
-      )}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {sortedTalks.map((talk) => (
+          <TalkCard key={talk.id} talk={talk} onSelect={handleTalkSelect} />
+        ))}
+      </div>
 
       {/* Empty State */}
       {sortedTalks.length === 0 && (
@@ -180,6 +56,3 @@ export default function Home({ onTalkSelect }: HomeProps) {
     </div>
   );
 }
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('ja-JP').format(price);
-};
