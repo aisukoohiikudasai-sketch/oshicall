@@ -86,7 +86,6 @@ export default function LiveTalk({ talkId, onBack }: LiveTalkProps) {
                   <h2 className="text-white font-bold text-lg">
                     {activeTalk.influencer.name}
                   </h2>
-                  <p className="text-white/80 text-sm">@{activeTalk.influencer.username}</p>
                 </div>
               </div>
             </div>

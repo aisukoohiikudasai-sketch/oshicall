@@ -93,9 +93,6 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-lg truncate">
               {talk.influencer.name}
-              <span className="text-lg md:text-xl lg:text-2xl text-white/90 drop-shadow-md ml-2 md:ml-3">
-                @{talk.influencer.username}
-              </span>
             </h1>
           </div>
         </div>
