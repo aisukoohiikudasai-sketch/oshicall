@@ -57,11 +57,18 @@ export default function TalkCard({ talk, onSelect }: TalkCardProps) {
       {/* Talk Details Section */}
       <div className="p-4 space-y-3">
         {/* Date and Time */}
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <Calendar className="h-4 w-4 text-pink-500" />
-          <span>
-            {formatDate(talk.start_time)} - {formatDate(talk.end_time)}
-          </span>
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-4 w-4 text-pink-500" />
+            <span>
+              {formatDate(talk.start_time)} - {formatDate(talk.end_time)}
+            </span>
+          </div>
+          {talk.is_female_only && (
+            <span className="bg-pink-100 text-pink-600 px-2 py-1 rounded-full text-xs font-medium">
+              女性限定
+            </span>
+          )}
         </div>
         
         {/* Countdown and Action */}

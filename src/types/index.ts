@@ -97,6 +97,7 @@ export interface TalkSession {
   status: 'upcoming' | 'active' | 'completed' | 'cancelled';
   created_at: string;
   detail_image_url: string;
+  is_female_only: boolean;
 }
 
 export interface Bid {

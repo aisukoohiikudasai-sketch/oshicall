@@ -139,6 +139,7 @@ export const mockTalkSessions: TalkSession[] = [
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
     detail_image_url: '/images/talk_details/T1.jpg',
+    is_female_only: true,
   },
   {
     id: '2',
@@ -155,6 +156,7 @@ export const mockTalkSessions: TalkSession[] = [
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
     detail_image_url: '/images/talk_details/T2.jpg',
+    is_female_only: true,
   },
   {
     id: '3',
@@ -171,6 +173,7 @@ export const mockTalkSessions: TalkSession[] = [
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
     detail_image_url: '/images/talk_details/T3.jpg',
+    is_female_only: true,
   },
   {
     id: '4',
@@ -187,6 +190,7 @@ export const mockTalkSessions: TalkSession[] = [
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
     detail_image_url: '/images/talk_details/T4.jpg',
+    is_female_only: true,
   },
   {
     id: '5',
@@ -203,6 +207,7 @@ export const mockTalkSessions: TalkSession[] = [
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
     detail_image_url: '/images/talk_details/T5.jpg',
+    is_female_only: false,
   },
   {
     id: '6',
@@ -219,6 +224,7 @@ export const mockTalkSessions: TalkSession[] = [
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
     detail_image_url: '/images/talk_details/T6.jpg',
+    is_female_only: false,
   },
   {
     id: '7',
@@ -235,6 +241,7 @@ export const mockTalkSessions: TalkSession[] = [
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
     detail_image_url: '/images/talk_details/T7.jpg',
+    is_female_only: false,
   },
   {
     id: '8',
@@ -251,6 +258,7 @@ export const mockTalkSessions: TalkSession[] = [
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
     detail_image_url: '/images/talk_details/T8.jpg',
+    is_female_only: false,
   },
   {
     id: '9',
@@ -267,6 +275,7 @@ export const mockTalkSessions: TalkSession[] = [
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
     detail_image_url: '/images/talk_details/T9.jpg',
+    is_female_only: false,
   },
   {
     id: '10',
@@ -283,6 +292,7 @@ export const mockTalkSessions: TalkSession[] = [
     status: 'upcoming',
     created_at: '2025-01-15T00:00:00Z',
     detail_image_url: '/images/talk_details/T10.jpg',
+    is_female_only: false,
   },
 ];
 
