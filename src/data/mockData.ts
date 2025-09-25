@@ -473,7 +473,7 @@ export const mockActivityLogs: ActivityLog[] = [
     id: '5',
     type: 'event',
     title: 'オンラインイベント参加',
-    description: '美活女子交流会に参加しました💄
+    description: '美活女子交流会に参加しました💄',
     result: 'success',
     date: '2024-03-20T19:00:00Z'
   }
