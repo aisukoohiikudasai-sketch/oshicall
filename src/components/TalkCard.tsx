@@ -62,7 +62,7 @@ export default function TalkCard({ talk, onSelect }: TalkCardProps) {
             </span>
           </div>
           {talk.is_female_only && (
-            <span className="bg-pink-100 text-pink-600 px-2 py-1 rounded-full text-xs font-medium">
+            <span className="bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-full text-[10px] font-medium">
               女性限定
             </span>
           )}
