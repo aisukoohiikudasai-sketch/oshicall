@@ -12,11 +12,14 @@
     "heroku-postbuild": "npm run build"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^8.0.0",
     "@supabase/supabase-js": "^2.57.4",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "serve": "^14.2.1"
+    "serve": "^14.2.1",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { Heart, User, Crown, Calendar, Video } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Heart, User, Crown, Calendar, Video, LogOut, Sparkles, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import AuthModal from './AuthModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,7 +9,11 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, onNavigate }: LayoutProps) {
-  const { user, signOut } = useAuth();
+  const { user, supabaseUser, userType, isLoading, signOut, switchToInfluencerMode } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [switching, setSwitching] = useState(false);
 
   // ページ遷移時にスクロール位置をリセット
   useEffect(() => {
@@ -63,31 +68,100 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
             </nav>
 
             <div className="flex items-center space-x-4">
-              {user ? (
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    {user.avatar_url && (
-                      <img
-                        src={user.avatar_url}
-                        alt={user.username}
-                        className="h-8 w-8 rounded-full object-cover"
-                      />
-                    )}
-                    <span className="text-sm font-medium text-gray-700">{user.username}</span>
-                  </div>
+              {isLoading ? (
+                <div className="h-8 w-8 animate-pulse bg-gray-200 rounded-full"></div>
+              ) : user ? (
+                <div className="flex items-center space-x-3 relative">
+                  {supabaseUser && (
+                    <span className="text-xs text-gray-500">
+                      {userType === 'fan' ? 'ファン' : 'インフルエンサー'}
+                    </span>
+                  )}
                   <button
-                    onClick={signOut}
-                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="h-8 w-8 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white flex items-center justify-center font-medium hover:from-pink-600 hover:to-purple-700 transition-all"
                   >
-                    ログアウト
+                    {supabaseUser?.display_name?.charAt(0) || user.email?.charAt(0) || 'U'}
                   </button>
+                  
+                  {userMenuOpen && (
+                    <div className="absolute right-0 top-12 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[220px] z-50">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <p className="font-medium text-gray-900">{supabaseUser?.display_name}</p>
+                        <p className="text-xs text-gray-500">{user.email}</p>
+                        <p className="text-xs text-pink-600 font-medium mt-1">
+                          {userType === 'fan' ? 'ファン' : 'インフルエンサー'}
+                        </p>
+                      </div>
+                      
+                      {userType === 'influencer' && (
+                        <button
+                          onClick={() => {
+                            onNavigate?.('influencer-dashboard');
+                            setUserMenuOpen(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                        >
+                          <LayoutDashboard className="h-4 w-4" />
+                          <span>ダッシュボード</span>
+                        </button>
+                      )}
+                      
+                      {userType === 'fan' && supabaseUser?.is_influencer && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              setSwitching(true);
+                              await switchToInfluencerMode();
+                              setUserMenuOpen(false);
+                              onNavigate?.('influencer-dashboard');
+                            } catch (error: any) {
+                              alert(error.message || 'インフルエンサーへの切り替えに失敗しました');
+                            } finally {
+                              setSwitching(false);
+                            }
+                          }}
+                          disabled={switching}
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2 disabled:opacity-50"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          <span>{switching ? '切り替え中...' : 'インフルエンサーモード'}</span>
+                        </button>
+                      )}
+                      
+                      <div className="border-t border-gray-100 my-1"></div>
+                      
+                      <button
+                        onClick={() => {
+                          signOut();
+                          setUserMenuOpen(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>ログアウト</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex space-x-2">
-                  <button className="px-4 py-2 text-sm font-medium text-pink-600 hover:text-pink-700 transition-colors">
+                  <button 
+                    onClick={() => {
+                      setAuthMode('signin');
+                      setAuthModalOpen(true);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-pink-600 hover:text-pink-700 transition-colors"
+                  >
                     ログイン
                   </button>
-                  <button className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-md">
+                  <button 
+                    onClick={() => {
+                      setAuthMode('signup');
+                      setAuthModalOpen(true);
+                    }}
+                    className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-md"
+                  >
                     新規登録
                   </button>
                 </div>
@@ -119,6 +193,12 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
           </div>
         </div>
       </main>
+      
+      <AuthModal 
+        isOpen={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)} 
+        mode={authMode}
+      />
     </div>
   );
 }

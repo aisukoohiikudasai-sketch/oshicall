@@ -8,9 +8,10 @@ import BidHistory from './pages/BidHistory';
 import MyPage from './pages/MyPage';
 import Rankings from './pages/Rankings';
 import HowItWorks from './pages/HowItWorks';
+import InfluencerDashboard from './pages/InfluencerDashboard';
 import { AuthProvider } from './contexts/AuthContext';
 
-type Page = 'home' | 'talk' | 'live-talk' | 'talk-detail' | 'bid-history' | 'mypage' | 'rankings' | 'how-it-works';
+type Page = 'home' | 'talk' | 'live-talk' | 'talk-detail' | 'bid-history' | 'mypage' | 'rankings' | 'how-it-works' | 'influencer-dashboard';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -81,6 +82,8 @@ function App() {
         return <Rankings />;
       case 'how-it-works':
         return <HowItWorks />;
+      case 'influencer-dashboard':
+        return <InfluencerDashboard />;
       default:
         return <Home onTalkSelect={handleTalkSelect} />;
     }
