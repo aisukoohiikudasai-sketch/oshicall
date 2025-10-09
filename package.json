@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "serve -s dist -l $PORT",
-    "heroku-postbuild": "npm run build"
+    "heroku-postbuild": "node scripts/check-env.js && npm run build"
   },
   "dependencies": {
     "@stripe/stripe-js": "^8.0.0",

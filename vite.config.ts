@@ -8,4 +8,8 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  build: {
+    // 環境変数の情報をビルドログに出力（デバッグ用）
+    reportCompressedSize: true,
+  },
 });
