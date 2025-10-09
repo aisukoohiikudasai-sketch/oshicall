@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, DollarSign, TrendingUp, X } from 'lucide-react';
+import { Calendar, Clock, DollarSign, TrendingUp, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { createCallSlot, CreateCallSlotInput } from '../api/callSlots';
+import { uploadImage, validateImageFile, getImagePreviewUrl } from '../lib/storage';
 
 interface CreateCallSlotFormProps {
   influencerId: string;
@@ -23,6 +24,9 @@ export default function CreateCallSlotForm({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +45,29 @@ export default function CreateCallSlotForm({
         return;
       }
 
-      await createCallSlot(influencerId, formData);
+      // 画像をアップロード（設定されている場合）
+      let thumbnailUrl = formData.thumbnail_url;
+      if (imageFile) {
+        setUploadingImage(true);
+        try {
+          thumbnailUrl = await uploadImage(imageFile, 'talk-images', 'thumbnails');
+          console.log('✅ 画像アップロード成功:', thumbnailUrl);
+        } catch (uploadError: any) {
+          console.error('画像アップロードエラー:', uploadError);
+          setError(`画像のアップロードに失敗しました: ${uploadError.message}`);
+          setLoading(false);
+          setUploadingImage(false);
+          return;
+        }
+        setUploadingImage(false);
+      }
+
+      // Talk枠を作成
+      await createCallSlot(influencerId, {
+        ...formData,
+        thumbnail_url,
+      });
+      
       onSuccess();
     } catch (err: any) {
       console.error('Talk枠作成エラー:', err);
@@ -61,6 +87,29 @@ export default function CreateCallSlotForm({
         ? Number(value)
         : value,
     }));
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // バリデーション
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setError(validation.error || '画像ファイルが無効です');
+      return;
+    }
+
+    setImageFile(file);
+    
+    // プレビューを生成
+    try {
+      const preview = await getImagePreviewUrl(file);
+      setImagePreview(preview);
+      setError('');
+    } catch (err) {
+      console.error('プレビュー生成エラー:', err);
+    }
   };
 
   // 現在時刻から25時間後の日時を計算（デフォルト値用）
@@ -195,6 +244,46 @@ export default function CreateCallSlotForm({
             />
           </div>
 
+          {/* サムネイル画像 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <ImageIcon className="inline h-4 w-4 mr-1" />
+              サムネイル画像
+            </label>
+            
+            {imagePreview ? (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="プレビュー"
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImageFile(null);
+                    setImagePreview('');
+                  }}
+                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-pink-500 transition-colors">
+                <Upload className="h-12 w-12 text-gray-400 mb-2" />
+                <span className="text-sm text-gray-600">クリックして画像を選択</span>
+                <span className="text-xs text-gray-500 mt-1">JPEG, PNG, WebP, GIF (最大5MB)</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+            )}
+          </div>
+
           {/* エラーメッセージ */}
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -214,10 +303,10 @@ export default function CreateCallSlotForm({
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploadingImage}
               className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg font-medium hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '作成中...' : 'Talk枠を作成'}
+              {uploadingImage ? '画像アップロード中...' : loading ? '作成中...' : 'Talk枠を作成'}
             </button>
           </div>
         </form>

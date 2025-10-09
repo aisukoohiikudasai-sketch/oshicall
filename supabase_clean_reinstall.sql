@@ -298,6 +298,26 @@ CREATE POLICY "Everyone can view auctions"
   ON auctions FOR SELECT 
   USING (true);
 
+CREATE POLICY "Influencers can create auctions for their call slots" 
+  ON auctions FOR INSERT 
+  WITH CHECK (
+    call_slot_id IN (
+      SELECT cs.id FROM call_slots cs
+      JOIN users u ON cs.user_id = u.id
+      WHERE u.auth_user_id = auth.uid() AND u.is_influencer = TRUE
+    )
+  );
+
+CREATE POLICY "Influencers can update their auctions" 
+  ON auctions FOR UPDATE 
+  USING (
+    call_slot_id IN (
+      SELECT cs.id FROM call_slots cs
+      JOIN users u ON cs.user_id = u.id
+      WHERE u.auth_user_id = auth.uid() AND u.is_influencer = TRUE
+    )
+  );
+
 -- Bids RLS
 CREATE POLICY "Users can view their own bids" 
   ON bids FOR SELECT 
