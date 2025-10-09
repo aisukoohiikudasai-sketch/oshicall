@@ -127,13 +127,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return window.location.origin;
     };
     
+    const redirectUrl = getRedirectUrl();
+    console.log('🔐 Google認証リダイレクトURL:', redirectUrl);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: getRedirectUrl(),
+        redirectTo: redirectUrl,
       },
     });
-    if (error) throw error;
+    if (error) {
+      console.error('🔐 Google認証エラー:', error);
+      throw error;
+    }
   };
 
   const switchToInfluencerMode = async () => {
