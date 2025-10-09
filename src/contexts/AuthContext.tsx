@@ -117,10 +117,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    // 環境に応じたリダイレクトURLを取得
+    const getRedirectUrl = () => {
+      // 本番環境の場合
+      if (window.location.hostname.includes('herokuapp.com')) {
+        return `${window.location.origin}/`;
+      }
+      // ローカル開発環境
+      return window.location.origin;
+    };
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: getRedirectUrl(),
       },
     });
     if (error) throw error;
