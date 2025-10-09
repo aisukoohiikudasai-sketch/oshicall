@@ -21,6 +21,7 @@ export default function CreateCallSlotForm({
     duration_minutes: 15,
     starting_price: 1000,
     minimum_bid_increment: 100,
+    thumbnail_url: undefined,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -46,7 +47,7 @@ export default function CreateCallSlotForm({
       }
 
       // 画像をアップロード（設定されている場合）
-      let thumbnailUrl = formData.thumbnail_url;
+      let thumbnailUrl: string | undefined = formData.thumbnail_url;
       if (imageFile) {
         setUploadingImage(true);
         try {
@@ -63,10 +64,21 @@ export default function CreateCallSlotForm({
       }
 
       // Talk枠を作成
-      await createCallSlot(influencerId, {
-        ...formData,
-        thumbnail_url,
-      });
+      const callSlotData: CreateCallSlotInput = {
+        title: formData.title,
+        description: formData.description,
+        scheduled_start_time: formData.scheduled_start_time,
+        duration_minutes: formData.duration_minutes,
+        starting_price: formData.starting_price,
+        minimum_bid_increment: formData.minimum_bid_increment,
+      };
+      
+      // 画像URLがある場合のみ追加
+      if (thumbnailUrl) {
+        callSlotData.thumbnail_url = thumbnailUrl;
+      }
+
+      await createCallSlot(influencerId, callSlotData);
       
       onSuccess();
     } catch (err: any) {

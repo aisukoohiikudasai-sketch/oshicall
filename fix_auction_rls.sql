@@ -7,6 +7,10 @@
 -- 既存のポリシーを確認
 -- SELECT * FROM pg_policies WHERE tablename = 'auctions';
 
+-- 既存のポリシーを削除（存在する場合）
+DROP POLICY IF EXISTS "Influencers can create auctions for their call slots" ON auctions;
+DROP POLICY IF EXISTS "Influencers can update their auctions" ON auctions;
+
 -- INSERTポリシーを追加
 CREATE POLICY "Influencers can create auctions for their call slots" 
   ON auctions FOR INSERT 
