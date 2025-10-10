@@ -411,8 +411,11 @@ SELECT
   cs.thumbnail_url,
   u.id as influencer_id,
   u.display_name as influencer_name,
+  u.bio as influencer_bio,
   u.profile_image_url as influencer_image,
-  u.average_rating
+  u.average_rating,
+  u.total_calls_completed,
+  u.is_verified
 FROM auctions a
 JOIN call_slots cs ON a.call_slot_id = cs.id
 JOIN users u ON cs.user_id = u.id

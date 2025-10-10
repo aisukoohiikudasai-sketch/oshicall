@@ -45,8 +45,8 @@ export default function TalkCard({ talk, onSelect }: TalkCardProps) {
 
         {/* Host Message - Bottom */}
         <div className="absolute bottom-4 left-4 right-4">
-          <p className="text-sm leading-relaxed text-white drop-shadow-md opacity-95 line-clamp-1">
-            {talk.influencer.description}
+          <p className="text-sm leading-relaxed text-white drop-shadow-md opacity-95 line-clamp-2">
+            {talk.host_message || talk.influencer.description || talk.description}
           </p>
         </div>
       </div>

@@ -49,6 +49,7 @@ export default function MyPage() {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // デモモード: ログイン無しでもダミーデータでマイページを表示
   const isDemoMode = !user;
@@ -104,6 +105,14 @@ export default function MyPage() {
     try {
       setSaving(true);
       setError('');
+      setSuccessMessage('');
+      
+      // 表示名のバリデーション
+      if (!editedDisplayName.trim()) {
+        setError('表示名を入力してください');
+        setSaving(false);
+        return;
+      }
       
       // 画像がアップロードされている場合
       if (imageFile) {
@@ -112,8 +121,8 @@ export default function MyPage() {
       
       // プロフィール情報を更新
       await updateUserProfile(supabaseUser.id, {
-        display_name: editedDisplayName,
-        bio: editedBio,
+        display_name: editedDisplayName.trim(),
+        bio: editedBio.trim(),
       });
       
       // ユーザー情報を再取得
@@ -121,6 +130,10 @@ export default function MyPage() {
       
       setIsEditingProfile(false);
       setImageFile(null);
+      setSuccessMessage('プロフィールを更新しました！');
+      
+      // 3秒後に成功メッセージを消す
+      setTimeout(() => setSuccessMessage(''), 3000);
       
     } catch (err: any) {
       console.error('プロフィール保存エラー:', err);
@@ -229,20 +242,50 @@ export default function MyPage() {
           
           <div className="flex-1 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start space-x-4 mb-4">
-              <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-                {supabaseUser?.display_name || profile.nickname || profile.username}
-              </h1>
+              {isEditingProfile && !isDemoMode ? (
+                <input
+                  type="text"
+                  value={editedDisplayName}
+                  onChange={(e) => setEditedDisplayName(e.target.value)}
+                  className="text-2xl md:text-3xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent border-b-2 border-pink-300 focus:border-pink-500 focus:outline-none px-2"
+                  placeholder="表示名"
+                  maxLength={100}
+                />
+              ) : (
+                <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+                  {supabaseUser?.display_name || profile.nickname || profile.username}
+                </h1>
+              )}
               {!isDemoMode && (
                 <>
                   {isEditingProfile ? (
-                    <button
-                      onClick={handleSaveProfile}
-                      disabled={saving}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                    >
-                      <Save className="h-4 w-4" />
-                      <span>{saving ? '保存中...' : '保存'}</span>
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={handleSaveProfile}
+                        disabled={saving}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                      >
+                        <Save className="h-4 w-4" />
+                        <span>{saving ? '保存中...' : '保存'}</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditingProfile(false);
+                          // 編集をキャンセルして元の値に戻す
+                          if (supabaseUser) {
+                            setEditedDisplayName(supabaseUser.display_name);
+                            setEditedBio(supabaseUser.bio || '');
+                            setImagePreview(supabaseUser.profile_image_url || '');
+                            setImageFile(null);
+                          }
+                          setError('');
+                        }}
+                        disabled={saving}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   ) : (
                     <button
                       onClick={() => setIsEditingProfile(true)}
@@ -260,35 +303,72 @@ export default function MyPage() {
               <p className="text-gray-600 mb-4">{user.email}</p>
             )}
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                <div className="text-2xl font-bold text-pink-600">
-                  ¥{formatPrice(supabaseUser?.total_spent || profile.total_spent)}
+            {/* 統計情報 - ファン/インフルエンサーで切り替え */}
+            {!isDemoMode && supabaseUser?.is_influencer ? (
+              // インフルエンサー用統計
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
+                  <div className="text-2xl font-bold text-green-600">
+                    ¥{formatPrice(supabaseUser.total_earnings)}
+                  </div>
+                  <div className="text-sm text-gray-600">総収益</div>
                 </div>
-                <div className="text-sm text-gray-600">総支払い額</div>
-              </div>
-              <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                <div className="text-2xl font-bold text-green-600">
-                  {supabaseUser?.total_calls_purchased || profile.call_count}
+                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {supabaseUser.total_calls_completed}
+                  </div>
+                  <div className="text-sm text-gray-600">完了通話数</div>
                 </div>
-                <div className="text-sm text-gray-600">通話回数</div>
+                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {supabaseUser.average_rating?.toFixed(1) || '-'}
+                  </div>
+                  <div className="text-sm text-gray-600">平均評価</div>
+                </div>
+                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
+                  <div className="text-2xl font-bold text-pink-600">
+                    {supabaseUser.is_verified ? '✓' : '-'}
+                  </div>
+                  <div className="text-sm text-gray-600">認証済み</div>
+                </div>
               </div>
-              <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                <div className="text-2xl font-bold text-blue-600">{profile.bid_count}</div>
-                <div className="text-sm text-gray-600">入札回数</div>
+            ) : (
+              // ファン用統計
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
+                  <div className="text-2xl font-bold text-pink-600">
+                    ¥{formatPrice(supabaseUser?.total_spent || profile.total_spent)}
+                  </div>
+                  <div className="text-sm text-gray-600">総支払い額</div>
+                </div>
+                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
+                  <div className="text-2xl font-bold text-green-600">
+                    {supabaseUser?.total_calls_purchased || profile.call_count}
+                  </div>
+                  <div className="text-sm text-gray-600">通話回数</div>
+                </div>
+                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
+                  <div className="text-2xl font-bold text-blue-600">{profile.bid_count}</div>
+                  <div className="text-sm text-gray-600">入札回数</div>
+                </div>
+                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
+                  <div className="text-2xl font-bold text-purple-600">{profile.total_points}</div>
+                  <div className="text-sm text-gray-600">総ポイント</div>
+                </div>
               </div>
-              <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                <div className="text-2xl font-bold text-purple-600">{profile.total_points}</div>
-                <div className="text-sm text-gray-600">総ポイント</div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
         
-        {/* エラーメッセージ */}
+        {/* メッセージ表示 */}
         {error && (
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+        {successMessage && (
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-600">✓ {successMessage}</p>
           </div>
         )}
       </div>
@@ -330,19 +410,10 @@ export default function MyPage() {
               
               {isEditingProfile && !isDemoMode ? (
                 <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      表示名 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={editedDisplayName}
-                      onChange={(e) => setEditedDisplayName(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                      placeholder="表示名を入力"
-                      required
-                      maxLength={100}
-                    />
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-blue-800 text-sm">
+                      💡 表示名はヘッダー部分で直接編集できます。自己紹介とタグを編集してください。
+                    </p>
                   </div>
                   
                   <div>

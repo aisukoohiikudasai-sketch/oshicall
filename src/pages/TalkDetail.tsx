@@ -52,18 +52,18 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
             influencer: {
               id: data.influencer_id,
               name: data.influencer_name,
-              username: '',
-              avatar_url: data.influencer_image || '',
-              description: '',
+              username: data.influencer_name, // display_nameを使用
+              avatar_url: data.influencer_image || '/images/talks/default.jpg',
+              description: data.influencer_bio || '',
               follower_count: 0,
               total_earned: 0,
-              total_talks: 0,
+              total_talks: data.total_calls_completed || 0,
               rating: data.average_rating || 0,
               created_at: new Date().toISOString(),
             },
-            title: data.title,
+            title: data.title || `${data.influencer_name}とのTalk`,
             description: data.description || '',
-            host_message: data.description || `${data.influencer_name}とのTalk`,
+            host_message: data.influencer_bio || data.description || `${data.influencer_name}とお話ししましょう！`,
             start_time: data.scheduled_start_time,
             end_time: new Date(new Date(data.scheduled_start_time).getTime() + data.duration_minutes * 60000).toISOString(),
             auction_end_time: data.end_time,
@@ -71,7 +71,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
             current_highest_bid: data.current_highest_bid || data.starting_price,
             status: data.status === 'active' ? 'upcoming' : 'ended',
             created_at: new Date().toISOString(),
-            detail_image_url: data.thumbnail_url || '',
+            detail_image_url: data.thumbnail_url || data.influencer_image || '/images/talks/default.jpg',
             is_female_only: false,
           };
           
