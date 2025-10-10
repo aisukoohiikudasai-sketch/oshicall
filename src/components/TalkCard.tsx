@@ -31,7 +31,7 @@ export default function TalkCard({ talk, onSelect }: TalkCardProps) {
       {/* Background Image with Host Info */}
       <div 
         className="h-64 bg-cover bg-top relative"
-        style={{ backgroundImage: `url(${talk.influencer.avatar_url})` }}
+        style={{ backgroundImage: `url(${talk.detail_image_url || talk.influencer.avatar_url})` }}
       >
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40"></div>

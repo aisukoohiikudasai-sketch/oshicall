@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, Clock, History, Edit3 } from 'lucide-react';
 import { mockTalkSessions, mockBids } from '../data/mockData';
 import { TalkSession } from '../types';
 import CountdownTimer from '../components/CountdownTimer';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 interface TalkDetailProps {
   talkId: string;
@@ -16,15 +17,103 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [isMyBid, setIsMyBid] = useState<boolean>(false);
-  
-  const talk = mockTalkSessions.find(t => t.id === talkId);
+  const [talk, setTalk] = useState<TalkSession | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentHighestBid, setCurrentHighestBid] = useState<number>(0);
 
-  if (!talk) {
-    return <div>Talk not found</div>;
+  useEffect(() => {
+    const fetchTalkDetail = async () => {
+      try {
+        setIsLoading(true);
+        
+        // active_auctions_view から取得
+        const { data, error } = await supabase
+          .from('active_auctions_view')
+          .select('*')
+          .eq('call_slot_id', talkId)
+          .single();
+        
+        if (error) {
+          console.error('Talk詳細取得エラー:', error);
+          // フォールバック: モックデータから取得
+          const mockTalk = mockTalkSessions.find(t => t.id === talkId);
+          if (mockTalk) {
+            setTalk(mockTalk);
+            setCurrentHighestBid(mockTalk.current_highest_bid);
+          }
+          return;
+        }
+        
+        if (data) {
+          // ビューデータをTalkSession形式に変換
+          const talkSession: TalkSession = {
+            id: data.call_slot_id,
+            influencer_id: data.influencer_id,
+            influencer: {
+              id: data.influencer_id,
+              name: data.influencer_name,
+              username: '',
+              avatar_url: data.influencer_image || '',
+              description: '',
+              follower_count: 0,
+              total_earned: 0,
+              total_talks: 0,
+              rating: data.average_rating || 0,
+              created_at: new Date().toISOString(),
+            },
+            title: data.title,
+            description: data.description || '',
+            host_message: data.description || `${data.influencer_name}とのTalk`,
+            start_time: data.scheduled_start_time,
+            end_time: new Date(new Date(data.scheduled_start_time).getTime() + data.duration_minutes * 60000).toISOString(),
+            auction_end_time: data.end_time,
+            starting_price: data.starting_price,
+            current_highest_bid: data.current_highest_bid || data.starting_price,
+            status: data.status === 'active' ? 'upcoming' : 'ended',
+            created_at: new Date().toISOString(),
+            detail_image_url: data.thumbnail_url || '',
+            is_female_only: false,
+          };
+          
+          setTalk(talkSession);
+          setCurrentHighestBid(talkSession.current_highest_bid);
+        }
+      } catch (err) {
+        console.error('データ取得エラー:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTalkDetail();
+  }, [talkId]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
   }
 
-  // 現在の最高価格を状態として管理
-  const [currentHighestBid, setCurrentHighestBid] = useState<number>(talk.current_highest_bid);
+  if (!talk) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Talk枠が見つかりません</p>
+          <button
+            onClick={onBack}
+            className="px-6 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600"
+          >
+            戻る
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -70,7 +159,7 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
         <div 
           className="absolute inset-0 bg-cover"
           style={{ 
-            backgroundImage: `url(${talk.influencer.avatar_url})`,
+            backgroundImage: `url(${talk.detail_image_url || talk.influencer.avatar_url})`,
             backgroundPosition: 'center top',
             backgroundAttachment: 'scroll'
           }}
