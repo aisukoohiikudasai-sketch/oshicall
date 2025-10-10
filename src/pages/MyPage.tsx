@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  User, 
+  User as UserIcon, 
   Calendar, 
   Pen as EditIcon, 
   Video, 
@@ -18,7 +18,8 @@ import {
   Sparkles,
   Shield,
   Lock,
-  Globe
+  Globe,
+  Save
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -28,9 +29,11 @@ import {
   mockCollections
 } from '../data/mockData';
 import { UserProfile, Badge as BadgeType } from '../types';
+import { updateUserProfile, updateProfileImage } from '../api/user';
+import { validateImageFile, getImagePreviewUrl } from '../lib/storage';
 
 export default function MyPage() {
-  const { user } = useAuth();
+  const { user, supabaseUser, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'rank' | 'badges' | 'activity' | 'collection' | 'privacy'>('profile');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profile, setProfile] = useState<UserProfile>(mockUserProfile);
@@ -38,9 +41,26 @@ export default function MyPage() {
   const [selectedBadge, setSelectedBadge] = useState<BadgeType | null>(null);
   const [activityFilter, setActivityFilter] = useState<'all' | 'call' | 'bid' | 'event'>('all');
   const [activitySort, setActivitySort] = useState<'date' | 'type'>('date');
+  
+  // 編集用の状態
+  const [editedDisplayName, setEditedDisplayName] = useState('');
+  const [editedBio, setEditedBio] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   // デモモード: ログイン無しでもダミーデータでマイページを表示
   const isDemoMode = !user;
+
+  // 実際のユーザーデータをロード
+  useEffect(() => {
+    if (supabaseUser) {
+      setEditedDisplayName(supabaseUser.display_name);
+      setEditedBio(supabaseUser.bio || '');
+      setImagePreview(supabaseUser.profile_image_url || '');
+    }
+  }, [supabaseUser]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -77,6 +97,61 @@ export default function MyPage() {
     }
   };
 
+  // プロフィール保存処理
+  const handleSaveProfile = async () => {
+    if (!supabaseUser) return;
+    
+    try {
+      setSaving(true);
+      setError('');
+      
+      // 画像がアップロードされている場合
+      if (imageFile) {
+        await updateProfileImage(supabaseUser.id, imageFile);
+      }
+      
+      // プロフィール情報を更新
+      await updateUserProfile(supabaseUser.id, {
+        display_name: editedDisplayName,
+        bio: editedBio,
+      });
+      
+      // ユーザー情報を再取得
+      await refreshUser();
+      
+      setIsEditingProfile(false);
+      setImageFile(null);
+      
+    } catch (err: any) {
+      console.error('プロフィール保存エラー:', err);
+      setError(err.message || 'プロフィールの保存に失敗しました');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // プロフィール画像の変更
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setError(validation.error || '画像ファイルが無効です');
+      return;
+    }
+
+    setImageFile(file);
+    
+    try {
+      const preview = await getImagePreviewUrl(file);
+      setImagePreview(preview);
+      setError('');
+    } catch (err) {
+      console.error('プレビュー生成エラー:', err);
+    }
+  };
+
   const addTag = (type: 'oshi' | 'fan') => {
     if (newTag.trim() && !profile[`${type}_tags`].includes(newTag.trim())) {
       setProfile({
@@ -102,7 +177,7 @@ export default function MyPage() {
     );
 
   const tabs = [
-    { id: 'profile', label: 'プロフィール', icon: User },
+    { id: 'profile', label: 'プロフィール', icon: UserIcon },
     { id: 'rank', label: 'ランク・ステータス', icon: Crown },
     { id: 'badges', label: '実績バッジ', icon: Award },
     { id: 'activity', label: '活動ログ', icon: Calendar },
@@ -129,34 +204,44 @@ export default function MyPage() {
           <div className="relative">
             <div className="h-32 w-32 md:h-40 md:w-40 rounded-full overflow-hidden border-4 border-pink-300 shadow-xl">
               <img
-                src={profile.avatar_url}
-                alt={profile.nickname || profile.username}
+                src={imagePreview || profile.avatar_url}
+                alt={supabaseUser?.display_name || profile.nickname || profile.username}
                 className="h-full w-full object-cover"
               />
             </div>
-            {isEditingProfile && (
-              <button className="absolute bottom-0 right-0 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full p-2 shadow-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200">
+            {isEditingProfile && !isDemoMode && (
+              <label className="absolute bottom-0 right-0 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full p-2 shadow-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 cursor-pointer">
                 <Camera className="h-4 w-4" />
-              </button>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
             )}
-            <div className={`absolute -top-2 -right-2 bg-gradient-to-r ${getRankColor(profile.oshi_rank.color)} text-white rounded-full px-3 py-1 text-xs font-bold shadow-lg`}>
-              {profile.oshi_rank.level}
-            </div>
+            {!isDemoMode && supabaseUser?.is_influencer && (
+              <div className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full px-3 py-1 text-xs font-bold shadow-lg">
+                ✨ Influencer
+              </div>
+            )}
           </div>
           
           <div className="flex-1 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start space-x-4 mb-4">
               <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-                {profile.nickname || profile.username}
+                {supabaseUser?.display_name || profile.nickname || profile.username}
               </h1>
               {!isDemoMode && (
                 <>
                   {isEditingProfile ? (
                     <button
-                      onClick={() => setIsEditingProfile(false)}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                      onClick={handleSaveProfile}
+                      disabled={saving}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                     >
-                      保存
+                      <Save className="h-4 w-4" />
+                      <span>{saving ? '保存中...' : '保存'}</span>
                     </button>
                   ) : (
                     <button
@@ -171,15 +256,21 @@ export default function MyPage() {
               )}
             </div>
             
-            <p className="text-gray-600 mb-4">@{profile.username}</p>
+            {!isDemoMode && user?.email && (
+              <p className="text-gray-600 mb-4">{user.email}</p>
+            )}
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                <div className="text-2xl font-bold text-pink-600">¥{formatPrice(profile.total_spent)}</div>
+                <div className="text-2xl font-bold text-pink-600">
+                  ¥{formatPrice(supabaseUser?.total_spent || profile.total_spent)}
+                </div>
                 <div className="text-sm text-gray-600">総支払い額</div>
               </div>
               <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                <div className="text-2xl font-bold text-green-600">{profile.call_count}</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {supabaseUser?.total_calls_purchased || profile.call_count}
+                </div>
                 <div className="text-sm text-gray-600">通話回数</div>
               </div>
               <div className="bg-white rounded-xl p-4 text-center shadow-lg">
@@ -193,6 +284,13 @@ export default function MyPage() {
             </div>
           </div>
         </div>
+        
+        {/* エラーメッセージ */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
@@ -233,29 +331,34 @@ export default function MyPage() {
               {isEditingProfile && !isDemoMode ? (
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">ニックネーム</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      表示名 <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
-                      value={profile.nickname || ''}
-                      onChange={(e) => setProfile({ ...profile, nickname: e.target.value })}
+                      value={editedDisplayName}
+                      onChange={(e) => setEditedDisplayName(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                      placeholder="ニックネームを入力"
+                      placeholder="表示名を入力"
+                      required
+                      maxLength={100}
                     />
                   </div>
                   
-                          <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">自己紹介 (最大200文字)</label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">自己紹介</label>
                     <textarea
-                      value={profile.bio || ''}
-                      onChange={(e) => setProfile({ ...profile, bio: e.target.value.slice(0, 200) })}
+                      value={editedBio}
+                      onChange={(e) => setEditedBio(e.target.value.slice(0, 500))}
                       rows={4}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                       placeholder="自己紹介を入力してください"
+                      maxLength={500}
                     />
                     <div className="text-right text-sm text-gray-500 mt-1">
-                      {(profile.bio || '').length}/200
-                        </div>
-                      </div>
+                      {editedBio.length}/500
+                    </div>
+                  </div>
                       
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">推しタグ</label>
@@ -334,7 +437,7 @@ export default function MyPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-3">自己紹介</h3>
                     <p className="text-gray-600 bg-gray-50 rounded-lg p-4">
-                      {profile.bio || '自己紹介が設定されていません'}
+                      {supabaseUser?.bio || profile.bio || '自己紹介が設定されていません'}
                     </p>
                   </div>
                   
