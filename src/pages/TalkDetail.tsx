@@ -252,7 +252,11 @@ export default function TalkDetail({ talkId, onBack, onNavigateToBidHistory }: T
               </span>
             )}
           </div>
-          <CountdownTimer targetTime={talk.auction_end_time} className="text-sm" />
+          <CountdownTimer 
+            targetTime={talk.auction_end_time} 
+            className="text-sm" 
+            showSeconds={true}
+          />
         </div>
         <p className="text-lg font-medium text-gray-800 mt-2">
           {formatDate(talk.start_time)} - {formatDate(talk.end_time)}

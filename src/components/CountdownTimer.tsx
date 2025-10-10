@@ -1,29 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 
 interface CountdownTimerProps {
   targetTime: string;
   onComplete?: () => void;
   className?: string;
+  showSeconds?: boolean; // 秒を表示するかどうか
 }
 
-export default function CountdownTimer({ targetTime, onComplete, className = '' }: CountdownTimerProps) {
-  // 固定の残り時間を表示（targetTimeに基づいて適当な時間を生成）
-  const getFixedTimeLeft = (targetTime: string) => {
-    const hash = targetTime.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    
-    const days = Math.abs(hash % 4); // 0-3日
-    const hours = Math.abs((hash >> 8) % 24); // 0-23時間
-    const minutes = Math.abs((hash >> 16) % 60); // 0-59分
-    const seconds = Math.abs((hash >> 24) % 60); // 0-59秒
-    
-    return { days, hours, minutes, seconds };
-  };
-  
-  const timeLeft = getFixedTimeLeft(targetTime);
+export default function CountdownTimer({ 
+  targetTime, 
+  onComplete, 
+  className = '', 
+  showSeconds = true 
+}: CountdownTimerProps) {
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    isExpired: boolean;
+  }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: false });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const target = new Date(targetTime).getTime();
+      const difference = target - now;
+
+      if (difference <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
+        if (onComplete) onComplete();
+        return;
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      setTimeLeft({ days, hours, minutes, seconds, isExpired: false });
+    };
+
+    // 初回計算
+    calculateTimeLeft();
+
+    // 1秒ごとに更新
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [targetTime, onComplete]);
+
+  if (timeLeft.isExpired) {
+    return (
+      <div className={`flex items-center space-x-2 ${className}`}>
+        <Clock className="h-5 w-5 text-gray-400" />
+        <span className="text-sm text-gray-500 font-medium">終了</span>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
@@ -40,9 +75,11 @@ export default function CountdownTimer({ targetTime, onComplete, className = '' 
         <span className={`px-2 py-1 rounded text-sm font-bold ${className.includes('text-white') ? 'bg-white/20 text-white' : 'bg-gradient-to-r from-orange-400 to-red-500 text-white'}`}>
           {String(timeLeft.minutes).padStart(2, '0')}m
         </span>
-        <span className={`px-2 py-1 rounded text-sm font-bold ${className.includes('text-white') ? 'bg-white/20 text-white' : 'bg-gradient-to-r from-orange-400 to-red-500 text-white'}`}>
-          {String(timeLeft.seconds).padStart(2, '0')}s
-        </span>
+        {showSeconds && (
+          <span className={`px-2 py-1 rounded text-sm font-bold ${className.includes('text-white') ? 'bg-white/20 text-white' : 'bg-gradient-to-r from-orange-400 to-red-500 text-white'}`}>
+            {String(timeLeft.seconds).padStart(2, '0')}s
+          </span>
+        )}
       </div>
     </div>
   );

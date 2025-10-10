@@ -75,6 +75,7 @@ export default function TalkCard({ talk, onSelect }: TalkCardProps) {
             <CountdownTimer
               targetTime={talk.auction_end_time}
               className="text-xs"
+              showSeconds={false}
             />
           </div>
           <button className="bg-gradient-to-r from-pink-500 to-purple-600 text-white p-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg">
