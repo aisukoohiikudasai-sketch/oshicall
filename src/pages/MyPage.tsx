@@ -211,23 +211,23 @@ export default function MyPage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 px-4 md:px-6">
+    <div className="max-w-7xl mx-auto space-y-4 md:space-y-6 px-3 sm:px-4 md:px-6 pb-8">
       {/* Demo Mode Notice */}
       {isDemoMode && (
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-3 md:p-4 text-center">
           <div className="flex items-center justify-center space-x-2 text-yellow-800">
-            <Sparkles className="h-5 w-5" />
-            <span className="font-medium">デモモード - サンプルデータで表示中</span>
-            <Sparkles className="h-5 w-5" />
+            <Sparkles className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="font-medium text-sm md:text-base">デモモード - サンプルデータで表示中</span>
+            <Sparkles className="h-4 w-4 md:h-5 md:w-5" />
           </div>
         </div>
       )}
 
       {/* Profile Header */}
-      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-50 rounded-3xl shadow-2xl border-2 border-pink-200 p-6 md:p-8">
-        <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
-          <div className="relative group">
-            <div className="h-32 w-32 md:h-40 md:w-40 rounded-full overflow-hidden border-4 border-pink-300 shadow-xl">
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-50 rounded-2xl md:rounded-3xl shadow-2xl border-2 border-pink-200 p-4 sm:p-6 md:p-8">
+        <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8">
+          <div className="relative group flex-shrink-0">
+            <div className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 rounded-full overflow-hidden border-4 border-pink-300 shadow-xl">
               <img
                 src={imagePreview || profile.avatar_url}
                 alt={supabaseUser?.display_name || profile.nickname || profile.username}
@@ -235,8 +235,8 @@ export default function MyPage() {
               />
             </div>
             {!isDemoMode && (
-              <label className="absolute bottom-0 right-0 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full p-3 shadow-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 cursor-pointer hover:scale-110">
-                <Camera className="h-5 w-5" />
+              <label className="absolute bottom-0 right-0 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full p-2 sm:p-2.5 md:p-3 shadow-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95">
+                <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
                 <input
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
@@ -246,38 +246,38 @@ export default function MyPage() {
               </label>
             )}
             {!isDemoMode && supabaseUser?.is_influencer && (
-              <div className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full px-3 py-1 text-xs font-bold shadow-lg">
+              <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full px-2 py-0.5 sm:px-3 sm:py-1 text-xs font-bold shadow-lg">
                 ✨ Influencer
               </div>
             )}
           </div>
           
-          <div className="flex-1 text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start space-x-4 mb-4">
+          <div className="flex-1 text-center md:text-left w-full">
+            <div className="flex flex-col md:flex-row items-center md:items-start justify-center md:justify-start gap-3 md:gap-4 mb-4">
               {isEditingProfile && !isDemoMode ? (
                 <input
                   type="text"
                   value={editedDisplayName}
                   onChange={(e) => setEditedDisplayName(e.target.value)}
-                  className="text-2xl md:text-3xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent border-b-2 border-pink-300 focus:border-pink-500 focus:outline-none px-2"
+                  className="text-xl md:text-3xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent border-b-2 border-pink-300 focus:border-pink-500 focus:outline-none px-2 w-full md:w-auto"
                   placeholder="表示名"
                   maxLength={100}
                 />
               ) : (
-                <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl md:text-4xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent break-words">
                   {supabaseUser?.display_name || profile.nickname || profile.username}
                 </h1>
               )}
               {!isDemoMode && (
                 <>
                   {isEditingProfile ? (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                       <button
                         onClick={handleSaveProfile}
                         disabled={saving}
-                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                        className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-base font-medium whitespace-nowrap"
                       >
-                        <Save className="h-4 w-4" />
+                        <Save className="h-5 w-5" />
                         <span>{saving ? '保存中...' : '保存'}</span>
                       </button>
                       <button
@@ -292,17 +292,18 @@ export default function MyPage() {
                           setError('');
                         }}
                         disabled={saving}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                        className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center justify-center"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-5 w-5" />
+                        <span className="ml-2">キャンセル</span>
                       </button>
                     </div>
                   ) : (
                     <button
                       onClick={() => setIsEditingProfile(true)}
-                      className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200"
+                      className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 flex items-center justify-center whitespace-nowrap text-base font-medium"
                     >
-                      <EditIcon className="h-4 w-4 inline mr-2" />
+                      <EditIcon className="h-5 w-5 mr-2" />
                       編集
                     </button>
                   )}
@@ -311,60 +312,60 @@ export default function MyPage() {
             </div>
             
             {!isDemoMode && user?.email && (
-              <p className="text-gray-600 mb-4">{user.email}</p>
+              <p className="text-sm md:text-base text-gray-600 mb-4 break-all">{user.email}</p>
             )}
             
             {/* 統計情報 - ファン/インフルエンサーで切り替え */}
             {!isDemoMode && supabaseUser?.is_influencer ? (
               // インフルエンサー用統計
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-xl md:text-2xl font-bold text-green-600">
                     ¥{formatPrice(supabaseUser.total_earnings)}
                   </div>
-                  <div className="text-sm text-gray-600">総収益</div>
+                  <div className="text-xs md:text-sm text-gray-600 mt-1">総収益</div>
                 </div>
                 <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-xl md:text-2xl font-bold text-blue-600">
                     {supabaseUser.total_calls_completed}
                   </div>
-                  <div className="text-sm text-gray-600">完了通話数</div>
+                  <div className="text-xs md:text-sm text-gray-600 mt-1">完了通話数</div>
                 </div>
                 <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-2xl font-bold text-purple-600">
+                  <div className="text-xl md:text-2xl font-bold text-purple-600">
                     {supabaseUser.average_rating?.toFixed(1) || '-'}
                   </div>
-                  <div className="text-sm text-gray-600">平均評価</div>
+                  <div className="text-xs md:text-sm text-gray-600 mt-1">平均評価</div>
                 </div>
                 <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-2xl font-bold text-pink-600">
+                  <div className="text-xl md:text-2xl font-bold text-pink-600">
                     {supabaseUser.is_verified ? '✓' : '-'}
                   </div>
-                  <div className="text-sm text-gray-600">認証済み</div>
+                  <div className="text-xs md:text-sm text-gray-600 mt-1">認証済み</div>
                 </div>
               </div>
             ) : (
               // ファン用統計
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-2xl font-bold text-pink-600">
+                  <div className="text-xl md:text-2xl font-bold text-pink-600">
                     ¥{formatPrice(supabaseUser?.total_spent || profile.total_spent)}
                   </div>
-                  <div className="text-sm text-gray-600">総支払い額</div>
+                  <div className="text-xs md:text-sm text-gray-600 mt-1">総支払い額</div>
                 </div>
                 <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-xl md:text-2xl font-bold text-green-600">
                     {supabaseUser?.total_calls_purchased || profile.call_count}
                   </div>
-                  <div className="text-sm text-gray-600">通話回数</div>
+                  <div className="text-xs md:text-sm text-gray-600 mt-1">通話回数</div>
                 </div>
                 <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-2xl font-bold text-blue-600">{profile.bid_count}</div>
-                  <div className="text-sm text-gray-600">入札回数</div>
+                  <div className="text-xl md:text-2xl font-bold text-blue-600">{profile.bid_count}</div>
+                  <div className="text-xs md:text-sm text-gray-600 mt-1">入札回数</div>
                 </div>
                 <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-2xl font-bold text-purple-600">{profile.total_points}</div>
-                  <div className="text-sm text-gray-600">総ポイント</div>
+                  <div className="text-xl md:text-2xl font-bold text-purple-600">{profile.total_points}</div>
+                  <div className="text-xs md:text-sm text-gray-600 mt-1">総ポイント</div>
                 </div>
               </div>
             )}
@@ -385,31 +386,31 @@ export default function MyPage() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-2xl shadow-lg">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="border-b border-gray-200">
-          <div className="flex flex-wrap justify-center space-x-2 md:space-x-8 px-4 md:px-6">
+          <div className="flex overflow-x-auto scrollbar-hide px-2 md:px-4">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center space-x-2 py-4 border-b-4 transition-all duration-300 ${
+                className={`flex items-center space-x-1.5 md:space-x-2 py-3 md:py-4 px-3 md:px-4 border-b-4 transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
                   activeTab === tab.id
                     ? 'border-pink-500 text-pink-600 bg-gradient-to-r from-pink-50 to-purple-50'
                     : 'border-transparent text-gray-600 hover:text-pink-600 hover:border-pink-300'
                 }`}
               >
-                <tab.icon className="h-5 w-5" />
-                <span className="font-medium text-sm md:text-base">{tab.label}</span>
+                <tab.icon className="h-4 w-4 md:h-5 md:w-5" />
+                <span className="font-medium text-xs md:text-base">{tab.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="p-6 md:p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {/* Profile Tab */}
           {activeTab === 'profile' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">プロフィール設定</h2>
+            <div className="space-y-4 md:space-y-6">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">プロフィール設定</h2>
               
               {isDemoMode && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -428,27 +429,27 @@ export default function MyPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">自己紹介</label>
+                    <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">自己紹介</label>
                     <textarea
                       value={editedBio}
                       onChange={(e) => setEditedBio(e.target.value.slice(0, 500))}
                       rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                      className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm md:text-base resize-none"
                       placeholder="自己紹介を入力してください"
                       maxLength={500}
                     />
-                    <div className="text-right text-sm text-gray-500 mt-1">
+                    <div className="text-right text-xs md:text-sm text-gray-500 mt-1">
                       {editedBio.length}/500
                     </div>
                   </div>
                       
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">推しタグ</label>
+                    <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">推しタグ</label>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {profile.oshi_tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-2"
+                          className="bg-pink-100 text-pink-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium flex items-center space-x-2"
                         >
                           <span>{tag}</span>
                           <button
@@ -460,31 +461,31 @@ export default function MyPage() {
                         </span>
                       ))}
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex gap-2">
                       <input
                         type="text"
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && addTag('oshi')}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                        placeholder="推しタグを追加 (#乃木坂46)"
+                        className="flex-1 px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm md:text-base"
+                        placeholder="推しタグを追加"
                       />
                       <button
                         onClick={() => addTag('oshi')}
-                        className="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition-colors"
+                        className="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition-colors flex-shrink-0"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-5 w-5" />
                       </button>
                         </div>
                       </div>
                       
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">ファンタグ</label>
+                    <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">ファンタグ</label>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {profile.fan_tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-2"
+                          className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium flex items-center space-x-2"
                         >
                           <span>{tag}</span>
                           <button
@@ -496,40 +497,40 @@ export default function MyPage() {
                         </span>
                       ))}
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex gap-2">
                       <input
                         type="text"
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && addTag('fan')}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="ファンタグを追加 (#古参)"
+                        className="flex-1 px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm md:text-base"
+                        placeholder="ファンタグを追加"
                       />
                       <button
                         onClick={() => addTag('fan')}
-                        className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors"
+                        className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors flex-shrink-0"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-5 w-5" />
                         </button>
                       </div>
                     </div>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">自己紹介</h3>
-                    <p className="text-gray-600 bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3">自己紹介</h3>
+                    <p className="text-sm md:text-base text-gray-600 bg-gray-50 rounded-lg p-3 md:p-4">
                       {supabaseUser?.bio || profile.bio || '自己紹介が設定されていません'}
                     </p>
                   </div>
                   
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">推しタグ</h3>
+                    <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3">推しタグ</h3>
                     <div className="flex flex-wrap gap-2">
                       {profile.oshi_tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-medium"
+                          className="bg-pink-100 text-pink-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium"
                         >
                           {tag}
                         </span>
@@ -538,12 +539,12 @@ export default function MyPage() {
                   </div>
                   
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">ファンタグ</h3>
+                    <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3">ファンタグ</h3>
                     <div className="flex flex-wrap gap-2">
                       {profile.fan_tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium"
+                          className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium"
                         >
                           {tag}
                         </span>
