@@ -559,63 +559,63 @@ export default function MyPage() {
 
           {/* Rank Tab */}
           {activeTab === 'rank' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">Oshiランク & ステータス</h2>
+            <div className="space-y-4 md:space-y-6">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Oshiランク & ステータス</h2>
               
-              <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-6 border-2 border-pink-200">
+              <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-4 sm:p-6 border-2 border-pink-200">
                 <div className="text-center">
-                  <div className={`inline-flex items-center space-x-3 bg-gradient-to-r ${getRankColor(profile.oshi_rank.color)} text-white px-6 py-3 rounded-full text-xl font-bold mb-4 shadow-lg`}>
-                    <Crown className="h-6 w-6" />
-                    <span>{profile.oshi_rank.title}</span>
-                    <Sparkles className="h-6 w-6 animate-pulse" />
+                  <div className={`inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r ${getRankColor(profile.oshi_rank.color)} text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 shadow-lg max-w-full`}>
+                    <Crown className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{profile.oshi_rank.title}</span>
+                    <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0 animate-pulse" />
                   </div>
-                  <p className="text-gray-600 mb-4">{profile.oshi_rank.description}</p>
-                  <div className="text-3xl font-bold text-gray-800 mb-2">{profile.oshi_rank.points}pt</div>
-                  <div className="text-sm text-gray-600">総ポイント</div>
+                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 px-2">{profile.oshi_rank.description}</p>
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{profile.oshi_rank.points}pt</div>
+                  <div className="text-xs sm:text-sm text-gray-600">総ポイント</div>
                 </div>
               </div>
               
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-xl p-6 shadow-lg">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">ポイント内訳</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">通話回数</span>
-                      <span className="font-semibold">{profile.call_count}回 × 3pt = {profile.call_count * 3}pt</span>
+              <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg">
+                  <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3 md:mb-4">ポイント内訳</h3>
+                  <div className="space-y-2 md:space-y-3">
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-sm md:text-base text-gray-600">通話回数</span>
+                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile.call_count}回 × 3pt = {profile.call_count * 3}pt</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">通話分数</span>
-                      <span className="font-semibold">{profile.call_minutes}分 × 0.5pt = {profile.call_minutes * 0.5}pt</span>
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-sm md:text-base text-gray-600">通話分数</span>
+                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile.call_minutes}分 × 0.5pt = {profile.call_minutes * 0.5}pt</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">入札回数</span>
-                      <span className="font-semibold">{profile.bid_count}回 × 1pt = {profile.bid_count}pt</span>
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-sm md:text-base text-gray-600">入札回数</span>
+                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile.bid_count}回 × 1pt = {profile.bid_count}pt</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">イベント参加</span>
-                      <span className="font-semibold">{profile.event_count}回 × 2pt = {profile.event_count * 2}pt</span>
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-sm md:text-base text-gray-600">イベント参加</span>
+                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile.event_count}回 × 2pt = {profile.event_count * 2}pt</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-xl p-6 shadow-lg">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">ランク一覧</h3>
+                <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg">
+                  <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3 md:mb-4">ランク一覧</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center p-2 rounded-lg bg-green-50">
-                      <span className="text-sm">Newbie</span>
-                      <span className="text-xs text-gray-500">0-19pt</span>
+                      <span className="text-sm md:text-base">Newbie</span>
+                      <span className="text-xs md:text-sm text-gray-500">0-19pt</span>
                     </div>
                     <div className="flex justify-between items-center p-2 rounded-lg bg-blue-50">
-                      <span className="text-sm">Regular</span>
-                      <span className="text-xs text-gray-500">20-69pt</span>
+                      <span className="text-sm md:text-base">Regular</span>
+                      <span className="text-xs md:text-sm text-gray-500">20-69pt</span>
                     </div>
                     <div className="flex justify-between items-center p-2 rounded-lg bg-purple-50">
-                      <span className="text-sm">Devoted</span>
-                      <span className="text-xs text-gray-500">70-149pt</span>
+                      <span className="text-sm md:text-base">Devoted</span>
+                      <span className="text-xs md:text-sm text-gray-500">70-149pt</span>
                     </div>
                     <div className="flex justify-between items-center p-2 rounded-lg bg-yellow-50">
-                      <span className="text-sm">Top Fan</span>
-                      <span className="text-xs text-gray-500">150pt+</span>
+                      <span className="text-sm md:text-base">Top Fan</span>
+                      <span className="text-xs md:text-sm text-gray-500">150pt+</span>
                     </div>
                   </div>
                 </div>
