@@ -393,14 +393,15 @@ export default function MyPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex flex-col md:flex-row items-center justify-center md:space-x-2 py-3 md:py-4 px-1 md:px-3 border-b-4 transition-all duration-300 ${
+                aria-label={tab.label}
+                title={tab.label}
+                className={`flex items-center justify-center py-4 md:py-5 px-2 border-b-4 transition-all duration-300 hover:scale-105 ${
                   activeTab === tab.id
                     ? 'border-pink-500 text-pink-600 bg-gradient-to-r from-pink-50 to-purple-50'
                     : 'border-transparent text-gray-600 hover:text-pink-600 hover:border-pink-300'
                 }`}
               >
-                <tab.icon className="h-5 w-5 md:h-5 md:w-5 flex-shrink-0" />
-                <span className="font-medium text-[10px] md:text-sm lg:text-base mt-1 md:mt-0 leading-tight text-center">{tab.label}</span>
+                <tab.icon className="h-6 w-6 md:h-7 md:w-7" />
               </button>
             ))}
           </div>
