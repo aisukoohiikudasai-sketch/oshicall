@@ -388,19 +388,19 @@ export default function MyPage() {
       {/* Tabs */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="border-b border-gray-200">
-          <div className="flex overflow-x-auto scrollbar-hide px-2 md:px-4">
+          <div className="grid grid-cols-6 gap-0">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center space-x-1.5 md:space-x-2 py-3 md:py-4 px-3 md:px-4 border-b-4 transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
+                className={`flex flex-col md:flex-row items-center justify-center md:space-x-2 py-3 md:py-4 px-1 md:px-3 border-b-4 transition-all duration-300 ${
                   activeTab === tab.id
                     ? 'border-pink-500 text-pink-600 bg-gradient-to-r from-pink-50 to-purple-50'
                     : 'border-transparent text-gray-600 hover:text-pink-600 hover:border-pink-300'
                 }`}
               >
-                <tab.icon className="h-4 w-4 md:h-5 md:w-5" />
-                <span className="font-medium text-xs md:text-base">{tab.label}</span>
+                <tab.icon className="h-5 w-5 md:h-5 md:w-5 flex-shrink-0" />
+                <span className="font-medium text-[10px] md:text-sm lg:text-base mt-1 md:mt-0 leading-tight text-center">{tab.label}</span>
               </button>
             ))}
           </div>
