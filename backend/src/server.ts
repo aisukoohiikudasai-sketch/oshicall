@@ -383,6 +383,16 @@ app.post('/api/stripe/influencer-status', async (req: Request, res: Response) =>
     
     console.log('🔵 インフルエンサー状態確認開始:', { authUserId });
     
+    // UUIDの形式チェック
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(authUserId)) {
+      console.error('❌ 無効なUUID形式:', authUserId);
+      return res.status(400).json({ 
+        error: 'Invalid UUID format',
+        received: authUserId 
+      });
+    }
+    
     // ユーザー情報を取得
     const { data: user, error: userError } = await supabase
       .from('users')
@@ -392,7 +402,10 @@ app.post('/api/stripe/influencer-status', async (req: Request, res: Response) =>
     
     if (userError) {
       console.error('❌ ユーザー取得エラー:', userError);
-      throw userError;
+      return res.status(404).json({ 
+        error: 'User not found',
+        details: userError.message 
+      });
     }
     
     if (!user?.stripe_connect_account_id) {
