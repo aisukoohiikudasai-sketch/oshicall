@@ -429,11 +429,11 @@ export default function MyPage() {
         </div>
       )}
 
-      {/* Profile Header - コンパクト版 */}
-      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-50 rounded-xl shadow-lg border border-pink-200 p-4">
+      {/* Profile Header - フラット版 */}
+      <div className="bg-white border-b border-gray-200 p-4">
         <div className="flex items-center space-x-4">
           <div className="relative group flex-shrink-0">
-            <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-pink-300 shadow-md">
+            <div className="h-16 w-16 overflow-hidden">
               <img
                 src={imagePreview || profile.avatar_url}
                 alt={supabaseUser?.display_name || profile.nickname || profile.username}
@@ -441,7 +441,7 @@ export default function MyPage() {
               />
             </div>
             {!isDemoMode && (
-              <label className="absolute -bottom-1 -right-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full p-1.5 shadow-md hover:from-pink-600 hover:to-purple-700 transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95">
+              <label className="absolute -bottom-1 -right-1 bg-pink-500 text-white p-1.5 hover:bg-pink-600 transition-colors cursor-pointer">
                 <Camera className="h-3 w-3" />
                 <input
                   type="file"
@@ -452,7 +452,7 @@ export default function MyPage() {
               </label>
             )}
             {!isDemoMode && supabaseUser?.is_influencer && (
-              <div className="absolute -top-1 -right-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full px-1.5 py-0.5 text-xs font-bold shadow-md">
+              <div className="absolute -top-1 -right-1 bg-purple-500 text-white px-1.5 py-0.5 text-xs font-bold">
                 ✨
               </div>
             )}
@@ -465,12 +465,12 @@ export default function MyPage() {
                   type="text"
                   value={editedDisplayName}
                   onChange={(e) => setEditedDisplayName(e.target.value)}
-                  className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent border-b border-pink-300 focus:border-pink-500 focus:outline-none px-1 flex-1 min-w-0"
+                  className="text-lg font-bold text-pink-500 border-b border-pink-300 focus:border-pink-500 focus:outline-none px-1 flex-1 min-w-0"
                   placeholder="表示名"
                   maxLength={100}
                 />
               ) : (
-                <h1 className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent truncate">
+                <h1 className="text-lg font-bold text-pink-500 truncate">
                   {supabaseUser?.display_name || profile.nickname || profile.username}
                 </h1>
               )}
@@ -481,7 +481,7 @@ export default function MyPage() {
                       <button
                         onClick={handleSaveProfile}
                         disabled={saving}
-                        className="bg-green-500 text-white px-3 py-1.5 rounded text-sm hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                        className="bg-green-500 text-white px-3 py-1.5 text-sm hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                       >
                         <Save className="h-3 w-3" />
                         <span>{saving ? '保存中...' : '保存'}</span>
@@ -497,7 +497,7 @@ export default function MyPage() {
                           setError('');
                         }}
                         disabled={saving}
-                        className="bg-gray-500 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center"
+                        className="bg-gray-500 text-white px-3 py-1.5 text-sm hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -505,7 +505,7 @@ export default function MyPage() {
                   ) : (
                     <button
                       onClick={() => setIsEditingProfile(true)}
-                      className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-3 py-1.5 rounded text-sm hover:from-pink-600 hover:to-purple-700 transition-all duration-200 flex items-center space-x-1"
+                      className="bg-pink-500 text-white px-3 py-1.5 text-sm hover:bg-pink-600 transition-colors flex items-center space-x-1"
                     >
                       <EditIcon className="h-3 w-3" />
                       <span>編集</span>
@@ -519,9 +519,9 @@ export default function MyPage() {
               <p className="text-xs text-gray-600 truncate">{user.email}</p>
             )}
             
-            {/* 統計情報 - コンパクト版 */}
+            {/* 統計情報 - フラット版 */}
             {!isDemoMode && (
-              <div className="flex space-x-4 mt-2">
+              <div className="flex space-x-6 mt-2">
                 {supabaseUser?.is_influencer ? (
                   <>
                     <div className="text-center">
@@ -560,25 +560,25 @@ export default function MyPage() {
         
         {/* メッセージ表示 */}
         {error && (
-          <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-xs">
+          <div className="mt-3 p-2 bg-red-50 text-xs">
             <p className="text-red-600">{error}</p>
           </div>
         )}
         {successMessage && (
-          <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-xs">
+          <div className="mt-3 p-2 bg-green-50 text-xs">
             <p className="text-green-600">✓ {successMessage}</p>
           </div>
         )}
       </div>
 
-      {/* Talk枠管理 - タブとは独立して表示 */}
+      {/* Talk枠管理 - フラット版 */}
       {!isDemoMode && supabaseUser?.is_influencer && (
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-4 border-2 border-purple-200">
+        <div className="bg-white border-b border-gray-200 p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
+              className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white text-sm font-medium hover:bg-purple-600 transition-colors"
             >
               <Plus className="h-4 w-4" />
               <span>新規作成</span>
@@ -587,13 +587,13 @@ export default function MyPage() {
 
           {/* エラー表示 */}
           {dashboardError && (
-            <div className="bg-red-50 border border-red-200 p-2 rounded-lg mb-4">
+            <div className="bg-red-50 p-2 mb-4">
               <p className="text-xs text-red-600">{dashboardError}</p>
             </div>
           )}
 
           {/* Talk枠タブ */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-4">
+          <div className="bg-white border border-gray-200 overflow-hidden mb-4">
             <div className="flex border-b border-gray-200">
               <button
                 onClick={() => setTalkSlotsTab('scheduled')}
@@ -621,7 +621,7 @@ export default function MyPage() {
               {isLoadingSlots ? (
                 <div className="space-y-2">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="animate-pulse bg-gray-100 h-16 rounded-lg"></div>
+                    <div key={i} className="animate-pulse bg-gray-100 h-16"></div>
                   ))}
                 </div>
               ) : (talkSlotsTab === 'scheduled' ? scheduledSlots : completedSlots).length === 0 ? (
@@ -637,30 +637,30 @@ export default function MyPage() {
                   )}
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {(talkSlotsTab === 'scheduled' ? scheduledSlots : completedSlots).map((slot) => {
                     const status = getSlotStatus(slot);
                     return (
                       <div
                         key={slot.id}
-                        className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                        className="border-b border-gray-200 p-3 hover:bg-gray-50 transition-colors"
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 mb-2">
                               <h5 className="text-sm font-bold text-gray-900 truncate">{slot.title}</h5>
-                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${status.color}`}>
+                              <span className={`px-2 py-1 text-xs font-medium ${status.color}`}>
                                 {status.icon} {status.text}
                               </span>
                               {slot.is_published && (
-                                <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded-full flex-shrink-0">
+                                <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs flex-shrink-0">
                                   公開中
                                 </span>
                               )}
                             </div>
 
                             {/* 予定日時を目立たせる */}
-                            <div className="bg-blue-50 rounded-lg p-2 mb-2">
+                            <div className="bg-blue-50 p-2 mb-2">
                               <div className="flex items-center space-x-2">
                                 <Calendar className="h-4 w-4 text-blue-600" />
                                 <span className="text-sm font-bold text-blue-800">
@@ -694,7 +694,7 @@ export default function MyPage() {
                             {talkSlotsTab === 'scheduled' && (
                               <button
                                 onClick={() => handleTogglePublish(slot.id, slot.is_published)}
-                                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                                 title={slot.is_published ? '非公開にする' : '公開する'}
                               >
                                 {slot.is_published ? (
@@ -708,7 +708,7 @@ export default function MyPage() {
                             {talkSlotsTab === 'scheduled' && (
                               <button
                                 onClick={() => handleDelete(slot.id)}
-                                className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors"
                                 title="削除"
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -724,30 +724,30 @@ export default function MyPage() {
             </div>
           </div>
 
-          {/* 統計情報 - コンパクト版 */}
-          <div className="grid grid-cols-4 gap-2">
-            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+          {/* 統計情報 - フラット版 */}
+          <div className="grid grid-cols-4 gap-1">
+            <div className="bg-gray-50 p-2 text-center">
               <div className="text-xs text-gray-600">総収益</div>
               <div className="text-sm font-bold text-green-600">
                 ¥{supabaseUser.total_earnings.toLocaleString()}
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+            <div className="bg-gray-50 p-2 text-center">
               <div className="text-xs text-gray-600">通話数</div>
               <div className="text-sm font-bold text-blue-600">
                 {supabaseUser.total_calls_completed}
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+            <div className="bg-gray-50 p-2 text-center">
               <div className="text-xs text-gray-600">評価</div>
               <div className="text-sm font-bold text-purple-600">
                 {supabaseUser.average_rating?.toFixed(1) || '-'}
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+            <div className="bg-gray-50 p-2 text-center">
               <div className="text-xs text-gray-600">枠数</div>
               <div className="text-sm font-bold text-pink-600">
                 {callSlots.length}
@@ -757,36 +757,36 @@ export default function MyPage() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="border-b border-gray-200">
-          <div className="grid grid-cols-6 gap-0">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                aria-label={tab.label}
-                title={tab.label}
-                className={`flex items-center justify-center py-4 md:py-5 px-2 border-b-4 transition-all duration-300 hover:scale-105 ${
-                  activeTab === tab.id
-                    ? 'border-pink-500 text-pink-600 bg-gradient-to-r from-pink-50 to-purple-50'
-                    : 'border-transparent text-gray-600 hover:text-pink-600 hover:border-pink-300'
-                }`}
-              >
-                <tab.icon className="h-6 w-6 md:h-7 md:w-7" />
-              </button>
-            ))}
-          </div>
+      {/* Tabs - フラット版 */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="grid grid-cols-6 gap-0">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              aria-label={tab.label}
+              title={tab.label}
+              className={`flex items-center justify-center py-4 px-2 border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-pink-500 text-pink-600 bg-pink-50'
+                  : 'border-transparent text-gray-600 hover:text-pink-600 hover:border-pink-300'
+              }`}
+            >
+              <tab.icon className="h-6 w-6" />
+            </button>
+          ))}
         </div>
+      </div>
 
-        <div className="p-4 sm:p-6 md:p-8">
-          {/* Profile Tab */}
-          {activeTab === 'profile' && (
-            <div className="space-y-4 md:space-y-6">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">プロフィール設定</h2>
+      {/* Tab Content - フラット版 */}
+      <div className="bg-white p-4">
+        {/* Profile Tab */}
+        {activeTab === 'profile' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">プロフィール設定</h2>
               
               {isDemoMode && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="bg-blue-50 p-3 mb-4">
                   <p className="text-blue-800 text-sm">
                     💡 デモモードでは編集機能は表示されません。実際のアプリケーションでは、ここでプロフィールを編集できます。
                   </p>
@@ -794,8 +794,8 @@ export default function MyPage() {
               )}
               
               {isEditingProfile && !isDemoMode ? (
-                <div className="space-y-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-3">
                     <p className="text-blue-800 text-sm">
                       💡 表示名はヘッダー部分で直接編集できます。自己紹介とタグを編集してください。
                     </p>
@@ -807,7 +807,7 @@ export default function MyPage() {
                       value={editedBio}
                       onChange={(e) => setEditedBio(e.target.value.slice(0, 500))}
                       rows={4}
-                      className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm md:text-base resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm resize-none"
                       placeholder="自己紹介を入力してください"
                       maxLength={500}
                     />
