@@ -23,3 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.local
+.env.staging.backup
+backend/.env.staging.backup
+
+# 機密情報を含むスクリプトファイル
+scripts/setup-local-env.js
