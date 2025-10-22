@@ -80,8 +80,19 @@ export default function MyPage() {
   const checkStripeAccountStatus = async () => {
     if (!supabaseUser) return;
     
+    console.log('🔍 Stripe状態確認開始:', {
+      supabaseUserId: supabaseUser.id,
+      authUserId: supabaseUser.auth_user_id,
+      isInfluencer: supabaseUser.is_influencer
+    });
+    
     try {
-      const status = await getInfluencerStripeStatus(supabaseUser.id);
+      // auth_user_idを使用してAPIを呼び出し
+      const userId = supabaseUser.auth_user_id || supabaseUser.id;
+      console.log('🔍 使用するユーザーID:', userId);
+      
+      const status = await getInfluencerStripeStatus(userId);
+      console.log('✅ Stripe状態取得成功:', status);
       setStripeAccountStatus(status.accountStatus || 'not_setup');
     } catch (error) {
       console.error('Stripe アカウント状態の確認エラー:', error);
@@ -130,7 +141,11 @@ export default function MyPage() {
     setStripeError('');
     
     try {
-      const { onboardingUrl } = await createConnectAccount(userEmail, supabaseUser.id);
+      // auth_user_idを使用してAPIを呼び出し
+      const userId = supabaseUser.auth_user_id || supabaseUser.id;
+      console.log('🔍 Connect Account作成:', { userEmail, userId });
+      
+      const { onboardingUrl } = await createConnectAccount(userEmail, userId);
       window.location.href = onboardingUrl;
     } catch (error: any) {
       console.error('Stripe Connect 設定エラー:', error);
@@ -153,7 +168,11 @@ export default function MyPage() {
     setStripeError('');
     
     try {
-      const { onboardingUrl } = await createConnectAccount(emailInput.trim(), supabaseUser.id);
+      // auth_user_idを使用してAPIを呼び出し
+      const userId = supabaseUser.auth_user_id || supabaseUser.id;
+      console.log('🔍 Connect Account作成（手動）:', { email: emailInput.trim(), userId });
+      
+      const { onboardingUrl } = await createConnectAccount(emailInput.trim(), userId);
       window.location.href = onboardingUrl;
     } catch (error: any) {
       console.error('Stripe Connect 設定エラー:', error);

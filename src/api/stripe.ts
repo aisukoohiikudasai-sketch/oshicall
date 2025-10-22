@@ -1,5 +1,13 @@
 // バックエンドAPIのベースURL
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 
+  (import.meta.env.PROD ? '' : 'http://localhost:3001');
+
+// デバッグ情報を出力
+console.log('🔍 API設定:', {
+  VITE_BACKEND_URL: import.meta.env.VITE_BACKEND_URL,
+  PROD: import.meta.env.PROD,
+  API_BASE_URL: API_BASE_URL
+});
 
 // Stripe Customer作成
 export const createStripeCustomer = async (
@@ -107,32 +115,73 @@ export const createConnectAccount = async (
   email: string,
   authUserId: string
 ) => {
-  const response = await fetch(`${API_BASE_URL}/api/stripe/create-connect-account`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, authUserId }),
+  console.log('🔍 Connect Account作成開始:', {
+    url: `${API_BASE_URL}/api/stripe/create-connect-account`,
+    email,
+    authUserId
   });
   
-  if (!response.ok) {
-    throw new Error('Connect Account作成に失敗しました');
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/stripe/create-connect-account`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, authUserId }),
+    });
+    
+    console.log('🔍 API応答:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ API エラー:', errorText);
+      throw new Error(`Connect Account作成に失敗しました: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log('✅ API データ:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ API呼び出しエラー:', error);
+    throw error;
   }
-  
-  return response.json();
 };
 
 // インフルエンサーの Stripe アカウント状態を確認
 export const getInfluencerStripeStatus = async (authUserId: string) => {
-  const response = await fetch(`${API_BASE_URL}/api/stripe/influencer-status`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ authUserId }),
+  console.log('🔍 API呼び出し開始:', {
+    url: `${API_BASE_URL}/api/stripe/influencer-status`,
+    authUserId
   });
   
-  if (!response.ok) {
-    throw new Error('インフルエンサー状態の取得に失敗しました');
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/stripe/influencer-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authUserId }),
+    });
+    
+    console.log('🔍 API応答:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ API エラー:', errorText);
+      throw new Error(`インフルエンサー状態の取得に失敗しました: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log('✅ API データ:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ API呼び出しエラー:', error);
+    throw error;
   }
-  
-  return response.json();
 };
 
 
