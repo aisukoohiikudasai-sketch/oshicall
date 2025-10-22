@@ -433,7 +433,7 @@ export default function MyPage() {
       <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
         <div className="flex items-center space-x-4 p-4">
           <div className="relative group flex-shrink-0">
-            <div className="h-16 w-16 overflow-hidden">
+            <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-white/30 shadow-lg">
               <img
                 src={imagePreview || profile.avatar_url}
                 alt={supabaseUser?.display_name || profile.nickname || profile.username}
@@ -441,7 +441,7 @@ export default function MyPage() {
               />
             </div>
             {!isDemoMode && (
-              <label className="absolute -bottom-1 -right-1 bg-pink-500 text-white p-1.5 hover:bg-pink-600 transition-colors cursor-pointer">
+              <label className="absolute -bottom-1 -right-1 bg-pink-500 text-white p-1.5 rounded-full hover:bg-pink-600 transition-colors cursor-pointer shadow-lg">
                 <Camera className="h-3 w-3" />
                 <input
                   type="file"
@@ -452,7 +452,7 @@ export default function MyPage() {
               </label>
             )}
             {!isDemoMode && supabaseUser?.is_influencer && (
-              <div className="absolute -top-1 -right-1 bg-purple-500 text-white px-1.5 py-0.5 text-xs font-bold">
+              <div className="absolute -top-1 -right-1 bg-purple-500 text-white px-1.5 py-0.5 text-xs font-bold rounded-full shadow-lg">
                 ✨
               </div>
             )}
@@ -481,7 +481,7 @@ export default function MyPage() {
                       <button
                         onClick={handleSaveProfile}
                         disabled={saving}
-                        className="bg-green-500 text-white px-3 py-1.5 text-sm hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                        className="bg-green-500 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 shadow-md"
                       >
                         <Save className="h-3 w-3" />
                         <span>{saving ? '保存中...' : '保存'}</span>
@@ -497,7 +497,7 @@ export default function MyPage() {
                           setError('');
                         }}
                         disabled={saving}
-                        className="bg-gray-500 text-white px-3 py-1.5 text-sm hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center"
+                        className="bg-gray-500 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center shadow-md"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -505,7 +505,7 @@ export default function MyPage() {
                   ) : (
                     <button
                       onClick={() => setIsEditingProfile(true)}
-                      className="bg-pink-500 text-white px-3 py-1.5 text-sm hover:bg-pink-600 transition-colors flex items-center space-x-1"
+                      className="bg-pink-500 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-pink-600 transition-colors flex items-center space-x-1 shadow-md"
                     >
                       <EditIcon className="h-3 w-3" />
                       <span>編集</span>
@@ -578,7 +578,7 @@ export default function MyPage() {
             <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white text-sm font-medium hover:bg-purple-600 transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white text-sm font-medium rounded-lg hover:bg-purple-600 transition-colors shadow-md"
             >
               <Plus className="h-4 w-4" />
               <span>新規作成</span>
@@ -594,13 +594,13 @@ export default function MyPage() {
 
           {/* Talk枠タブ */}
           <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
-            <div className="flex border-b border-white/20">
+            <div className="flex border border-white/20 rounded-lg mx-4 my-2 overflow-hidden">
               <button
                 onClick={() => setTalkSlotsTab('scheduled')}
-                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors border-r border-white/20 ${
                   talkSlotsTab === 'scheduled'
-                    ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-500'
-                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-25'
+                    ? 'bg-white/80 text-purple-700 shadow-inner'
+                    : 'text-gray-600 hover:text-purple-600 hover:bg-white/40'
                 }`}
               >
                 予定 ({scheduledSlots.length})
@@ -609,8 +609,8 @@ export default function MyPage() {
                 onClick={() => setTalkSlotsTab('completed')}
                 className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                   talkSlotsTab === 'completed'
-                    ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-500'
-                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-25'
+                    ? 'bg-white/80 text-purple-700 shadow-inner'
+                    : 'text-gray-600 hover:text-purple-600 hover:bg-white/40'
                 }`}
               >
                 履歴 ({completedSlots.length})
@@ -759,17 +759,17 @@ export default function MyPage() {
 
       {/* Tabs - フラット版 */}
       <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
-        <div className="grid grid-cols-6 gap-0">
+        <div className="grid grid-cols-6 gap-0 border border-white/20 rounded-lg mx-4 my-2 overflow-hidden">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               aria-label={tab.label}
               title={tab.label}
-              className={`flex items-center justify-center py-4 px-2 border-b-2 transition-colors ${
+              className={`flex items-center justify-center py-4 px-2 transition-colors border-r border-white/20 last:border-r-0 ${
                 activeTab === tab.id
-                  ? 'border-pink-500 text-pink-600 bg-pink-50'
-                  : 'border-transparent text-gray-600 hover:text-pink-600 hover:border-pink-300'
+                  ? 'bg-white/80 text-pink-600 shadow-inner'
+                  : 'text-gray-600 hover:text-pink-600 hover:bg-white/40'
               }`}
             >
               <tab.icon className="h-6 w-6" />
