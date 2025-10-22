@@ -375,8 +375,8 @@ app.post('/api/stripe/create-connect-account', async (req: Request, res: Respons
     // オンボーディングリンクを作成
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `${process.env.FRONTEND_URL}/influencer/settings`,
-      return_url: `${process.env.FRONTEND_URL}/influencer/dashboard`,
+      refresh_url: `${process.env.FRONTEND_URL}/mypage`,
+      return_url: `${process.env.FRONTEND_URL}/mypage`,
       type: 'account_onboarding',
     });
     
