@@ -375,6 +375,70 @@ app.post('/api/stripe/create-connect-account', async (req: Request, res: Respons
 });
 
 // ============================================
+// インフルエンサーのStripe状態確認
+// ============================================
+app.post('/api/stripe/influencer-status', async (req: Request, res: Response) => {
+  try {
+    const { authUserId } = req.body;
+    
+    console.log('🔵 インフルエンサー状態確認開始:', { authUserId });
+    
+    // ユーザー情報を取得
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('stripe_connect_account_id, stripe_connect_account_status')
+      .eq('auth_user_id', authUserId)
+      .single();
+    
+    if (userError) {
+      console.error('❌ ユーザー取得エラー:', userError);
+      throw userError;
+    }
+    
+    if (!user?.stripe_connect_account_id) {
+      console.log('⚠️  Stripe Connect Account ID が設定されていません');
+      return res.json({ 
+        accountStatus: 'not_setup',
+        accountId: null,
+        isVerified: false
+      });
+    }
+    
+    // Stripeアカウントの状態を確認
+    const stripeAccount = await stripe.accounts.retrieve(user.stripe_connect_account_id);
+    
+    console.log('✅ Stripe Account状態:', {
+      id: stripeAccount.id,
+      charges_enabled: stripeAccount.charges_enabled,
+      payouts_enabled: stripeAccount.payouts_enabled,
+      details_submitted: stripeAccount.details_submitted
+    });
+    
+    let accountStatus = 'pending';
+    if (stripeAccount.charges_enabled && stripeAccount.payouts_enabled) {
+      accountStatus = 'active';
+    } else if (stripeAccount.details_submitted) {
+      accountStatus = 'pending';
+    } else {
+      accountStatus = 'incomplete';
+    }
+    
+    res.json({
+      accountStatus,
+      accountId: stripeAccount.id,
+      isVerified: stripeAccount.charges_enabled && stripeAccount.payouts_enabled,
+      chargesEnabled: stripeAccount.charges_enabled,
+      payoutsEnabled: stripeAccount.payouts_enabled,
+      detailsSubmitted: stripeAccount.details_submitted
+    });
+    
+  } catch (error: any) {
+    console.error('インフルエンサー状態確認エラー:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
 // Webhook受信（Stripeイベント処理）
 // ============================================
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req: Request, res: Response) => {
