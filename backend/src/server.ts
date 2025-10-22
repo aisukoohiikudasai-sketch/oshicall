@@ -367,10 +367,22 @@ app.post('/api/stripe/create-connect-account', async (req: Request, res: Respons
     });
     
     // Supabaseを更新
-    await supabase
+    const { data: updatedUser, error: updateError } = await supabase
       .from('users')
-      .update({ stripe_account_id: account.id })
-      .eq('auth_user_id', authUserId);
+      .update({ 
+        stripe_account_id: account.id,
+        stripe_connect_account_id: account.id,
+        stripe_connect_account_status: 'pending'
+      })
+      .eq('auth_user_id', authUserId)
+      .select();
+    
+    if (updateError) {
+      console.error('❌ Supabase更新エラー:', updateError);
+      throw updateError;
+    }
+    
+    console.log('✅ Supabase更新成功:', updatedUser);
     
     // オンボーディングリンクを作成
     const accountLink = await stripe.accountLinks.create({
@@ -501,11 +513,33 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
       case 'account.updated':
         // Connectアカウント更新時
         const account = event.data.object as Stripe.Account;
+        console.log('🔵 Stripe Connect Account更新:', {
+          id: account.id,
+          charges_enabled: account.charges_enabled,
+          payouts_enabled: account.payouts_enabled,
+          details_submitted: account.details_submitted
+        });
+        
+        // アカウント情報を更新
+        const updateData: any = {
+          stripe_connect_account_id: account.id,
+          stripe_connect_account_status: account.charges_enabled && account.payouts_enabled ? 'active' : 'pending'
+        };
+        
         if (account.charges_enabled && account.payouts_enabled) {
-          await supabase
-            .from('users')
-            .update({ is_verified: true })
-            .eq('stripe_account_id', account.id);
+          updateData.is_verified = true;
+        }
+        
+        const { data: updatedUser, error: updateError } = await supabase
+          .from('users')
+          .update(updateData)
+          .eq('stripe_account_id', account.id)
+          .select();
+        
+        if (updateError) {
+          console.error('❌ Stripe Connect Account更新エラー:', updateError);
+        } else {
+          console.log('✅ Stripe Connect Account更新成功:', updatedUser);
         }
         break;
     }
