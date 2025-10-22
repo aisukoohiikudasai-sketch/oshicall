@@ -400,11 +400,11 @@ export default function MyPage() {
         </div>
       )}
 
-      {/* Profile Header */}
-      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-50 rounded-2xl md:rounded-3xl shadow-2xl border-2 border-pink-200 p-4 sm:p-6 md:p-8">
-        <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8">
+      {/* Profile Header - コンパクト版 */}
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-50 rounded-xl shadow-lg border border-pink-200 p-4">
+        <div className="flex items-center space-x-4">
           <div className="relative group flex-shrink-0">
-            <div className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 rounded-full overflow-hidden border-4 border-pink-300 shadow-xl">
+            <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-pink-300 shadow-md">
               <img
                 src={imagePreview || profile.avatar_url}
                 alt={supabaseUser?.display_name || profile.nickname || profile.username}
@@ -412,8 +412,8 @@ export default function MyPage() {
               />
             </div>
             {!isDemoMode && (
-              <label className="absolute bottom-0 right-0 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full p-2 sm:p-2.5 md:p-3 shadow-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95">
-                <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
+              <label className="absolute -bottom-1 -right-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full p-1.5 shadow-md hover:from-pink-600 hover:to-purple-700 transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95">
+                <Camera className="h-3 w-3" />
                 <input
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
@@ -423,44 +423,43 @@ export default function MyPage() {
               </label>
             )}
             {!isDemoMode && supabaseUser?.is_influencer && (
-              <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full px-2 py-0.5 sm:px-3 sm:py-1 text-xs font-bold shadow-lg">
-                ✨ Influencer
+              <div className="absolute -top-1 -right-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full px-1.5 py-0.5 text-xs font-bold shadow-md">
+                ✨
               </div>
             )}
           </div>
           
-          <div className="flex-1 text-center md:text-left w-full">
-            <div className="flex flex-col md:flex-row items-center md:items-start justify-center md:justify-start gap-3 md:gap-4 mb-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-3 mb-2">
               {isEditingProfile && !isDemoMode ? (
                 <input
                   type="text"
                   value={editedDisplayName}
                   onChange={(e) => setEditedDisplayName(e.target.value)}
-                  className="text-xl md:text-3xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent border-b-2 border-pink-300 focus:border-pink-500 focus:outline-none px-2 w-full md:w-auto"
+                  className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent border-b border-pink-300 focus:border-pink-500 focus:outline-none px-1 flex-1 min-w-0"
                   placeholder="表示名"
                   maxLength={100}
                 />
               ) : (
-                <h1 className="text-2xl md:text-4xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent break-words">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent truncate">
                   {supabaseUser?.display_name || profile.nickname || profile.username}
                 </h1>
               )}
               {!isDemoMode && (
                 <>
                   {isEditingProfile ? (
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                    <div className="flex items-center space-x-2">
                       <button
                         onClick={handleSaveProfile}
                         disabled={saving}
-                        className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-base font-medium whitespace-nowrap"
+                        className="bg-green-500 text-white px-3 py-1.5 rounded text-sm hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                       >
-                        <Save className="h-5 w-5" />
+                        <Save className="h-3 w-3" />
                         <span>{saving ? '保存中...' : '保存'}</span>
                       </button>
                       <button
                         onClick={() => {
                           setIsEditingProfile(false);
-                          // 編集をキャンセルして元の値に戻す
                           if (supabaseUser) {
                             setEditedDisplayName(supabaseUser.display_name);
                             setEditedBio(supabaseUser.bio || '');
@@ -469,19 +468,18 @@ export default function MyPage() {
                           setError('');
                         }}
                         disabled={saving}
-                        className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center justify-center"
+                        className="bg-gray-500 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center"
                       >
-                        <X className="h-5 w-5" />
-                        <span className="ml-2">キャンセル</span>
+                        <X className="h-3 w-3" />
                       </button>
                     </div>
                   ) : (
                     <button
                       onClick={() => setIsEditingProfile(true)}
-                      className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 flex items-center justify-center whitespace-nowrap text-base font-medium"
+                      className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-3 py-1.5 rounded text-sm hover:from-pink-600 hover:to-purple-700 transition-all duration-200 flex items-center space-x-1"
                     >
-                      <EditIcon className="h-5 w-5 mr-2" />
-                      編集
+                      <EditIcon className="h-3 w-3" />
+                      <span>編集</span>
                     </button>
                   )}
                 </>
@@ -489,175 +487,235 @@ export default function MyPage() {
             </div>
             
             {!isDemoMode && user?.email && (
-              <p className="text-sm md:text-base text-gray-600 mb-4 break-all">{user.email}</p>
+              <p className="text-xs text-gray-600 truncate">{user.email}</p>
             )}
             
-            {/* 統計情報 - ファン/インフルエンサーで切り替え */}
-            {!isDemoMode && supabaseUser?.is_influencer ? (
-              // インフルエンサー用統計
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-xl md:text-2xl font-bold text-green-600">
-                    ¥{formatPrice(supabaseUser.total_earnings)}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-600 mt-1">総収益</div>
-                </div>
-                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-xl md:text-2xl font-bold text-blue-600">
-                    {supabaseUser.total_calls_completed}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-600 mt-1">完了通話数</div>
-                </div>
-                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-xl md:text-2xl font-bold text-purple-600">
-                    {supabaseUser.average_rating?.toFixed(1) || '-'}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-600 mt-1">平均評価</div>
-                </div>
-                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-xl md:text-2xl font-bold text-pink-600">
-                    {supabaseUser.is_verified ? '✓' : '-'}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-600 mt-1">認証済み</div>
-                </div>
+            {/* 統計情報 - コンパクト版 */}
+            {!isDemoMode && (
+              <div className="flex space-x-4 mt-2">
+                {supabaseUser?.is_influencer ? (
+                  <>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-green-600">¥{formatPrice(supabaseUser.total_earnings)}</div>
+                      <div className="text-xs text-gray-600">収益</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-blue-600">{supabaseUser.total_calls_completed}</div>
+                      <div className="text-xs text-gray-600">通話</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-purple-600">{supabaseUser.average_rating?.toFixed(1) || '-'}</div>
+                      <div className="text-xs text-gray-600">評価</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-pink-600">¥{formatPrice(supabaseUser?.total_spent || profile.total_spent)}</div>
+                      <div className="text-xs text-gray-600">支払い</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-green-600">{supabaseUser?.total_calls_purchased || profile.call_count}</div>
+                      <div className="text-xs text-gray-600">通話</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-purple-600">{profile.total_points}</div>
+                      <div className="text-xs text-gray-600">ポイント</div>
+                    </div>
+                  </>
+                )}
               </div>
-            ) : (
-              // ファン用統計
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-xl md:text-2xl font-bold text-pink-600">
-                    ¥{formatPrice(supabaseUser?.total_spent || profile.total_spent)}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-600 mt-1">総支払い額</div>
-                </div>
-                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-xl md:text-2xl font-bold text-green-600">
-                    {supabaseUser?.total_calls_purchased || profile.call_count}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-600 mt-1">通話回数</div>
-                </div>
-                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-xl md:text-2xl font-bold text-blue-600">{profile.bid_count}</div>
-                  <div className="text-xs md:text-sm text-gray-600 mt-1">入札回数</div>
-                </div>
-                <div className="bg-white rounded-xl p-4 text-center shadow-lg">
-                  <div className="text-xl md:text-2xl font-bold text-purple-600">{profile.total_points}</div>
-                  <div className="text-xs md:text-sm text-gray-600 mt-1">総ポイント</div>
-                </div>
-              </div>
-            )}
-            
-            {/* Stripe Connect 設定（インフルエンサーのみ） */}
-            {!isDemoMode && supabaseUser?.is_influencer && (
-              <>
-                {stripeAccountStatus === 'not_setup' && (
-                  <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="bg-blue-100 p-2 rounded-lg">
-                        <DollarSign className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-blue-800">収益設定が必要です</h3>
-                        <p className="text-sm text-blue-600">収益の80%を受け取るためにStripe Connectを設定してください</p>
-                      </div>
-                    </div>
-                    
-                    {showEmailInput ? (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            メールアドレス
-                          </label>
-                          <input
-                            type="email"
-                            value={emailInput}
-                            onChange={(e) => setEmailInput(e.target.value)}
-                            placeholder="your-email@example.com"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                        <div className="flex space-x-3">
-                          <button
-                            onClick={handleSetupStripeConnectWithEmail}
-                            disabled={isSettingUpStripe}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isSettingUpStripe ? '設定中...' : 'Stripe Connect を設定'}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowEmailInput(false);
-                              setEmailInput('');
-                              setStripeError('');
-                            }}
-                            className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
-                          >
-                            キャンセル
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={handleSetupStripeConnect}
-                        disabled={isSettingUpStripe}
-                        className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                      >
-                        {isSettingUpStripe ? '設定中...' : 'Stripe Connect を設定'}
-                      </button>
-                    )}
-                    
-                    {stripeError && (
-                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-sm text-red-600">{stripeError}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {stripeAccountStatus === 'pending' && (
-                  <div className="mt-6 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-yellow-100 p-2 rounded-lg">
-                        <Clock className="h-6 w-6 text-yellow-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-yellow-800">審査中です</h3>
-                        <p className="text-sm text-yellow-600">Stripe Connect アカウントの審査が進行中です。通常1-2営業日で完了します。</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {stripeAccountStatus === 'active' && (
-                  <div className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-green-100 p-2 rounded-lg">
-                        <Shield className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-green-800">収益設定完了</h3>
-                        <p className="text-sm text-green-600">Stripe Connect アカウントが設定済みです。収益の80%が自動的に送金されます。</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
             )}
           </div>
         </div>
         
         {/* メッセージ表示 */}
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-xs">
+            <p className="text-red-600">{error}</p>
           </div>
         )}
         {successMessage && (
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-600">✓ {successMessage}</p>
+          <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-xs">
+            <p className="text-green-600">✓ {successMessage}</p>
           </div>
         )}
       </div>
+
+      {/* インフルエンサーダッシュボード - タブとは独立して表示 */}
+      {!isDemoMode && supabaseUser?.is_influencer && (
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border-2 border-purple-200">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl font-bold text-gray-800">Talk枠管理</h3>
+              <p className="text-gray-600 mt-1">あなたのTalk枠を管理</p>
+            </div>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
+            >
+              <Plus className="h-4 w-4" />
+              <span>新しいTalk枠を作成</span>
+            </button>
+          </div>
+
+          {/* 統計カード */}
+          <div className="grid md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">総収益</p>
+                  <p className="text-lg font-bold text-gray-900 mt-1">
+                    ¥{supabaseUser.total_earnings.toLocaleString()}
+                  </p>
+                </div>
+                <DollarSign className="h-6 w-6 text-green-500" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">完了通話数</p>
+                  <p className="text-lg font-bold text-gray-900 mt-1">
+                    {supabaseUser.total_calls_completed}
+                  </p>
+                </div>
+                <Users className="h-6 w-6 text-blue-500" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">平均評価</p>
+                  <p className="text-lg font-bold text-gray-900 mt-1">
+                    {supabaseUser.average_rating?.toFixed(1) || '-'}
+                  </p>
+                </div>
+                <span className="text-lg">⭐</span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Talk枠数</p>
+                  <p className="text-lg font-bold text-gray-900 mt-1">
+                    {callSlots.length}
+                  </p>
+                </div>
+                <Calendar className="h-6 w-6 text-purple-500" />
+              </div>
+            </div>
+          </div>
+
+          {/* エラー表示 */}
+          {dashboardError && (
+            <div className="bg-red-50 border border-red-200 p-3 rounded-xl mb-4">
+              <p className="text-sm text-red-600">{dashboardError}</p>
+            </div>
+          )}
+
+          {/* Talk枠一覧 */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <h4 className="text-lg font-bold text-gray-900 mb-4">Talk枠一覧</h4>
+
+            {isLoadingSlots ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse bg-gray-100 h-20 rounded-lg"></div>
+                ))}
+              </div>
+            ) : callSlots.length === 0 ? (
+              <div className="text-center py-8">
+                <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                <p className="text-gray-600">まだTalk枠がありません</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  「新しいTalk枠を作成」ボタンから作成できます
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {callSlots.map((slot) => (
+                  <div
+                    key={slot.id}
+                    className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h5 className="text-base font-bold text-gray-900">{slot.title}</h5>
+                          {slot.is_published ? (
+                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                              公開中
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                              非公開
+                            </span>
+                          )}
+                        </div>
+
+                        {slot.description && (
+                          <p className="text-sm text-gray-600 mb-2">{slot.description}</p>
+                        )}
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                          <div className="flex items-center space-x-1 text-gray-600">
+                            <Calendar className="h-3 w-3" />
+                            <span>
+                              {format(new Date(slot.scheduled_start_time), 'MM/dd HH:mm', {
+                                locale: ja,
+                              })}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center space-x-1 text-gray-600">
+                            <Clock className="h-3 w-3" />
+                            <span>{slot.duration_minutes}分</span>
+                          </div>
+
+                          <div className="flex items-center space-x-1 text-gray-600">
+                            <DollarSign className="h-3 w-3" />
+                            <span>¥{slot.starting_price.toLocaleString()}</span>
+                          </div>
+
+                          <div className="text-gray-600">
+                            <span className="text-xs">最小入札: ¥{slot.minimum_bid_increment}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-1 ml-3">
+                        <button
+                          onClick={() => handleTogglePublish(slot.id, slot.is_published)}
+                          className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title={slot.is_published ? '非公開にする' : '公開する'}
+                        >
+                          {slot.is_published ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(slot.id)}
+                          className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="削除"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -686,181 +744,6 @@ export default function MyPage() {
           {activeTab === 'profile' && (
             <div className="space-y-4 md:space-y-6">
               <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">プロフィール設定</h2>
-              
-              {/* インフルエンサーダッシュボード - Profileタブの直下に表示 */}
-              {!isDemoMode && supabaseUser?.is_influencer && (
-                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border-2 border-purple-200 mb-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-800">インフルエンサーダッシュボード</h3>
-                      <p className="text-gray-600 mt-1">あなたのTalk枠を管理</p>
-                    </div>
-                    <button
-                      onClick={() => setShowCreateForm(true)}
-                      className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>新しいTalk枠を作成</span>
-                    </button>
-                  </div>
-
-                  {/* 統計カード */}
-                  <div className="grid md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">総収益</p>
-                          <p className="text-lg font-bold text-gray-900 mt-1">
-                            ¥{supabaseUser.total_earnings.toLocaleString()}
-                          </p>
-                        </div>
-                        <DollarSign className="h-6 w-6 text-green-500" />
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">完了通話数</p>
-                          <p className="text-lg font-bold text-gray-900 mt-1">
-                            {supabaseUser.total_calls_completed}
-                          </p>
-                        </div>
-                        <Users className="h-6 w-6 text-blue-500" />
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">平均評価</p>
-                          <p className="text-lg font-bold text-gray-900 mt-1">
-                            {supabaseUser.average_rating?.toFixed(1) || '-'}
-                          </p>
-                        </div>
-                        <span className="text-lg">⭐</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">Talk枠数</p>
-                          <p className="text-lg font-bold text-gray-900 mt-1">
-                            {callSlots.length}
-                          </p>
-                        </div>
-                        <Calendar className="h-6 w-6 text-purple-500" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* エラー表示 */}
-                  {dashboardError && (
-                    <div className="bg-red-50 border border-red-200 p-3 rounded-xl mb-4">
-                      <p className="text-sm text-red-600">{dashboardError}</p>
-                    </div>
-                  )}
-
-                  {/* Talk枠一覧 */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <h4 className="text-lg font-bold text-gray-900 mb-4">Talk枠一覧</h4>
-
-                    {isLoadingSlots ? (
-                      <div className="space-y-3">
-                        {[1, 2, 3].map((i) => (
-                          <div key={i} className="animate-pulse bg-gray-100 h-20 rounded-lg"></div>
-                        ))}
-                      </div>
-                    ) : callSlots.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                        <p className="text-gray-600">まだTalk枠がありません</p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          「新しいTalk枠を作成」ボタンから作成できます
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {callSlots.map((slot) => (
-                          <div
-                            key={slot.id}
-                            className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
-                          >
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-2 mb-2">
-                                  <h5 className="text-base font-bold text-gray-900">{slot.title}</h5>
-                                  {slot.is_published ? (
-                                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                                      公開中
-                                    </span>
-                                  ) : (
-                                    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                                      非公開
-                                    </span>
-                                  )}
-                                </div>
-
-                                {slot.description && (
-                                  <p className="text-sm text-gray-600 mb-2">{slot.description}</p>
-                                )}
-
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                                  <div className="flex items-center space-x-1 text-gray-600">
-                                    <Calendar className="h-3 w-3" />
-                                    <span>
-                                      {format(new Date(slot.scheduled_start_time), 'MM/dd HH:mm', {
-                                        locale: ja,
-                                      })}
-                                    </span>
-                                  </div>
-
-                                  <div className="flex items-center space-x-1 text-gray-600">
-                                    <Clock className="h-3 w-3" />
-                                    <span>{slot.duration_minutes}分</span>
-                                  </div>
-
-                                  <div className="flex items-center space-x-1 text-gray-600">
-                                    <DollarSign className="h-3 w-3" />
-                                    <span>¥{slot.starting_price.toLocaleString()}</span>
-                                  </div>
-
-                                  <div className="text-gray-600">
-                                    <span className="text-xs">最小入札: ¥{slot.minimum_bid_increment}</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex space-x-1 ml-3">
-                                <button
-                                  onClick={() => handleTogglePublish(slot.id, slot.is_published)}
-                                  className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                  title={slot.is_published ? '非公開にする' : '公開する'}
-                                >
-                                  {slot.is_published ? (
-                                    <EyeOff className="h-4 w-4" />
-                                  ) : (
-                                    <Eye className="h-4 w-4" />
-                                  )}
-                                </button>
-
-                                <button
-                                  onClick={() => handleDelete(slot.id)}
-                                  className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="削除"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
               
               {isDemoMode && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
