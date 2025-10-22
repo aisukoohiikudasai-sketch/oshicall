@@ -417,7 +417,7 @@ export default function MyPage() {
   ];
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 min-h-screen">
       {/* Demo Mode Notice */}
       {isDemoMode && (
         <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-3 md:p-4 text-center">
@@ -430,7 +430,7 @@ export default function MyPage() {
       )}
 
       {/* Profile Header - フラット版 */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
         <div className="flex items-center space-x-4 p-4">
           <div className="relative group flex-shrink-0">
             <div className="h-16 w-16 overflow-hidden">
@@ -573,8 +573,8 @@ export default function MyPage() {
 
       {/* Talk枠管理 - フラット版 */}
       {!isDemoMode && supabaseUser?.is_influencer && (
-        <div className="bg-white border-b border-gray-200">
-          <div className="flex justify-between items-center p-4 border-b border-gray-200">
+        <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
+          <div className="flex justify-between items-center p-4 border-b border-white/20">
             <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
             <button
               onClick={() => setShowCreateForm(true)}
@@ -593,8 +593,8 @@ export default function MyPage() {
           )}
 
           {/* Talk枠タブ */}
-          <div className="bg-white border-b border-gray-200">
-            <div className="flex border-b border-gray-200">
+          <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
+            <div className="flex border-b border-white/20">
               <button
                 onClick={() => setTalkSlotsTab('scheduled')}
                 className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
@@ -643,7 +643,7 @@ export default function MyPage() {
                     return (
                       <div
                         key={slot.id}
-                        className="border-b border-gray-200 p-4 hover:bg-gray-50 transition-colors"
+                        className="border-b border-white/20 p-4 hover:bg-white/10 transition-colors"
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex-1 min-w-0">
@@ -726,28 +726,28 @@ export default function MyPage() {
 
           {/* 統計情報 - フラット版 */}
           <div className="grid grid-cols-4">
-            <div className="bg-gray-50 p-3 text-center border-r border-gray-200">
+            <div className="p-3 text-center border-r border-white/20">
               <div className="text-xs text-gray-600">総収益</div>
               <div className="text-sm font-bold text-green-600">
                 ¥{supabaseUser.total_earnings.toLocaleString()}
               </div>
             </div>
 
-            <div className="bg-gray-50 p-3 text-center border-r border-gray-200">
+            <div className="p-3 text-center border-r border-white/20">
               <div className="text-xs text-gray-600">通話数</div>
               <div className="text-sm font-bold text-blue-600">
                 {supabaseUser.total_calls_completed}
               </div>
             </div>
 
-            <div className="bg-gray-50 p-3 text-center border-r border-gray-200">
+            <div className="p-3 text-center border-r border-white/20">
               <div className="text-xs text-gray-600">評価</div>
               <div className="text-sm font-bold text-purple-600">
                 {supabaseUser.average_rating?.toFixed(1) || '-'}
               </div>
             </div>
 
-            <div className="bg-gray-50 p-3 text-center">
+            <div className="p-3 text-center">
               <div className="text-xs text-gray-600">枠数</div>
               <div className="text-sm font-bold text-pink-600">
                 {callSlots.length}
@@ -758,7 +758,7 @@ export default function MyPage() {
       )}
 
       {/* Tabs - フラット版 */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
         <div className="grid grid-cols-6 gap-0">
           {tabs.map((tab) => (
             <button
@@ -779,7 +779,7 @@ export default function MyPage() {
       </div>
 
       {/* Tab Content - フラット版 */}
-      <div className="bg-white">
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100">
         {/* Profile Tab */}
         {activeTab === 'profile' && (
           <div className="p-4">
