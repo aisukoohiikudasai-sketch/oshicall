@@ -1,0 +1,16 @@
+{
+    "name": "oshicall-e2e-scripts",
+    "version": "1.0.0",
+    "description": "E2Eテスト用スクリプト",
+    "scripts": {
+        "setup": "node scripts/e2e_test_setup.js",
+        "cleanup": "node scripts/e2e_test_cleanup.js",
+        "test": "node scripts/e2e_test_runner.js",
+        "full-test": "npm run cleanup && npm run setup && npm run test"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.38.0",
+        "axios": "^1.6.0",
+        "dotenv": "^17.2.3"
+    }
+}
