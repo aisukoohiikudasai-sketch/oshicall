@@ -464,6 +464,28 @@ app.post('/api/stripe/influencer-status', async (req: Request, res: Response) =>
       accountStatus = 'incomplete';
     }
     
+    // データベースの状態を実際のStripe状態に同期
+    if (user.stripe_connect_account_status !== accountStatus) {
+      console.log('🔄 Stripe状態を同期中:', {
+        db_status: user.stripe_connect_account_status,
+        stripe_status: accountStatus
+      });
+      
+      const { error: syncError } = await supabase
+        .from('users')
+        .update({ 
+          stripe_connect_account_status: accountStatus,
+          is_verified: accountStatus === 'active'
+        })
+        .eq('auth_user_id', authUserId);
+      
+      if (syncError) {
+        console.error('❌ 状態同期エラー:', syncError);
+      } else {
+        console.log('✅ 状態同期完了:', accountStatus);
+      }
+    }
+    
     res.json({
       accountStatus,
       accountId: stripeAccount.id,
