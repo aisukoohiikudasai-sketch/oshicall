@@ -430,7 +430,7 @@ export default function MyPage() {
       )}
 
       {/* Profile Header - フラット版 */}
-      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
         <div className="flex items-center space-x-4 p-4">
           <div className="relative group flex-shrink-0">
             <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-white/30 shadow-lg">
@@ -573,8 +573,8 @@ export default function MyPage() {
 
       {/* Talk枠管理 - フラット版 */}
       {!isDemoMode && supabaseUser?.is_influencer && (
-        <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
-          <div className="flex justify-between items-center p-4 border-b border-white/20">
+        <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
+          <div className="flex justify-between items-center p-4 border-b-2 border-blue-200">
             <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
             <button
               onClick={() => setShowCreateForm(true)}
@@ -593,7 +593,7 @@ export default function MyPage() {
           )}
 
           {/* Talk枠タブ */}
-          <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
+          <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
             <div className="flex border-2 border-blue-200 rounded-lg mx-4 my-2 overflow-hidden shadow-sm">
               <button
                 onClick={() => setTalkSlotsTab('scheduled')}
@@ -758,7 +758,7 @@ export default function MyPage() {
       )}
 
       {/* Tabs - フラット版 */}
-      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
         <div className="grid grid-cols-6 gap-0 border-2 border-blue-200 rounded-lg mx-4 my-2 overflow-hidden shadow-sm">
           {tabs.map((tab) => (
             <button
@@ -779,7 +779,7 @@ export default function MyPage() {
       </div>
 
       {/* Tab Content - フラット版 */}
-      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100">
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
         {/* Profile Tab */}
         {activeTab === 'profile' && (
           <div className="p-4">
