@@ -31,6 +31,8 @@ import {
 import { UserProfile, Badge as BadgeType } from '../types';
 import { updateUserProfile, updateProfileImage } from '../api/user';
 import { validateImageFile, getImagePreviewUrl } from '../lib/storage';
+import { createConnectAccount, getInfluencerStripeStatus } from '../api/stripe';
+import { supabase } from '../lib/supabase';
 
 export default function MyPage() {
   const { user, supabaseUser, refreshUser } = useAuth();
@@ -49,6 +51,13 @@ export default function MyPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  
+  // Stripe Connect関連の状態
+  const [stripeAccountStatus, setStripeAccountStatus] = useState<string>('not_setup');
+  const [isSettingUpStripe, setIsSettingUpStripe] = useState(false);
+  const [stripeError, setStripeError] = useState('');
+  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
 
   // デモモード: ログイン無しでもダミーデータでマイページを表示
   const isDemoMode = !user;
@@ -59,8 +68,100 @@ export default function MyPage() {
       setEditedDisplayName(supabaseUser.display_name);
       setEditedBio(supabaseUser.bio || '');
       setImagePreview(supabaseUser.profile_image_url || '');
+      
+      // インフルエンサーの場合、Stripe Connect状態を確認
+      if (supabaseUser.is_influencer) {
+        checkStripeAccountStatus();
+      }
     }
   }, [supabaseUser]);
+
+  // Stripe Connect アカウント状態を確認
+  const checkStripeAccountStatus = async () => {
+    if (!supabaseUser) return;
+    
+    try {
+      const status = await getInfluencerStripeStatus(supabaseUser.id);
+      setStripeAccountStatus(status.accountStatus || 'not_setup');
+    } catch (error) {
+      console.error('Stripe アカウント状態の確認エラー:', error);
+      setStripeAccountStatus('not_setup');
+    }
+  };
+
+  // Stripe Connect アカウント作成
+  const handleSetupStripeConnect = async () => {
+    if (!supabaseUser) return;
+    
+    // デバッグ: ユーザー情報をコンソールに出力
+    console.log('🔍 ユーザー情報:', {
+      id: supabaseUser.id,
+      auth_user_id: supabaseUser.auth_user_id,
+      display_name: supabaseUser.display_name,
+      is_influencer: supabaseUser.is_influencer
+    });
+    
+    // より詳細なデバッグ情報
+    console.log('🔍 完全なユーザーオブジェクト:', supabaseUser);
+    console.log('🔍 利用可能なプロパティ:', Object.keys(supabaseUser));
+    
+    // auth_user_id を使って Supabase Auth から実際のユーザー情報を取得
+    let userEmail = '';
+    try {
+      const { data: authUser } = await supabase.auth.getUser();
+      if (authUser?.user) {
+        userEmail = authUser.user.email || '';
+        console.log('🔍 Auth ユーザー情報:', {
+          email: authUser.user.email,
+          user_metadata: authUser.user.user_metadata
+        });
+      }
+    } catch (error) {
+      console.error('Auth ユーザー情報取得エラー:', error);
+    }
+    
+    if (!userEmail) {
+      setStripeError('メールアドレスが取得できませんでした。メールアドレスを手動で入力してください。');
+      setShowEmailInput(true);
+      return;
+    }
+    
+    setIsSettingUpStripe(true);
+    setStripeError('');
+    
+    try {
+      const { onboardingUrl } = await createConnectAccount(userEmail, supabaseUser.id);
+      window.location.href = onboardingUrl;
+    } catch (error: any) {
+      console.error('Stripe Connect 設定エラー:', error);
+      setStripeError(error.message || 'Stripe Connect の設定に失敗しました');
+    } finally {
+      setIsSettingUpStripe(false);
+    }
+  };
+
+  // メールアドレス手動入力でのStripe Connect設定
+  const handleSetupStripeConnectWithEmail = async () => {
+    if (!emailInput.trim()) {
+      setStripeError('メールアドレスを入力してください');
+      return;
+    }
+    
+    if (!supabaseUser) return;
+    
+    setIsSettingUpStripe(true);
+    setStripeError('');
+    
+    try {
+      const { onboardingUrl } = await createConnectAccount(emailInput.trim(), supabaseUser.id);
+      window.location.href = onboardingUrl;
+    } catch (error: any) {
+      console.error('Stripe Connect 設定エラー:', error);
+      setStripeError(error.message || 'Stripe Connect の設定に失敗しました');
+    } finally {
+      setIsSettingUpStripe(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -368,6 +469,103 @@ export default function MyPage() {
                   <div className="text-xs md:text-sm text-gray-600 mt-1">総ポイント</div>
                 </div>
               </div>
+            )}
+            
+            {/* Stripe Connect 設定（インフルエンサーのみ） */}
+            {!isDemoMode && supabaseUser?.is_influencer && (
+              <>
+                {stripeAccountStatus === 'not_setup' && (
+                  <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <DollarSign className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-blue-800">収益設定が必要です</h3>
+                        <p className="text-sm text-blue-600">収益の80%を受け取るためにStripe Connectを設定してください</p>
+                      </div>
+                    </div>
+                    
+                    {showEmailInput ? (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            メールアドレス
+                          </label>
+                          <input
+                            type="email"
+                            value={emailInput}
+                            onChange={(e) => setEmailInput(e.target.value)}
+                            placeholder="your-email@example.com"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                        <div className="flex space-x-3">
+                          <button
+                            onClick={handleSetupStripeConnectWithEmail}
+                            disabled={isSettingUpStripe}
+                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isSettingUpStripe ? '設定中...' : 'Stripe Connect を設定'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowEmailInput(false);
+                              setEmailInput('');
+                              setStripeError('');
+                            }}
+                            className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
+                          >
+                            キャンセル
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleSetupStripeConnect}
+                        disabled={isSettingUpStripe}
+                        className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      >
+                        {isSettingUpStripe ? '設定中...' : 'Stripe Connect を設定'}
+                      </button>
+                    )}
+                    
+                    {stripeError && (
+                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-sm text-red-600">{stripeError}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {stripeAccountStatus === 'pending' && (
+                  <div className="mt-6 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-yellow-100 p-2 rounded-lg">
+                        <Clock className="h-6 w-6 text-yellow-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-yellow-800">審査中です</h3>
+                        <p className="text-sm text-yellow-600">Stripe Connect アカウントの審査が進行中です。通常1-2営業日で完了します。</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {stripeAccountStatus === 'active' && (
+                  <div className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-green-100 p-2 rounded-lg">
+                        <Shield className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-green-800">収益設定完了</h3>
+                        <p className="text-sm text-green-600">Stripe Connect アカウントが設定済みです。収益の80%が自動的に送金されます。</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
