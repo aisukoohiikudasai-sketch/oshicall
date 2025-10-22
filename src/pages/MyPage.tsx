@@ -429,11 +429,11 @@ export default function MyPage() {
         </div>
       )}
 
-      {/* Profile Header - フラット版 */}
-      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
-        <div className="flex items-center space-x-4 p-4">
+      {/* Profile Header - スッキリ版 */}
+      <div className="bg-white border-b-2 border-blue-200">
+        <div className="flex items-center space-x-4 p-6">
           <div className="relative group flex-shrink-0">
-            <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-white/30 shadow-lg">
+            <div className="h-20 w-20 rounded-full overflow-hidden border-2 border-gray-200 shadow-md">
               <img
                 src={imagePreview || profile.avatar_url}
                 alt={supabaseUser?.display_name || profile.nickname || profile.username}
@@ -441,7 +441,7 @@ export default function MyPage() {
               />
             </div>
             {!isDemoMode && (
-              <label className="absolute -bottom-1 -right-1 bg-pink-500 text-white p-1.5 rounded-full hover:bg-pink-600 transition-colors cursor-pointer shadow-lg">
+              <label className="absolute -bottom-1 -right-1 bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer shadow-md">
                 <Camera className="h-3 w-3" />
                 <input
                   type="file"
@@ -452,7 +452,7 @@ export default function MyPage() {
               </label>
             )}
             {!isDemoMode && supabaseUser?.is_influencer && (
-              <div className="absolute -top-1 -right-1 bg-purple-500 text-white px-1.5 py-0.5 text-xs font-bold rounded-full shadow-lg">
+              <div className="absolute -top-1 -right-1 bg-purple-500 text-white px-2 py-1 text-xs font-bold rounded-full shadow-md">
                 ✨
               </div>
             )}
@@ -470,7 +470,7 @@ export default function MyPage() {
                   maxLength={100}
                 />
               ) : (
-                <h1 className="text-lg font-bold text-pink-500 truncate">
+                <h1 className="text-xl font-bold text-gray-800 truncate">
                   {supabaseUser?.display_name || profile.nickname || profile.username}
                 </h1>
               )}
@@ -481,7 +481,7 @@ export default function MyPage() {
                       <button
                         onClick={handleSaveProfile}
                         disabled={saving}
-                        className="bg-green-500 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 shadow-md"
+                        className="bg-green-500 text-white px-4 py-2 text-sm rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-sm"
                       >
                         <Save className="h-3 w-3" />
                         <span>{saving ? '保存中...' : '保存'}</span>
@@ -497,7 +497,7 @@ export default function MyPage() {
                           setError('');
                         }}
                         disabled={saving}
-                        className="bg-gray-500 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center shadow-md"
+                        className="bg-gray-500 text-white px-4 py-2 text-sm rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center shadow-sm"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -505,7 +505,7 @@ export default function MyPage() {
                   ) : (
                     <button
                       onClick={() => setIsEditingProfile(true)}
-                      className="bg-pink-500 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-pink-600 transition-colors flex items-center space-x-1 shadow-md"
+                      className="bg-blue-500 text-white px-4 py-2 text-sm rounded-lg hover:bg-blue-600 transition-colors flex items-center space-x-2 shadow-sm"
                     >
                       <EditIcon className="h-3 w-3" />
                       <span>編集</span>
@@ -519,9 +519,9 @@ export default function MyPage() {
               <p className="text-xs text-gray-600 truncate">{user.email}</p>
             )}
             
-            {/* 統計情報 - フラット版 */}
+            {/* 統計情報 - スッキリ版 */}
             {!isDemoMode && (
-              <div className="flex space-x-6 mt-2">
+              <div className="flex space-x-8 mt-4">
                 {supabaseUser?.is_influencer ? (
                   <>
                     <div className="text-center">
@@ -571,10 +571,10 @@ export default function MyPage() {
         )}
       </div>
 
-      {/* Talk枠管理 - フラット版 */}
+      {/* Talk枠管理 - スッキリ版 */}
       {!isDemoMode && supabaseUser?.is_influencer && (
-        <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
-          <div className="flex justify-between items-center p-4 border-b-2 border-blue-200">
+        <div className="bg-white border-b-2 border-blue-200">
+          <div className="flex justify-between items-center p-6 border-b border-gray-200">
             <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
             <button
               onClick={() => setShowCreateForm(true)}
@@ -593,14 +593,14 @@ export default function MyPage() {
           )}
 
           {/* Talk枠タブ */}
-          <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
-            <div className="flex border-2 border-blue-200 rounded-lg mx-4 my-2 overflow-hidden shadow-sm">
+          <div className="bg-white border-b border-gray-200">
+            <div className="flex border border-gray-300 rounded-lg mx-6 my-4 overflow-hidden">
               <button
                 onClick={() => setTalkSlotsTab('scheduled')}
-                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors border-r-2 border-blue-200 ${
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors border-r border-gray-300 ${
                   talkSlotsTab === 'scheduled'
-                    ? 'bg-white/80 text-purple-700 shadow-inner'
-                    : 'text-gray-600 hover:text-purple-600 hover:bg-white/40'
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                 }`}
               >
                 予定 ({scheduledSlots.length})
@@ -609,8 +609,8 @@ export default function MyPage() {
                 onClick={() => setTalkSlotsTab('completed')}
                 className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                   talkSlotsTab === 'completed'
-                    ? 'bg-white/80 text-purple-700 shadow-inner'
-                    : 'text-gray-600 hover:text-purple-600 hover:bg-white/40'
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                 }`}
               >
                 履歴 ({completedSlots.length})
@@ -757,19 +757,19 @@ export default function MyPage() {
         </div>
       )}
 
-      {/* Tabs - フラット版 */}
-      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
-        <div className="grid grid-cols-6 gap-0 border-2 border-blue-200 rounded-lg mx-4 my-2 overflow-hidden shadow-sm">
+      {/* Tabs - スッキリ版 */}
+      <div className="bg-white border-b-2 border-blue-200">
+        <div className="grid grid-cols-6 gap-0 border border-gray-300 rounded-lg mx-6 my-4 overflow-hidden">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               aria-label={tab.label}
               title={tab.label}
-              className={`flex items-center justify-center py-4 px-2 transition-colors border-r-2 border-blue-200 last:border-r-0 ${
+              className={`flex items-center justify-center py-4 px-2 transition-colors border-r border-gray-300 last:border-r-0 ${
                 activeTab === tab.id
-                  ? 'bg-white/80 text-pink-600 shadow-inner'
-                  : 'text-gray-600 hover:text-pink-600 hover:bg-white/40'
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
               }`}
             >
               <tab.icon className="h-6 w-6" />
@@ -778,11 +778,11 @@ export default function MyPage() {
         </div>
       </div>
 
-      {/* Tab Content - フラット版 */}
-      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
+      {/* Tab Content - スッキリ版 */}
+      <div className="bg-white border-b-2 border-blue-200">
         {/* Profile Tab */}
         {activeTab === 'profile' && (
-          <div className="p-4">
+          <div className="p-6">
             <h2 className="text-lg font-bold text-gray-800 mb-4">プロフィール設定</h2>
               
               {isDemoMode && (
