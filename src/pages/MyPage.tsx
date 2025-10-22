@@ -430,7 +430,7 @@ export default function MyPage() {
       )}
 
       {/* Profile Header - スッキリ版 */}
-      <div className="bg-white border-b-2 border-blue-200">
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
         <div className="flex items-center space-x-4 p-6">
           <div className="relative group flex-shrink-0">
             <div className="h-20 w-20 rounded-full overflow-hidden border-2 border-gray-200 shadow-md">
@@ -573,7 +573,7 @@ export default function MyPage() {
 
       {/* Talk枠管理 - スッキリ版 */}
       {!isDemoMode && supabaseUser?.is_influencer && (
-        <div className="bg-white border-b-2 border-blue-200">
+        <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
           <div className="flex justify-between items-center p-6 border-b border-gray-200">
             <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
             <button
@@ -593,7 +593,7 @@ export default function MyPage() {
           )}
 
           {/* Talk枠タブ */}
-          <div className="bg-white border-b border-gray-200">
+          <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-gray-200">
             <div className="flex border border-gray-300 rounded-lg mx-6 my-4 overflow-hidden">
               <button
                 onClick={() => setTalkSlotsTab('scheduled')}
@@ -758,15 +758,15 @@ export default function MyPage() {
       )}
 
       {/* Tabs - スッキリ版 */}
-      <div className="bg-white border-b-2 border-blue-200">
-        <div className="grid grid-cols-6 gap-0 border border-gray-300 rounded-lg mx-6 my-4 overflow-hidden">
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
+        <div className="flex border border-gray-300 rounded-lg mx-6 my-4 overflow-hidden">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               aria-label={tab.label}
               title={tab.label}
-              className={`flex items-center justify-center py-4 px-2 transition-colors border-r border-gray-300 last:border-r-0 ${
+              className={`flex-1 flex items-center justify-center py-4 px-2 transition-colors border-r border-gray-300 last:border-r-0 ${
                 activeTab === tab.id
                   ? 'bg-blue-50 text-blue-700'
                   : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
@@ -779,7 +779,7 @@ export default function MyPage() {
       </div>
 
       {/* Tab Content - スッキリ版 */}
-      <div className="bg-white border-b-2 border-blue-200">
+      <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
         {/* Profile Tab */}
         {activeTab === 'profile' && (
           <div className="p-6">
