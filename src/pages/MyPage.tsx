@@ -542,127 +542,71 @@ export default function MyPage() {
         )}
       </div>
 
-      {/* インフルエンサーダッシュボード - タブとは独立して表示 */}
+      {/* Talk枠管理 - タブとは独立して表示 */}
       {!isDemoMode && supabaseUser?.is_influencer && (
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border-2 border-purple-200">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-xl font-bold text-gray-800">Talk枠管理</h3>
-              <p className="text-gray-600 mt-1">あなたのTalk枠を管理</p>
-            </div>
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-4 border-2 border-purple-200">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
+              className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
             >
               <Plus className="h-4 w-4" />
-              <span>新しいTalk枠を作成</span>
+              <span>新規作成</span>
             </button>
-          </div>
-
-          {/* 統計カード */}
-          <div className="grid md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">総収益</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">
-                    ¥{supabaseUser.total_earnings.toLocaleString()}
-                  </p>
-                </div>
-                <DollarSign className="h-6 w-6 text-green-500" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">完了通話数</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">
-                    {supabaseUser.total_calls_completed}
-                  </p>
-                </div>
-                <Users className="h-6 w-6 text-blue-500" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">平均評価</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">
-                    {supabaseUser.average_rating?.toFixed(1) || '-'}
-                  </p>
-                </div>
-                <span className="text-lg">⭐</span>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Talk枠数</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">
-                    {callSlots.length}
-                  </p>
-                </div>
-                <Calendar className="h-6 w-6 text-purple-500" />
-              </div>
-            </div>
           </div>
 
           {/* エラー表示 */}
           {dashboardError && (
-            <div className="bg-red-50 border border-red-200 p-3 rounded-xl mb-4">
-              <p className="text-sm text-red-600">{dashboardError}</p>
+            <div className="bg-red-50 border border-red-200 p-2 rounded-lg mb-4">
+              <p className="text-xs text-red-600">{dashboardError}</p>
             </div>
           )}
 
           {/* Talk枠一覧 */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <h4 className="text-lg font-bold text-gray-900 mb-4">Talk枠一覧</h4>
-
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 mb-4">
             {isLoadingSlots ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="animate-pulse bg-gray-100 h-20 rounded-lg"></div>
+                  <div key={i} className="animate-pulse bg-gray-100 h-16 rounded-lg"></div>
                 ))}
               </div>
             ) : callSlots.length === 0 ? (
-              <div className="text-center py-8">
-                <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                <p className="text-gray-600">まだTalk枠がありません</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  「新しいTalk枠を作成」ボタンから作成できます
+              <div className="text-center py-6">
+                <Calendar className="h-8 w-8 mx-auto text-gray-300 mb-2" />
+                <p className="text-gray-600 text-sm">まだTalk枠がありません</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  「新規作成」ボタンから作成できます
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {callSlots.map((slot) => (
                   <div
                     key={slot.id}
                     className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
                   >
                     <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h5 className="text-base font-bold text-gray-900">{slot.title}</h5>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h5 className="text-sm font-bold text-gray-900 truncate">{slot.title}</h5>
                           {slot.is_published ? (
-                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                            <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded-full flex-shrink-0">
                               公開中
                             </span>
                           ) : (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full flex-shrink-0">
                               非公開
                             </span>
                           )}
                         </div>
 
                         {slot.description && (
-                          <p className="text-sm text-gray-600 mb-2">{slot.description}</p>
+                          <p className="text-xs text-gray-600 mb-2 line-clamp-2">{slot.description}</p>
                         )}
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                          <div className="flex items-center space-x-1 text-gray-600">
+                        <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                          <div className="flex items-center space-x-1">
                             <Calendar className="h-3 w-3" />
                             <span>
                               {format(new Date(slot.scheduled_start_time), 'MM/dd HH:mm', {
@@ -671,41 +615,41 @@ export default function MyPage() {
                             </span>
                           </div>
 
-                          <div className="flex items-center space-x-1 text-gray-600">
+                          <div className="flex items-center space-x-1">
                             <Clock className="h-3 w-3" />
                             <span>{slot.duration_minutes}分</span>
                           </div>
 
-                          <div className="flex items-center space-x-1 text-gray-600">
+                          <div className="flex items-center space-x-1">
                             <DollarSign className="h-3 w-3" />
                             <span>¥{slot.starting_price.toLocaleString()}</span>
                           </div>
 
                           <div className="text-gray-600">
-                            <span className="text-xs">最小入札: ¥{slot.minimum_bid_increment}</span>
+                            <span className="text-xs">最小: ¥{slot.minimum_bid_increment}</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex space-x-1 ml-3">
+                      <div className="flex space-x-1 ml-2 flex-shrink-0">
                         <button
                           onClick={() => handleTogglePublish(slot.id, slot.is_published)}
-                          className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                           title={slot.is_published ? '非公開にする' : '公開する'}
                         >
                           {slot.is_published ? (
-                            <EyeOff className="h-4 w-4" />
+                            <EyeOff className="h-3 w-3" />
                           ) : (
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-3 w-3" />
                           )}
                         </button>
 
                         <button
                           onClick={() => handleDelete(slot.id)}
-                          className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                           title="削除"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3" />
                         </button>
                       </div>
                     </div>
@@ -713,6 +657,37 @@ export default function MyPage() {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* 統計情報 - コンパクト版 */}
+          <div className="grid grid-cols-4 gap-2">
+            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+              <div className="text-xs text-gray-600">総収益</div>
+              <div className="text-sm font-bold text-green-600">
+                ¥{supabaseUser.total_earnings.toLocaleString()}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+              <div className="text-xs text-gray-600">通話数</div>
+              <div className="text-sm font-bold text-blue-600">
+                {supabaseUser.total_calls_completed}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+              <div className="text-xs text-gray-600">評価</div>
+              <div className="text-sm font-bold text-purple-600">
+                {supabaseUser.average_rating?.toFixed(1) || '-'}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+              <div className="text-xs text-gray-600">枠数</div>
+              <div className="text-sm font-bold text-pink-600">
+                {callSlots.length}
+              </div>
+            </div>
           </div>
         </div>
       )}
