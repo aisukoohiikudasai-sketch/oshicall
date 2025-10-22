@@ -132,20 +132,20 @@ export default function CreateCallSlotForm({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-2xl w-full p-8 relative shadow-2xl my-8">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-2xl w-full p-6 relative shadow-2xl my-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
         <button
           onClick={onCancel}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
         >
           <X className="h-6 w-6" />
         </button>
 
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4 pr-8">
           新しいTalk枠を作成
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* タイトル */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -156,7 +156,7 @@ export default function CreateCallSlotForm({
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
               placeholder="例: 推しとの特別トーク"
               required
               maxLength={200}
@@ -172,88 +172,95 @@ export default function CreateCallSlotForm({
               name="description"
               value={formData.description}
               onChange={handleChange}
-              rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
               placeholder="このTalkセッションについて詳しく説明してください"
             />
           </div>
 
-          {/* 開始日時 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Calendar className="inline h-4 w-4 mr-1" />
-              開始日時 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="datetime-local"
-              name="scheduled_start_time"
-              value={formData.scheduled_start_time}
-              onChange={handleChange}
-              min={getMinDateTime()}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              ※ 現在から25時間以上先の日時を設定してください（オークション期間24時間を確保）
-            </p>
-          </div>
+          {/* 日時と時間を横並びに */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 開始日時 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Calendar className="inline h-4 w-4 mr-1" />
+                開始日時 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                name="scheduled_start_time"
+                value={formData.scheduled_start_time}
+                onChange={handleChange}
+                min={getMinDateTime()}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
+                required
+              />
+            </div>
 
-          {/* 通話時間 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Clock className="inline h-4 w-4 mr-1" />
-              通話時間 <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="duration_minutes"
-              value={formData.duration_minutes}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              required
-            >
-              <option value={10}>10分</option>
-              <option value={15}>15分</option>
-              <option value={20}>20分</option>
-              <option value={30}>30分</option>
-              <option value={45}>45分</option>
-              <option value={60}>60分</option>
-            </select>
+            {/* 通話時間 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Clock className="inline h-4 w-4 mr-1" />
+                通話時間 <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="duration_minutes"
+                value={formData.duration_minutes}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
+                required
+              >
+                <option value={10}>10分</option>
+                <option value={15}>15分</option>
+                <option value={20}>20分</option>
+                <option value={30}>30分</option>
+                <option value={45}>45分</option>
+                <option value={60}>60分</option>
+              </select>
+            </div>
           </div>
+          
+          <p className="text-xs text-gray-500">
+            ※ 開始日時は現在から25時間以上先の日時を設定してください（オークション期間24時間を確保）
+          </p>
 
-          {/* 開始価格 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <DollarSign className="inline h-4 w-4 mr-1" />
-              開始価格（円） <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              name="starting_price"
-              value={formData.starting_price}
-              onChange={handleChange}
-              min={100}
-              step={100}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              required
-            />
-          </div>
+          {/* 価格設定を横並びに */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 開始価格 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <DollarSign className="inline h-4 w-4 mr-1" />
+                開始価格（円） <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                name="starting_price"
+                value={formData.starting_price}
+                onChange={handleChange}
+                min={100}
+                step={100}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
+                required
+              />
+            </div>
 
-          {/* 最小入札単位 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <TrendingUp className="inline h-4 w-4 mr-1" />
-              最小入札単位（円） <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              name="minimum_bid_increment"
-              value={formData.minimum_bid_increment}
-              onChange={handleChange}
-              min={10}
-              step={10}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              required
-            />
+            {/* 最小入札単位 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <TrendingUp className="inline h-4 w-4 mr-1" />
+                最小入札単位（円） <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                name="minimum_bid_increment"
+                value={formData.minimum_bid_increment}
+                onChange={handleChange}
+                min={10}
+                step={10}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
+                required
+              />
+            </div>
           </div>
 
           {/* サムネイル画像 */}
@@ -268,7 +275,7 @@ export default function CreateCallSlotForm({
                 <img
                   src={imagePreview}
                   alt="プレビュー"
-                  className="w-full h-48 object-cover rounded-lg"
+                  className="w-full h-32 object-cover rounded-lg"
                 />
                 <button
                   type="button"
@@ -276,16 +283,16 @@ export default function CreateCallSlotForm({
                     setImageFile(null);
                     setImagePreview('');
                   }}
-                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3 w-3" />
                 </button>
               </div>
             ) : (
-              <label className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-pink-500 transition-colors">
-                <Upload className="h-12 w-12 text-gray-400 mb-2" />
-                <span className="text-sm text-gray-600">クリックして画像を選択</span>
-                <span className="text-xs text-gray-500 mt-1">JPEG, PNG, WebP, GIF (最大5MB)</span>
+              <label className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-pink-500 transition-colors">
+                <Upload className="h-8 w-8 text-gray-400 mb-1" />
+                <span className="text-xs text-gray-600">クリックして画像を選択</span>
+                <span className="text-xs text-gray-500">JPEG, PNG, WebP, GIF (最大5MB)</span>
                 <input
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
@@ -298,17 +305,17 @@ export default function CreateCallSlotForm({
 
           {/* エラーメッセージ */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-xs text-red-600">{error}</p>
             </div>
           )}
 
           {/* ボタン */}
-          <div className="flex space-x-3">
+          <div className="flex space-x-3 pt-2">
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
+              className="flex-1 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200 text-sm"
               disabled={loading}
             >
               キャンセル
@@ -316,7 +323,7 @@ export default function CreateCallSlotForm({
             <button
               type="submit"
               disabled={loading || uploadingImage}
-              className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg font-medium hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg font-medium hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               {uploadingImage ? '画像アップロード中...' : loading ? '作成中...' : 'Talk枠を作成'}
             </button>
