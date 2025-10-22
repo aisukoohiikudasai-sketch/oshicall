@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Heart, User, Crown, Calendar, Video, LogOut, Sparkles, LayoutDashboard } from 'lucide-react';
+import { Heart, User, Crown, Calendar, Video, LogOut, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';
 
@@ -94,18 +94,6 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
                         </p>
                       </div>
                       
-                      {userType === 'influencer' && (
-                        <button
-                          onClick={() => {
-                            onNavigate?.('influencer-dashboard');
-                            setUserMenuOpen(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                        >
-                          <LayoutDashboard className="h-4 w-4" />
-                          <span>ダッシュボード</span>
-                        </button>
-                      )}
                       
                       {userType === 'fan' && supabaseUser?.is_influencer && (
                         <button
@@ -114,7 +102,7 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
                               setSwitching(true);
                               await switchToInfluencerMode();
                               setUserMenuOpen(false);
-                              onNavigate?.('influencer-dashboard');
+                              onNavigate?.('mypage');
                             } catch (error: any) {
                               alert(error.message || 'インフルエンサーへの切り替えに失敗しました');
                             } finally {
