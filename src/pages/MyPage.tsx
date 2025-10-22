@@ -594,10 +594,10 @@ export default function MyPage() {
 
           {/* Talk枠タブ */}
           <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
-            <div className="flex border border-white/20 rounded-lg mx-4 my-2 overflow-hidden">
+            <div className="flex border-2 border-white/40 rounded-lg mx-4 my-2 overflow-hidden shadow-sm">
               <button
                 onClick={() => setTalkSlotsTab('scheduled')}
-                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors border-r border-white/20 ${
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors border-r-2 border-white/40 ${
                   talkSlotsTab === 'scheduled'
                     ? 'bg-white/80 text-purple-700 shadow-inner'
                     : 'text-gray-600 hover:text-purple-600 hover:bg-white/40'
@@ -643,7 +643,7 @@ export default function MyPage() {
                     return (
                       <div
                         key={slot.id}
-                        className="border-b border-white/20 p-4 hover:bg-white/10 transition-colors"
+                        className="border-b-2 border-white/40 p-4 hover:bg-white/10 transition-colors"
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex-1 min-w-0">
@@ -726,21 +726,21 @@ export default function MyPage() {
 
           {/* 統計情報 - フラット版 */}
           <div className="grid grid-cols-4">
-            <div className="p-3 text-center border-r border-white/20">
+            <div className="p-3 text-center border-r-2 border-white/40">
               <div className="text-xs text-gray-600">総収益</div>
               <div className="text-sm font-bold text-green-600">
                 ¥{supabaseUser.total_earnings.toLocaleString()}
               </div>
             </div>
 
-            <div className="p-3 text-center border-r border-white/20">
+            <div className="p-3 text-center border-r-2 border-white/40">
               <div className="text-xs text-gray-600">通話数</div>
               <div className="text-sm font-bold text-blue-600">
                 {supabaseUser.total_calls_completed}
               </div>
             </div>
 
-            <div className="p-3 text-center border-r border-white/20">
+            <div className="p-3 text-center border-r-2 border-white/40">
               <div className="text-xs text-gray-600">評価</div>
               <div className="text-sm font-bold text-purple-600">
                 {supabaseUser.average_rating?.toFixed(1) || '-'}
@@ -759,14 +759,14 @@ export default function MyPage() {
 
       {/* Tabs - フラット版 */}
       <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-white/20">
-        <div className="grid grid-cols-6 gap-0 border border-white/20 rounded-lg mx-4 my-2 overflow-hidden">
+        <div className="grid grid-cols-6 gap-0 border-2 border-white/40 rounded-lg mx-4 my-2 overflow-hidden shadow-sm">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               aria-label={tab.label}
               title={tab.label}
-              className={`flex items-center justify-center py-4 px-2 transition-colors border-r border-white/20 last:border-r-0 ${
+              className={`flex items-center justify-center py-4 px-2 transition-colors border-r-2 border-white/40 last:border-r-0 ${
                 activeTab === tab.id
                   ? 'bg-white/80 text-pink-600 shadow-inner'
                   : 'text-gray-600 hover:text-pink-600 hover:bg-white/40'
