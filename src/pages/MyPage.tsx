@@ -55,6 +55,7 @@ export default function MyPage() {
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [dashboardError, setDashboardError] = useState('');
+  const [talkSlotsTab, setTalkSlotsTab] = useState<'scheduled' | 'completed'>('scheduled');
   
   // 編集用の状態
   const [editedDisplayName, setEditedDisplayName] = useState('');
@@ -251,6 +252,34 @@ export default function MyPage() {
     } catch (err) {
       console.error('公開状態変更エラー:', err);
       alert('公開状態の変更に失敗しました');
+    }
+  };
+
+  // Talk枠の分類
+  const scheduledSlots = callSlots.filter(slot => {
+    const now = new Date();
+    const slotDate = new Date(slot.scheduled_start_time);
+    return slotDate > now;
+  });
+
+  const completedSlots = callSlots.filter(slot => {
+    const now = new Date();
+    const slotDate = new Date(slot.scheduled_start_time);
+    return slotDate <= now;
+  });
+
+  // ステータス表示用の関数
+  const getSlotStatus = (slot: CallSlot) => {
+    const now = new Date();
+    const slotDate = new Date(slot.scheduled_start_time);
+    const endDate = new Date(slotDate.getTime() + slot.duration_minutes * 60000);
+    
+    if (slotDate > now) {
+      return { text: '予定', color: 'bg-blue-100 text-blue-700', icon: '📅' };
+    } else if (now >= slotDate && now <= endDate) {
+      return { text: '実施中', color: 'bg-green-100 text-green-700', icon: '🔴' };
+    } else {
+      return { text: '終了', color: 'bg-gray-100 text-gray-700', icon: '✅' };
     }
   };
 
@@ -563,100 +592,136 @@ export default function MyPage() {
             </div>
           )}
 
-          {/* Talk枠一覧 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 mb-4">
-            {isLoadingSlots ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="animate-pulse bg-gray-100 h-16 rounded-lg"></div>
-                ))}
-              </div>
-            ) : callSlots.length === 0 ? (
-              <div className="text-center py-6">
-                <Calendar className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                <p className="text-gray-600 text-sm">まだTalk枠がありません</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  「新規作成」ボタンから作成できます
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {callSlots.map((slot) => (
-                  <div
-                    key={slot.id}
-                    className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h5 className="text-sm font-bold text-gray-900 truncate">{slot.title}</h5>
-                          {slot.is_published ? (
-                            <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded-full flex-shrink-0">
-                              公開中
-                            </span>
-                          ) : (
-                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full flex-shrink-0">
-                              非公開
-                            </span>
-                          )}
-                        </div>
+          {/* Talk枠タブ */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-4">
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setTalkSlotsTab('scheduled')}
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                  talkSlotsTab === 'scheduled'
+                    ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-500'
+                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-25'
+                }`}
+              >
+                予定 ({scheduledSlots.length})
+              </button>
+              <button
+                onClick={() => setTalkSlotsTab('completed')}
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                  talkSlotsTab === 'completed'
+                    ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-500'
+                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-25'
+                }`}
+              >
+                履歴 ({completedSlots.length})
+              </button>
+            </div>
 
-                        {slot.description && (
-                          <p className="text-xs text-gray-600 mb-2 line-clamp-2">{slot.description}</p>
-                        )}
+            <div className="p-3">
+              {isLoadingSlots ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse bg-gray-100 h-16 rounded-lg"></div>
+                  ))}
+                </div>
+              ) : (talkSlotsTab === 'scheduled' ? scheduledSlots : completedSlots).length === 0 ? (
+                <div className="text-center py-6">
+                  <Calendar className="h-8 w-8 mx-auto text-gray-300 mb-2" />
+                  <p className="text-gray-600 text-sm">
+                    {talkSlotsTab === 'scheduled' ? '予定のTalk枠がありません' : '完了したTalk枠がありません'}
+                  </p>
+                  {talkSlotsTab === 'scheduled' && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      「新規作成」ボタンから作成できます
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {(talkSlotsTab === 'scheduled' ? scheduledSlots : completedSlots).map((slot) => {
+                    const status = getSlotStatus(slot);
+                    return (
+                      <div
+                        key={slot.id}
+                        className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <h5 className="text-sm font-bold text-gray-900 truncate">{slot.title}</h5>
+                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${status.color}`}>
+                                {status.icon} {status.text}
+                              </span>
+                              {slot.is_published && (
+                                <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded-full flex-shrink-0">
+                                  公開中
+                                </span>
+                              )}
+                            </div>
 
-                        <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                          <div className="flex items-center space-x-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>
-                              {format(new Date(slot.scheduled_start_time), 'MM/dd HH:mm', {
-                                locale: ja,
-                              })}
-                            </span>
+                            {/* 予定日時を目立たせる */}
+                            <div className="bg-blue-50 rounded-lg p-2 mb-2">
+                              <div className="flex items-center space-x-2">
+                                <Calendar className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm font-bold text-blue-800">
+                                  {format(new Date(slot.scheduled_start_time), 'yyyy年MM月dd日 HH:mm', {
+                                    locale: ja,
+                                  })}
+                                </span>
+                                <span className="text-xs text-blue-600">
+                                  ({slot.duration_minutes}分間)
+                                </span>
+                              </div>
+                            </div>
+
+                            {slot.description && (
+                              <p className="text-xs text-gray-600 mb-2 line-clamp-2">{slot.description}</p>
+                            )}
+
+                            <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                              <div className="flex items-center space-x-1">
+                                <DollarSign className="h-3 w-3" />
+                                <span>¥{slot.starting_price.toLocaleString()}</span>
+                              </div>
+
+                              <div className="text-gray-600">
+                                <span className="text-xs">最小: ¥{slot.minimum_bid_increment}</span>
+                              </div>
+                            </div>
                           </div>
 
-                          <div className="flex items-center space-x-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{slot.duration_minutes}分</span>
-                          </div>
-
-                          <div className="flex items-center space-x-1">
-                            <DollarSign className="h-3 w-3" />
-                            <span>¥{slot.starting_price.toLocaleString()}</span>
-                          </div>
-
-                          <div className="text-gray-600">
-                            <span className="text-xs">最小: ¥{slot.minimum_bid_increment}</span>
+                          <div className="flex space-x-1 ml-2 flex-shrink-0">
+                            {talkSlotsTab === 'scheduled' && (
+                              <button
+                                onClick={() => handleTogglePublish(slot.id, slot.is_published)}
+                                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                title={slot.is_published ? '非公開にする' : '公開する'}
+                              >
+                                {slot.is_published ? (
+                                  <EyeOff className="h-3 w-3" />
+                                ) : (
+                                  <Eye className="h-3 w-3" />
+                                )}
+                              </button>
+                            )}
+                            
+                            {talkSlotsTab === 'scheduled' && (
+                              <button
+                                onClick={() => handleDelete(slot.id)}
+                                className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                title="削除"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
-
-                      <div className="flex space-x-1 ml-2 flex-shrink-0">
-                        <button
-                          onClick={() => handleTogglePublish(slot.id, slot.is_published)}
-                          className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                          title={slot.is_published ? '非公開にする' : '公開する'}
-                        >
-                          {slot.is_published ? (
-                            <EyeOff className="h-3 w-3" />
-                          ) : (
-                            <Eye className="h-3 w-3" />
-                          )}
-                        </button>
-
-                        <button
-                          onClick={() => handleDelete(slot.id)}
-                          className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="削除"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 統計情報 - コンパクト版 */}
