@@ -120,4 +120,19 @@ export const createConnectAccount = async (
   return response.json();
 };
 
+// インフルエンサーの Stripe アカウント状態を確認
+export const getInfluencerStripeStatus = async (authUserId: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/stripe/influencer-status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ authUserId }),
+  });
+  
+  if (!response.ok) {
+    throw new Error('インフルエンサー状態の取得に失敗しました');
+  }
+  
+  return response.json();
+};
+
 
