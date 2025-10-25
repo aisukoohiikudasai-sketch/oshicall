@@ -24,13 +24,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  mockUserProfile, 
   mockBadges, 
   mockActivityLogs, 
   mockCollections
 } from '../data/mockData';
 import { UserProfile, Badge as BadgeType } from '../types';
 import { updateUserProfile, updateProfileImage } from '../api/user';
+import { getUserStats, getFanPurchasedCalls, getFanBidHistory, getInfluencerEarnings } from '../api/userStats';
 import { validateImageFile, getImagePreviewUrl } from '../lib/storage';
 import { createConnectAccount, getInfluencerStripeStatus } from '../api/stripe';
 import { supabase } from '../lib/supabase';
@@ -39,12 +39,23 @@ import { getInfluencerCallSlots, deleteCallSlot, toggleCallSlotPublish } from '.
 import type { CallSlot } from '../lib/supabase';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import { calculateOshiRank, calculatePoints } from '../data/mockData';
 
 export default function MyPage() {
   const { user, supabaseUser, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'rank' | 'badges' | 'activity' | 'collection' | 'privacy'>('profile');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [profile, setProfile] = useState<UserProfile>(mockUserProfile);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [userStats, setUserStats] = useState({
+    total_spent: 0,
+    total_calls_purchased: 0,
+    total_bids: 0,
+    total_earnings: 0,
+    total_calls_completed: 0,
+    average_rating: 0,
+    oshi_tags: [] as string[],
+    fan_tags: [] as string[],
+  });
   const [newTag, setNewTag] = useState('');
   const [selectedBadge, setSelectedBadge] = useState<BadgeType | null>(null);
   const [activityFilter, setActivityFilter] = useState<'all' | 'call' | 'bid' | 'event'>('all');
@@ -74,6 +85,39 @@ export default function MyPage() {
 
   // デモモード: ログイン無しでもダミーデータでマイページを表示
   const isDemoMode = !user;
+  
+  // デモモード用のダミーデータ
+  const demoProfile: UserProfile = {
+    id: 'demo',
+    username: 'demo_user',
+    email: 'demo@example.com',
+    avatar_url: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh6XGT5Hz9MpAiyfTHlBczavuUjyTBza9zWdzYmoifglj0p1lsylcTEScnpSa-Youh7YXw-ssgO-mMQmw-DBz4NeesioQPTe8beOH_QS-A4JMnfZAGP-01gxPQrS-pPEnrnJxbdVnWguhCC/s400/pose_pien_uruuru_woman.png',
+    nickname: 'デモユーザー',
+    bio: 'これはデモ用のプロフィールです。実際のデータは表示されません。',
+    oshi_tags: ['#デモ', '#テスト'],
+    fan_tags: ['#デモファン'],
+    total_spent: 0,
+    successful_bids: 0,
+    created_at: new Date().toISOString(),
+    oshi_rank: {
+      level: 'Newbie',
+      points: 0,
+      title: '初心者ファン',
+      description: '初心者ファン',
+      color: 'green'
+    },
+    total_points: 0,
+    call_count: 0,
+    call_minutes: 0,
+    bid_count: 0,
+    event_count: 0,
+    badges: [],
+    privacy_settings: {
+      profile_visibility: 'public',
+      call_history_visibility: 'public',
+      influencer_visibility: {}
+    }
+  };
 
   // 実際のユーザーデータをロード
   useEffect(() => {
@@ -82,6 +126,9 @@ export default function MyPage() {
       setEditedBio(supabaseUser.bio || '');
       setImagePreview(supabaseUser.profile_image_url || '');
       
+      // ユーザー統計を取得
+      loadUserStats();
+      
       // インフルエンサーの場合、Stripe Connect状態を確認
       if (supabaseUser.is_influencer) {
         checkStripeAccountStatus();
@@ -89,6 +136,79 @@ export default function MyPage() {
       }
     }
   }, [supabaseUser]);
+
+  // ユーザー統計を取得
+  const loadUserStats = async () => {
+    if (!supabaseUser) return;
+    
+    try {
+      const stats = await getUserStats(supabaseUser.id);
+      setUserStats(stats);
+      
+      // プロフィール情報を構築
+      const userProfile: UserProfile = {
+        id: supabaseUser.id,
+        username: supabaseUser.username || '',
+        email: supabaseUser.email || '',
+        avatar_url: supabaseUser.profile_image_url || '',
+        nickname: supabaseUser.display_name || '',
+        bio: supabaseUser.bio || '',
+        oshi_tags: stats.oshi_tags,
+        fan_tags: stats.fan_tags,
+        total_spent: stats.total_spent,
+        successful_bids: stats.total_bids,
+        created_at: supabaseUser.created_at || '',
+        oshi_rank: calculateOshiRank(stats.total_spent, stats.total_calls_purchased, stats.total_bids),
+        total_points: calculatePoints(stats.total_calls_purchased, 0, stats.total_bids, 0),
+        call_count: stats.total_calls_purchased,
+        call_minutes: stats.total_calls_purchased * 30, // 仮の計算
+        bid_count: stats.total_bids,
+        event_count: 0,
+        badges: [],
+        privacy_settings: {
+          profile_visibility: 'public',
+          call_history_visibility: 'public',
+          influencer_visibility: {}
+        }
+      };
+      
+      setProfile(userProfile);
+    } catch (error) {
+      console.error('ユーザー統計取得エラー:', error);
+      // エラーの場合は空のプロフィールを設定
+      setProfile({
+        id: supabaseUser.id,
+        username: supabaseUser.username || '',
+        email: supabaseUser.email || '',
+        avatar_url: supabaseUser.profile_image_url || '',
+        nickname: supabaseUser.display_name || '',
+        bio: supabaseUser.bio || '',
+        oshi_tags: [],
+        fan_tags: [],
+        total_spent: 0,
+        successful_bids: 0,
+        created_at: supabaseUser.created_at || '',
+        oshi_rank: {
+          level: 'Newbie',
+          points: 0,
+          title: '初心者ファン',
+          description: '初心者ファン',
+          color: 'green'
+        },
+        total_points: 0,
+        call_count: 0,
+        call_minutes: 0,
+        bid_count: 0,
+        event_count: 0,
+        badges: [],
+        privacy_settings: {
+          profile_visibility: 'public',
+          call_history_visibility: 'public',
+          influencer_visibility: {}
+        }
+      });
+    }
+  };
 
   // Stripe Connect アカウント状態を確認
   const checkStripeAccountStatus = async () => {
@@ -384,7 +504,7 @@ export default function MyPage() {
   };
 
   const addTag = (type: 'oshi' | 'fan') => {
-    if (newTag.trim() && !profile[`${type}_tags`].includes(newTag.trim())) {
+    if (newTag.trim() && profile && !profile[`${type}_tags`].includes(newTag.trim())) {
       setProfile({
         ...profile,
         [`${type}_tags`]: [...profile[`${type}_tags`], newTag.trim()]
@@ -394,10 +514,12 @@ export default function MyPage() {
   };
 
   const removeTag = (type: 'oshi' | 'fan', index: number) => {
-    setProfile({
-      ...profile,
-      [`${type}_tags`]: profile[`${type}_tags`].filter((_, i) => i !== index)
-    });
+    if (profile) {
+      setProfile({
+        ...profile,
+        [`${type}_tags`]: profile[`${type}_tags`].filter((_, i) => i !== index)
+      });
+    }
   };
 
   const filteredActivities = mockActivityLogs
@@ -435,8 +557,8 @@ export default function MyPage() {
           <div className="relative group flex-shrink-0">
             <div className="h-20 w-20 rounded-full overflow-hidden border-2 border-gray-200 shadow-md">
               <img
-                src={imagePreview || profile.avatar_url}
-                alt={supabaseUser?.display_name || profile.nickname || profile.username}
+                src={imagePreview || (isDemoMode ? demoProfile.avatar_url : profile?.avatar_url) || '/images/default-avatar.png'}
+                alt={isDemoMode ? demoProfile.nickname : (supabaseUser?.display_name || profile?.nickname || profile?.username) || 'ユーザー'}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -471,7 +593,7 @@ export default function MyPage() {
                 />
               ) : (
                 <h1 className="text-xl font-bold text-gray-800 truncate">
-                  {supabaseUser?.display_name || profile.nickname || profile.username}
+                  {isDemoMode ? demoProfile.nickname : (supabaseUser?.display_name || profile?.nickname || profile?.username) || 'ユーザー'}
                 </h1>
               )}
               {!isDemoMode && (
@@ -540,15 +662,15 @@ export default function MyPage() {
                 ) : (
                   <>
                     <div className="text-center">
-                      <div className="text-sm font-bold text-pink-600">¥{formatPrice(supabaseUser?.total_spent || profile.total_spent)}</div>
+                      <div className="text-sm font-bold text-pink-600">¥{formatPrice(isDemoMode ? demoProfile.total_spent : (supabaseUser?.total_spent || profile?.total_spent || 0))}</div>
                       <div className="text-xs text-gray-600">支払い</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm font-bold text-green-600">{supabaseUser?.total_calls_purchased || profile.call_count}</div>
+                      <div className="text-sm font-bold text-green-600">{isDemoMode ? demoProfile.call_count : (supabaseUser?.total_calls_purchased || profile?.call_count || 0)}</div>
                       <div className="text-xs text-gray-600">通話</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm font-bold text-purple-600">{profile.total_points}</div>
+                      <div className="text-sm font-bold text-purple-600">{isDemoMode ? demoProfile.total_points : (profile?.total_points || 0)}</div>
                       <div className="text-xs text-gray-600">ポイント</div>
                     </div>
                   </>
@@ -819,7 +941,7 @@ export default function MyPage() {
                   <div>
                     <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">推しタグ</label>
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {profile.oshi_tags.map((tag, index) => (
+                      {(isDemoMode ? demoProfile.oshi_tags : (profile?.oshi_tags || [])).map((tag, index) => (
                         <span
                           key={index}
                           className="bg-pink-100 text-pink-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium flex items-center space-x-2"
@@ -855,7 +977,7 @@ export default function MyPage() {
                   <div>
                     <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">ファンタグ</label>
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {profile.fan_tags.map((tag, index) => (
+                      {(isDemoMode ? demoProfile.fan_tags : (profile?.fan_tags || [])).map((tag, index) => (
                         <span
                           key={index}
                           className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium flex items-center space-x-2"
@@ -893,14 +1015,14 @@ export default function MyPage() {
                   <div>
                     <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3">自己紹介</h3>
                     <p className="text-sm md:text-base text-gray-600 bg-gray-50 rounded-lg p-3 md:p-4">
-                      {supabaseUser?.bio || profile.bio || '自己紹介が設定されていません'}
+                      {isDemoMode ? demoProfile.bio : (supabaseUser?.bio || profile?.bio || '自己紹介が設定されていません')}
                     </p>
                   </div>
                   
                   <div>
                     <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3">推しタグ</h3>
                     <div className="flex flex-wrap gap-2">
-                      {profile.oshi_tags.map((tag, index) => (
+                      {(isDemoMode ? demoProfile.oshi_tags : (profile?.oshi_tags || [])).map((tag, index) => (
                         <span
                           key={index}
                           className="bg-pink-100 text-pink-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium"
@@ -914,7 +1036,7 @@ export default function MyPage() {
                   <div>
                     <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3">ファンタグ</h3>
                     <div className="flex flex-wrap gap-2">
-                      {profile.fan_tags.map((tag, index) => (
+                      {(isDemoMode ? demoProfile.fan_tags : (profile?.fan_tags || [])).map((tag, index) => (
                         <span
                           key={index}
                           className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium"
@@ -953,19 +1075,19 @@ export default function MyPage() {
                   <div className="space-y-2 md:space-y-3">
                     <div className="flex justify-between items-center gap-2">
                       <span className="text-sm md:text-base text-gray-600">通話回数</span>
-                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile.call_count}回 × 3pt = {profile.call_count * 3}pt</span>
+                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile?.call_count || 0}回 × 3pt = {(profile?.call_count || 0) * 3}pt</span>
                     </div>
                     <div className="flex justify-between items-center gap-2">
                       <span className="text-sm md:text-base text-gray-600">通話分数</span>
-                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile.call_minutes}分 × 0.5pt = {profile.call_minutes * 0.5}pt</span>
+                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile?.call_minutes || 0}分 × 0.5pt = {(profile?.call_minutes || 0) * 0.5}pt</span>
                     </div>
                     <div className="flex justify-between items-center gap-2">
                       <span className="text-sm md:text-base text-gray-600">入札回数</span>
-                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile.bid_count}回 × 1pt = {profile.bid_count}pt</span>
+                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile?.bid_count || 0}回 × 1pt = {(profile?.bid_count || 0)}pt</span>
                     </div>
                     <div className="flex justify-between items-center gap-2">
                       <span className="text-sm md:text-base text-gray-600">イベント参加</span>
-                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile.event_count}回 × 2pt = {profile.event_count * 2}pt</span>
+                      <span className="text-sm md:text-base font-semibold whitespace-nowrap">{profile?.event_count || 0}回 × 2pt = {(profile?.event_count || 0) * 2}pt</span>
                     </div>
                   </div>
                 </div>
