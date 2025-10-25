@@ -31,6 +31,9 @@ import {
 import { UserProfile, Badge as BadgeType } from '../types';
 import { updateUserProfile, updateProfileImage } from '../api/user';
 import { getUserStats, getFanPurchasedCalls, getFanBidHistory, getInfluencerEarnings } from '../api/userStats';
+import { getUserBadges, getAvailableBadges } from '../api/userBadges';
+import { getUserActivity } from '../api/userActivity';
+import { getUserCollection, getInfluencerCollection } from '../api/userCollection';
 import { validateImageFile, getImagePreviewUrl } from '../lib/storage';
 import { createConnectAccount, getInfluencerStripeStatus } from '../api/stripe';
 import { supabase } from '../lib/supabase';
@@ -60,6 +63,15 @@ export default function MyPage() {
   const [selectedBadge, setSelectedBadge] = useState<BadgeType | null>(null);
   const [activityFilter, setActivityFilter] = useState<'all' | 'call' | 'bid' | 'event'>('all');
   const [activitySort, setActivitySort] = useState<'date' | 'type'>('date');
+  
+  // DBから取得するデータの状態
+  const [userBadges, setUserBadges] = useState<any[]>([]);
+  const [userActivity, setUserActivity] = useState<any[]>([]);
+  const [userCollection, setUserCollection] = useState<any[]>([]);
+  const [availableBadges, setAvailableBadges] = useState<any[]>([]);
+  const [isLoadingBadges, setIsLoadingBadges] = useState(false);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
+  const [isLoadingCollection, setIsLoadingCollection] = useState(false);
   
   // インフルエンサーダッシュボード用の状態
   const [callSlots, setCallSlots] = useState<CallSlot[]>([]);
@@ -128,6 +140,9 @@ export default function MyPage() {
       
       // ユーザー統計を取得
       loadUserStats();
+      
+      // バッジ、活動ログ、コレクションを取得
+      loadUserData();
       
       // インフルエンサーの場合、Stripe Connect状態を確認
       if (supabaseUser.is_influencer) {
@@ -207,6 +222,43 @@ export default function MyPage() {
           influencer_visibility: {}
         }
       });
+    }
+  };
+
+  // ユーザーデータ（バッジ、活動ログ、コレクション）を取得
+  const loadUserData = async () => {
+    if (!supabaseUser) return;
+    
+    try {
+      // バッジを取得
+      setIsLoadingBadges(true);
+      const badges = await getUserBadges(supabaseUser.id);
+      setUserBadges(badges);
+      
+      // 利用可能なバッジを取得
+      const available = await getAvailableBadges();
+      setAvailableBadges(available);
+      
+      // 活動ログを取得
+      setIsLoadingActivity(true);
+      const activity = await getUserActivity(supabaseUser.id);
+      setUserActivity(activity);
+      
+      // コレクションを取得
+      setIsLoadingCollection(true);
+      if (supabaseUser.is_influencer) {
+        const collection = await getInfluencerCollection(supabaseUser.id);
+        setUserCollection(collection);
+      } else {
+        const collection = await getUserCollection(supabaseUser.id);
+        setUserCollection(collection);
+      }
+    } catch (error) {
+      console.error('ユーザーデータ取得エラー:', error);
+    } finally {
+      setIsLoadingBadges(false);
+      setIsLoadingActivity(false);
+      setIsLoadingCollection(false);
     }
   };
 
@@ -522,7 +574,7 @@ export default function MyPage() {
     }
   };
 
-  const filteredActivities = mockActivityLogs
+  const filteredActivities = userActivity
     .filter(activity => activityFilter === 'all' || activity.type === activityFilter)
     .sort((a, b) => activitySort === 'date' 
       ? new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -535,7 +587,8 @@ export default function MyPage() {
     { id: 'badges', label: '実績バッジ', icon: Award },
     { id: 'activity', label: '活動ログ', icon: Calendar },
     { id: 'collection', label: 'コレクション', icon: Heart },
-    { id: 'privacy', label: 'プライバシー', icon: Shield },
+    // プライバシー設定はインフルエンサーのみ
+    ...(supabaseUser?.is_influencer ? [{ id: 'privacy', label: 'プライバシー', icon: Shield }] : []),
   ];
 
   return (
@@ -1123,10 +1176,22 @@ export default function MyPage() {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">実績バッジ</h2>
               
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockBadges.map((badge) => (
+                {isLoadingBadges ? (
+                  <div className="col-span-full text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto"></div>
+                    <p className="text-gray-600 mt-2">バッジを読み込み中...</p>
+                  </div>
+                ) : userBadges.length === 0 ? (
+                  <div className="col-span-full text-center py-8">
+                    <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">まだバッジを獲得していません</p>
+                    <p className="text-sm text-gray-500 mt-2">通話や入札をしてバッジを獲得しましょう！</p>
+                  </div>
+                ) : (
+                  userBadges.map((badge) => (
                   <div
                     key={badge.id}
-                    className={`border-2 rounded-xl p-6 text-center cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg ${getBadgeRarityColor(badge.rarity)}`}
+                    className={`border-2 rounded-xl p-6 text-center cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg ${getBadgeRarityColor(badge.category)}`}
                     onClick={() => setSelectedBadge(badge)}
                   >
                     <div className="text-4xl mb-3">{badge.icon}</div>
@@ -1136,15 +1201,16 @@ export default function MyPage() {
                       獲得日: {formatDate(badge.earned_at)}
                     </div>
                     <div className={`mt-2 px-2 py-1 rounded-full text-xs font-medium ${
-                      badge.rarity === 'legendary' ? 'bg-yellow-200 text-yellow-800' :
-                      badge.rarity === 'epic' ? 'bg-purple-200 text-purple-800' :
-                      badge.rarity === 'rare' ? 'bg-blue-200 text-blue-800' :
+                      badge.category === 'legendary' ? 'bg-yellow-200 text-yellow-800' :
+                      badge.category === 'epic' ? 'bg-purple-200 text-purple-800' :
+                      badge.category === 'rare' ? 'bg-blue-200 text-blue-800' :
                       'bg-gray-200 text-gray-800'
                     }`}>
-                      {badge.rarity.toUpperCase()}
+                      {badge.category.toUpperCase()}
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -1179,7 +1245,19 @@ export default function MyPage() {
               </div>
               
               <div className="space-y-4">
-                {filteredActivities.map((activity) => (
+                {isLoadingActivity ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto"></div>
+                    <p className="text-gray-600 mt-2">活動ログを読み込み中...</p>
+                  </div>
+                ) : filteredActivities.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">まだ活動ログがありません</p>
+                    <p className="text-sm text-gray-500 mt-2">通話や入札をして活動ログを増やしましょう！</p>
+                  </div>
+                ) : (
+                  filteredActivities.map((activity) => (
                   <div
                     key={activity.id}
                     className="bg-white rounded-xl p-6 shadow-lg border-l-4 border-pink-400 hover:shadow-xl transition-shadow"
@@ -1192,12 +1270,12 @@ export default function MyPage() {
                           {activity.type === 'event' && <Users className="h-5 w-5 text-purple-500" />}
                           <h3 className="font-semibold text-gray-800">{activity.title}</h3>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            activity.result === 'success' ? 'bg-green-100 text-green-800' :
-                            activity.result === 'failed' ? 'bg-red-100 text-red-800' :
+                            activity.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            activity.status === 'failed' ? 'bg-red-100 text-red-800' :
                             'bg-yellow-100 text-yellow-800'
                           }`}>
-                            {activity.result === 'success' ? '成功' :
-                             activity.result === 'failed' ? '失敗' : '保留中'}
+                            {activity.status === 'completed' ? '完了' :
+                             activity.status === 'failed' ? '失敗' : '進行中'}
                           </span>
                         </div>
                         
@@ -1227,7 +1305,8 @@ export default function MyPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -1238,7 +1317,19 @@ export default function MyPage() {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">コレクション</h2>
               
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockCollections.map((item) => (
+                {isLoadingCollection ? (
+                  <div className="col-span-full text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto"></div>
+                    <p className="text-gray-600 mt-2">コレクションを読み込み中...</p>
+                  </div>
+                ) : userCollection.length === 0 ? (
+                  <div className="col-span-full text-center py-8">
+                    <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">まだコレクションがありません</p>
+                    <p className="text-sm text-gray-500 mt-2">通話を購入してコレクションを増やしましょう！</p>
+                  </div>
+                ) : (
+                  userCollection.map((item) => (
                   <div
                     key={item.id}
                     className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
@@ -1255,17 +1346,19 @@ export default function MyPage() {
                     </div>
                     
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-800 mb-2">{item.influencer_name}</h3>
-                      <p className="text-sm text-gray-600 mb-3">{formatDate(item.date)}</p>
+                      <h3 className="font-semibold text-gray-800 mb-2">{item.title}</h3>
+                      <p className="text-sm text-gray-600 mb-2">{item.influencer_name}</p>
+                      <p className="text-sm text-gray-600 mb-3">{formatDate(item.purchased_at)}</p>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">ID: {item.session_id}</span>
+                        <span className="text-xs text-gray-500">ステータス: {item.call_status}</span>
                         <button className="text-pink-500 hover:text-pink-700 text-sm font-medium">
                           詳細を見る
                         </button>
                       </div>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
