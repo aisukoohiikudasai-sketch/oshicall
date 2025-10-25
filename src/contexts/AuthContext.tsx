@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // 初回セッションチェック
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔍 初回セッションチェック:', session);
       setUser(session?.user ?? null);
       if (session?.user) {
         syncUser(session.user);
@@ -47,7 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 認証状態の変化を監視
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔄 認証状態変化:', { event, session });
       setUser(session?.user ?? null);
       if (session?.user) {
         syncUser(session.user);
@@ -64,13 +66,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const syncUser = async (authUser: AuthUser) => {
     try {
       setIsLoading(true);
+      console.log('🔄 ユーザー同期開始:', {
+        authUserId: authUser.id,
+        email: authUser.email,
+        metadata: authUser.user_metadata
+      });
+      
       // Supabaseでユーザー情報を取得
       let user = await getSupabaseUser(authUser.id);
+      console.log('🔍 既存ユーザー検索結果:', user);
       
       if (!user) {
         // 初回ログイン - デフォルトでファンとして登録
-        console.log('新規ユーザー - ファンとして登録します');
-        user = await registerUser(authUser);
+        console.log('🆕 新規ユーザー - ファンとして登録します');
+        try {
+          user = await registerUser(authUser);
+          console.log('✅ ユーザー登録成功:', user);
+        } catch (registerError) {
+          console.error('❌ ユーザー登録エラー:', registerError);
+          throw registerError;
+        }
+      } else {
+        console.log('✅ 既存ユーザー見つかりました:', user);
       }
       
       setSupabaseUser(user);
@@ -78,13 +95,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // ユーザータイプを判定（インフルエンサー優先）
       if (user.is_influencer) {
         setUserType('influencer');
+        console.log('👑 インフルエンサーとして設定');
       } else if (user.is_fan) {
         setUserType('fan');
+        console.log('👤 ファンとして設定');
       } else {
         setUserType(null);
+        console.log('⚠️ ユーザータイプが未設定');
       }
     } catch (error) {
-      console.error('ユーザー同期エラー:', error);
+      console.error('❌ ユーザー同期エラー:', error);
+      // エラー時はユーザー情報をクリア
+      setSupabaseUser(null);
+      setUserType(null);
     } finally {
       setIsLoading(false);
     }
@@ -117,27 +140,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    // 環境に応じたリダイレクトURLを取得
-    const getRedirectUrl = () => {
-      // 本番環境の場合
-      if (window.location.hostname.includes('herokuapp.com')) {
-        return `${window.location.origin}/`;
+    try {
+      // 環境に応じたリダイレクトURLを取得
+      const getRedirectUrl = () => {
+        // 本番環境の場合
+        if (window.location.hostname.includes('herokuapp.com')) {
+          return `${window.location.origin}/`;
+        }
+        // ローカル開発環境
+        return window.location.origin;
+      };
+      
+      const redirectUrl = getRedirectUrl();
+      console.log('🔐 Google認証開始:', {
+        redirectUrl,
+        hostname: window.location.hostname,
+        origin: window.location.origin
+      });
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      
+      if (error) {
+        console.error('❌ Google認証エラー:', error);
+        throw error;
       }
-      // ローカル開発環境
-      return window.location.origin;
-    };
-    
-    const redirectUrl = getRedirectUrl();
-    console.log('🔐 Google認証リダイレクトURL:', redirectUrl);
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl,
-      },
-    });
-    if (error) {
-      console.error('🔐 Google認証エラー:', error);
+      
+      console.log('✅ Google認証リダイレクト開始:', data);
+    } catch (error) {
+      console.error('❌ Google認証処理エラー:', error);
       throw error;
     }
   };

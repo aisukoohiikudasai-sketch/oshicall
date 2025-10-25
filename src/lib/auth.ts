@@ -39,23 +39,46 @@ export const updateToInfluencer = async (
 export const registerUser = async (
   authUser: AuthUser
 ): Promise<User> => {
+  console.log('🆕 ユーザー登録開始:', {
+    authUserId: authUser.id,
+    email: authUser.email,
+    metadata: authUser.user_metadata
+  });
+  
   const displayName = authUser.user_metadata?.display_name || 
+                     authUser.user_metadata?.full_name ||
                      authUser.email?.split('@')[0] || 
                      'Unnamed User';
+  
+  const profileImageUrl = authUser.user_metadata?.avatar_url || 
+                        authUser.user_metadata?.picture || 
+                        null;
+  
+  console.log('📝 登録データ:', {
+    displayName,
+    profileImageUrl,
+    email: authUser.email
+  });
   
   const { data, error } = await supabase
     .from('users')
     .insert({
       auth_user_id: authUser.id,
       display_name: displayName,
-      profile_image_url: authUser.user_metadata?.avatar_url || null,
+      email: authUser.email,
+      profile_image_url: profileImageUrl,
       is_fan: true,
       is_influencer: false,
     })
     .select()
     .single();
   
-  if (error) throw error;
+  if (error) {
+    console.error('❌ ユーザー登録エラー:', error);
+    throw error;
+  }
+  
+  console.log('✅ ユーザー登録成功:', data);
   return data;
 };
 
