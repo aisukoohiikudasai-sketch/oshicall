@@ -92,16 +92,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       setSupabaseUser(user);
       
+      // ユーザータイプを詳細にログ出力してデバッグ
+      console.log('🔍 ユーザータイプ判定:', {
+        is_influencer: user.is_influencer,
+        is_fan: user.is_fan,
+        user_id: user.id,
+        auth_user_id: user.auth_user_id,
+        display_name: user.display_name
+      });
+      
       // ユーザータイプを判定（インフルエンサー優先）
       if (user.is_influencer) {
         setUserType('influencer');
-        console.log('👑 インフルエンサーとして設定');
+        console.log('👑 インフルエンサーとして設定 - is_influencer:', user.is_influencer);
       } else if (user.is_fan) {
         setUserType('fan');
-        console.log('👤 ファンとして設定');
+        console.log('👤 ファンとして設定 - is_fan:', user.is_fan);
       } else {
         setUserType(null);
-        console.log('⚠️ ユーザータイプが未設定');
+        console.log('⚠️ ユーザータイプが未設定 - is_influencer:', user.is_influencer, 'is_fan:', user.is_fan);
       }
     } catch (error) {
       console.error('❌ ユーザー同期エラー:', error);
@@ -165,7 +174,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
+            hd: '', // ドメイン制限（必要に応じて）
           },
+          scopes: 'openid email profile',
         },
       });
       

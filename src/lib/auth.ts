@@ -60,16 +60,19 @@ export const registerUser = async (
     email: authUser.email
   });
   
+  const insertData = {
+    auth_user_id: authUser.id,
+    display_name: displayName,
+    profile_image_url: profileImageUrl,
+    is_fan: true,
+    is_influencer: false,
+  };
+  
+  console.log('📝 データベースに挿入するデータ:', insertData);
+  
   const { data, error } = await supabase
     .from('users')
-    .insert({
-      auth_user_id: authUser.id,
-      display_name: displayName,
-      email: authUser.email,
-      profile_image_url: profileImageUrl,
-      is_fan: true,
-      is_influencer: false,
-    })
+    .insert(insertData)
     .select()
     .single();
   
@@ -78,7 +81,13 @@ export const registerUser = async (
     throw error;
   }
   
-  console.log('✅ ユーザー登録成功:', data);
+  console.log('✅ ユーザー登録成功:', {
+    id: data.id,
+    is_fan: data.is_fan,
+    is_influencer: data.is_influencer,
+    display_name: data.display_name,
+    auth_user_id: data.auth_user_id
+  });
   return data;
 };
 
@@ -86,13 +95,28 @@ export const registerUser = async (
 export const getSupabaseUser = async (
   authUserId: string
 ): Promise<User | null> => {
+  console.log('🔍 既存ユーザー検索:', { authUserId });
+  
   const { data, error } = await supabase
     .from('users')
     .select('*')
     .eq('auth_user_id', authUserId)
     .single();
   
-  if (error) return null;
+  if (error) {
+    console.log('🔍 既存ユーザーが見つかりません:', error.message);
+    return null;
+  }
+  
+  console.log('🔍 既存ユーザー見つかりました:', {
+    id: data.id,
+    is_fan: data.is_fan,
+    is_influencer: data.is_influencer,
+    display_name: data.display_name,
+    auth_user_id: data.auth_user_id,
+    created_at: data.created_at
+  });
+  
   return data;
 };
 
