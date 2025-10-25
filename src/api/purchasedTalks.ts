@@ -29,10 +29,18 @@ export const getPurchasedTalks = async (userId: string) => {
       .eq('fan_user_id', userId)
       .order('purchased_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
+    }
+
+    // データが空の場合は空の配列を返す（エラーではない）
+    if (!purchasedSlots || purchasedSlots.length === 0) {
+      return [];
+    }
 
     // TalkSession形式に変換
-    const talkSessions: TalkSession[] = (purchasedSlots || []).map((slot: any) => {
+    const talkSessions: TalkSession[] = purchasedSlots.map((slot: any) => {
       const callSlot = slot.call_slots;
       const influencer = callSlot?.users;
       

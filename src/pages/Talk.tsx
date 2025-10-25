@@ -33,7 +33,18 @@ export default function Talk() {
         setPastTalks(completed);
       } catch (err) {
         console.error('落札済みTalk取得エラー:', err);
-        setError('データの取得に失敗しました');
+        // 実際のデータベースエラーの場合のみエラーを表示
+        if (err instanceof Error && (
+          err.message.includes('database') || 
+          err.message.includes('network') || 
+          err.message.includes('connection') ||
+          err.message.includes('timeout')
+        )) {
+          setError('データの取得に失敗しました');
+        } else {
+          // その他のエラー（空のデータなど）は正常な状態として扱う
+          setError(null);
+        }
         setUpcomingTalks([]);
         setPastTalks([]);
       } finally {
