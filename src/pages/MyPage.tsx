@@ -393,6 +393,8 @@ export default function MyPage() {
       setIsLoadingSlots(true);
       setDashboardError('');
       const slots = await getInfluencerCallSlots(supabaseUser.id);
+      console.log('📊 取得したTalk枠データ:', slots);
+      console.log('📊 最初のスロットの詳細:', slots[0]);
       setCallSlots(slots);
     } catch (err) {
       console.error('Talk枠取得エラー:', err);
@@ -899,11 +901,22 @@ export default function MyPage() {
                                   </span>
                                 </div>
                                 <button
-                                  onClick={() => handleEditAuctionEndTime(slot.auction_id || slot.id)}
+                                  onClick={() => {
+                                    console.log('🔧 編集ボタンクリック:', {
+                                      slotId: slot.id,
+                                      auctionId: slot.auction_id,
+                                      auctionEndTime: slot.auction_end_time
+                                    });
+                                    handleEditAuctionEndTime(slot.auction_id || slot.id);
+                                  }}
                                   className="text-xs text-orange-600 hover:text-orange-800 underline"
                                 >
                                   編集
                                 </button>
+                              </div>
+                              {/* デバッグ情報 */}
+                              <div className="text-xs text-gray-500 mt-1">
+                                Debug: auction_id={slot.auction_id}, auction_end_time={slot.auction_end_time}
                               </div>
                             </div>
 
