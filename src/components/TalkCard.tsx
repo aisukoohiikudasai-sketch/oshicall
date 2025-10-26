@@ -53,12 +53,12 @@ export default function TalkCard({ talk, onSelect }: TalkCardProps) {
 
       {/* Talk Details Section */}
       <div className="p-4 space-y-3">
-        {/* Date and Time */}
-        <div className="flex items-center justify-between text-sm text-gray-600">
+        {/* 通話枠開始時間 */}
+        <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
           <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-pink-500" />
-            <span>
-              {formatDate(talk.start_time)} - {formatDate(talk.end_time)}
+            <Calendar className="h-4 w-4 text-blue-500" />
+            <span className="font-medium">
+              通話開始: {formatDate(talk.start_time)}
             </span>
           </div>
           {talk.is_female_only && (
@@ -68,13 +68,16 @@ export default function TalkCard({ talk, onSelect }: TalkCardProps) {
           )}
         </div>
         
-        {/* Countdown and Action */}
+        {/* オークション終了時間とカウントダウン */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-xs text-gray-500 mb-1">オークション終了まで</span>
+            <div className="flex items-center space-x-2 mb-1">
+              <Clock className="h-4 w-4 text-orange-500" />
+              <span className="text-xs text-gray-500">オークション終了: {formatDate(talk.auction_end_time)}</span>
+            </div>
             <CountdownTimer
               targetTime={talk.auction_end_time}
-              className="text-xs"
+              className="text-xs text-orange-600 font-medium"
               showSeconds={false}
             />
           </div>

@@ -53,7 +53,7 @@ export default function Home() {
             host_message: item.influencer_bio || item.description || `${item.influencer_name}とお話ししましょう！`,
             start_time: item.scheduled_start_time,
             end_time: new Date(new Date(item.scheduled_start_time).getTime() + item.duration_minutes * 60000).toISOString(),
-            auction_end_time: item.end_time,
+            auction_end_time: item.auction_end_time || item.end_time,
             starting_price: item.starting_price,
             current_highest_bid: item.current_highest_bid || item.starting_price,
             status: item.status === 'active' ? 'upcoming' : 'ended',

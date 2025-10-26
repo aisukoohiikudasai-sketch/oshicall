@@ -124,31 +124,132 @@ class E2ETestRunner {
     return data;
   }
 
-  async testCreateBid() {
-    const { data: slots } = await supabase
+  async testCreateAuction() {
+    // オークション用の通話枠を作成
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(20, 0, 0, 0);
+
+    const { data: callSlot, error: slotError } = await supabase
       .from('call_slots')
-      .select('id')
-      .eq('influencer_id', this.influencerUserId)
-      .eq('status', 'scheduled')
+      .insert({
+        user_id: this.influencerUserId,
+        title: 'E2Eテスト用オークション通話枠',
+        description: 'オークション終了テスト用の通話枠です',
+        scheduled_start_time: tomorrow.toISOString(),
+        duration_minutes: 30,
+        starting_price: 5000,
+        is_published: true
+      })
+      .select()
+      .single();
+
+    if (slotError) throw slotError;
+
+    // オークションを作成
+    const { data: auction, error: auctionError } = await supabase
+      .from('auctions')
+      .insert({
+        call_slot_id: callSlot.id,
+        start_time: new Date().toISOString(),
+        end_time: new Date(Date.now() + 2 * 60 * 1000).toISOString(), // 2分後に終了
+        status: 'active',
+        current_highest_bid: 5000,
+        total_bids_count: 0
+      })
+      .select()
+      .single();
+
+    if (auctionError) throw auctionError;
+    return { callSlot, auction };
+  }
+
+  async testCreateBid() {
+    // アクティブなオークションを取得
+    const { data: auctions, error: auctionError } = await supabase
+      .from('auctions')
+      .select('id, call_slot_id')
+      .eq('status', 'active')
       .limit(1);
 
-    if (!slots || slots.length === 0) {
-      throw new Error('通話枠が見つかりません');
+    if (auctionError) throw auctionError;
+    if (!auctions || auctions.length === 0) {
+      throw new Error('アクティブなオークションが見つかりません');
     }
 
+    const auction = auctions[0];
+
+    // 入札を作成
     const { data, error } = await supabase
       .from('bids')
       .insert({
-        fan_id: this.fanUserId,
-        slot_id: slots[0].id,
-        amount: 6000,
-        status: 'active'
+        auction_id: auction.id,
+        fan_user_id: this.fanUserId,
+        bid_amount: 6000,
+        is_autobid: false
       })
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+
+    // オークションの最高入札額を更新
+    await supabase
+      .from('auctions')
+      .update({
+        current_highest_bid: 6000,
+        highest_bidder_id: this.fanUserId,
+        total_bids_count: 1
+      })
+      .eq('id', auction.id);
+
+    return { bid: data, auction };
+  }
+
+  async testMultipleBids() {
+    // 複数のユーザーで入札をテスト
+    const { data: auctions, error: auctionError } = await supabase
+      .from('auctions')
+      .select('id')
+      .eq('status', 'active')
+      .limit(1);
+
+    if (auctionError) throw auctionError;
+    if (!auctions || auctions.length === 0) {
+      throw new Error('アクティブなオークションが見つかりません');
+    }
+
+    const auction = auctions[0];
+
+    // 複数の入札を作成
+    const bids = [];
+    for (let i = 0; i < 3; i++) {
+      const { data, error } = await supabase
+        .from('bids')
+        .insert({
+          auction_id: auction.id,
+          fan_user_id: this.fanUserId,
+          bid_amount: 6000 + (i * 1000), // 6000, 7000, 8000
+          is_autobid: false
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      bids.push(data);
+    }
+
+    // 最高入札額を更新
+    await supabase
+      .from('auctions')
+      .update({
+        current_highest_bid: 8000,
+        highest_bidder_id: this.fanUserId,
+        total_bids_count: 3
+      })
+      .eq('id', auction.id);
+
+    return bids;
   }
 
   async testPaymentProcessing() {
@@ -167,6 +268,70 @@ class E2ETestRunner {
 
     if (error) throw error;
     return data;
+  }
+
+  async testAuctionEnd() {
+    // 終了時間を過ぎたオークションを取得
+    const { data: auctions, error: auctionError } = await supabase
+      .from('auctions')
+      .select('id, call_slot_id, current_highest_bid, highest_bidder_id')
+      .eq('status', 'active')
+      .lte('end_time', new Date().toISOString())
+      .limit(1);
+
+    if (auctionError) throw auctionError;
+    if (!auctions || auctions.length === 0) {
+      throw new Error('終了したオークションが見つかりません');
+    }
+
+    const auction = auctions[0];
+
+    // オークションを終了状態に更新
+    const { error: updateError } = await supabase
+      .from('auctions')
+      .update({
+        status: 'ended',
+        winner_user_id: auction.highest_bidder_id
+      })
+      .eq('id', auction.id);
+
+    if (updateError) throw updateError;
+
+    return auction;
+  }
+
+  async testAuctionFinalization() {
+    // 終了したオークションの最終化処理をテスト
+    const { data: endedAuctions, error: auctionError } = await supabase
+      .from('auctions')
+      .select('id, call_slot_id, current_highest_bid, highest_bidder_id')
+      .eq('status', 'ended')
+      .limit(1);
+
+    if (auctionError) throw auctionError;
+    if (!endedAuctions || endedAuctions.length === 0) {
+      throw new Error('終了したオークションが見つかりません');
+    }
+
+    const auction = endedAuctions[0];
+
+    // purchased_slotsテーブルに購入記録を作成
+    const { data: purchasedSlot, error: purchaseError } = await supabase
+      .from('purchased_slots')
+      .insert({
+        fan_user_id: auction.highest_bidder_id,
+        influencer_user_id: this.influencerUserId,
+        call_slot_id: auction.call_slot_id,
+        price: auction.current_highest_bid,
+        call_status: 'scheduled',
+        purchased_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (purchaseError) throw purchaseError;
+
+    return { auction, purchasedSlot };
   }
 
   async testVideoCallSetup() {
@@ -197,13 +362,25 @@ class E2ETestRunner {
       // 4. 通話枠作成
       await this.runTest('通話枠作成', () => this.testCreateCallSlot());
 
-      // 5. 入札作成
+      // 5. オークション作成
+      await this.runTest('オークション作成', () => this.testCreateAuction());
+
+      // 6. 入札作成
       await this.runTest('入札作成', () => this.testCreateBid());
 
-      // 6. 支払い処理
+      // 7. 複数入札テスト
+      await this.runTest('複数入札テスト', () => this.testMultipleBids());
+
+      // 8. オークション終了
+      await this.runTest('オークション終了', () => this.testAuctionEnd());
+
+      // 9. オークション最終化
+      await this.runTest('オークション最終化', () => this.testAuctionFinalization());
+
+      // 10. 支払い処理
       await this.runTest('支払い処理', () => this.testPaymentProcessing());
 
-      // 7. ビデオ通話設定
+      // 11. ビデオ通話設定
       await this.runTest('ビデオ通話設定', () => this.testVideoCallSetup());
 
       // 結果表示

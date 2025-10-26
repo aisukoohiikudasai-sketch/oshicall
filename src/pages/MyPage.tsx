@@ -427,6 +427,27 @@ export default function MyPage() {
     }
   };
 
+  const handleEditAuctionEndTime = async (slotId: string) => {
+    const newEndTime = prompt('新しいオークション終了時間を入力してください (YYYY-MM-DDTHH:MM):');
+    if (!newEndTime) return;
+
+    try {
+      const { supabase } = await import('../lib/supabase');
+      const { error } = await supabase.rpc('update_auction_end_time', {
+        p_auction_id: slotId,
+        p_new_end_time: newEndTime
+      });
+
+      if (error) throw error;
+
+      alert('オークション終了時間を更新しました');
+      await loadCallSlots();
+    } catch (error) {
+      console.error('オークション終了時間更新エラー:', error);
+      alert('オークション終了時間の更新に失敗しました');
+    }
+  };
+
   // Talk枠の分類
   const scheduledSlots = callSlots.filter(slot => {
     const now = new Date();
@@ -848,6 +869,28 @@ export default function MyPage() {
                                 </span>
                               </div>
                             </div>
+
+                            {/* オークション終了時間 */}
+                            {slot.auction_end_time && (
+                              <div className="bg-orange-50 p-2 mb-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-2">
+                                    <Clock className="h-4 w-4 text-orange-600" />
+                                    <span className="text-sm font-bold text-orange-800">
+                                      オークション終了: {format(new Date(slot.auction_end_time), 'yyyy年MM月dd日 HH:mm', {
+                                        locale: ja,
+                                      })}
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleEditAuctionEndTime(slot.id)}
+                                    className="text-xs text-orange-600 hover:text-orange-800 underline"
+                                  >
+                                    編集
+                                  </button>
+                                </div>
+                              </div>
+                            )}
 
                             {slot.description && (
                               <p className="text-xs text-gray-600 mb-2 line-clamp-2">{slot.description}</p>

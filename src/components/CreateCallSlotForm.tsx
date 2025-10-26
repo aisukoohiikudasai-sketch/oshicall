@@ -23,11 +23,29 @@ export default function CreateCallSlotForm({
     minimum_bid_increment: 100,
     thumbnail_url: undefined,
   });
+  const [auctionEndTime, setAuctionEndTime] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  // 通話枠開始時間が変更された時にオークション終了時間を自動設定
+  const handleScheduledTimeChange = (value: string) => {
+    setFormData(prev => ({ ...prev, scheduled_start_time: value }));
+    
+    if (value) {
+      const scheduledTime = new Date(value);
+      const defaultEndTime = new Date(scheduledTime.getTime() - 24 * 60 * 60 * 1000); // 24時間前
+      const now = new Date();
+      const minEndTime = new Date(now.getTime() + 60 * 60 * 1000); // 現在から1時間後
+      
+      // デフォルト終了時間が現在から1時間後より前の場合は1時間後に設定
+      const finalEndTime = defaultEndTime < minEndTime ? minEndTime : defaultEndTime;
+      
+      setAuctionEndTime(finalEndTime.toISOString().slice(0, 16));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,11 +55,23 @@ export default function CreateCallSlotForm({
     try {
       // 日時のバリデーション
       const scheduledTime = new Date(formData.scheduled_start_time);
+      const auctionEnd = new Date(auctionEndTime);
       const now = new Date();
-      const minTime = new Date(now.getTime() + 25 * 60 * 60 * 1000); // 現在時刻 + 25時間
 
-      if (scheduledTime <= minTime) {
-        setError('開始時刻は現在から25時間以上先に設定してください（オークション期間を確保するため）');
+      if (scheduledTime <= now) {
+        setError('開始時刻は現在時刻より後に設定してください');
+        setLoading(false);
+        return;
+      }
+
+      if (auctionEnd <= now) {
+        setError('オークション終了時間は現在時刻より後に設定してください');
+        setLoading(false);
+        return;
+      }
+
+      if (auctionEnd >= scheduledTime) {
+        setError('オークション終了時間は通話枠開始時間より前に設定してください');
         setLoading(false);
         return;
       }
@@ -78,7 +108,19 @@ export default function CreateCallSlotForm({
         callSlotData.thumbnail_url = thumbnailUrl;
       }
 
-      await createCallSlot(influencerId, callSlotData);
+      const callSlot = await createCallSlot(influencerId, callSlotData);
+
+      // オークションを作成（24時間前のデフォルト設定）
+      const { supabase } = await import('../lib/supabase');
+      const { error: auctionError } = await supabase.rpc('create_auction_with_default_end_time', {
+        p_call_slot_id: callSlot.id,
+        p_start_time: new Date().toISOString()
+      });
+
+      if (auctionError) {
+        console.error('オークション作成エラー:', auctionError);
+        // オークション作成に失敗しても通話枠は作成済みなので続行
+      }
       
       onSuccess();
     } catch (err: any) {
@@ -190,7 +232,7 @@ export default function CreateCallSlotForm({
                 type="datetime-local"
                 name="scheduled_start_time"
                 value={formData.scheduled_start_time}
-                onChange={handleChange}
+                onChange={(e) => handleScheduledTimeChange(e.target.value)}
                 min={getMinDateTime()}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
                 required
@@ -218,6 +260,25 @@ export default function CreateCallSlotForm({
                 <option value={60}>60分</option>
               </select>
             </div>
+          </div>
+
+          {/* オークション終了時間 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Clock className="inline h-4 w-4 mr-1" />
+              オークション終了時間 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              value={auctionEndTime}
+              onChange={(e) => setAuctionEndTime(e.target.value)}
+              min={getMinDateTime()}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              ※ 通話枠開始時間より前に設定してください（デフォルト: 開始時間の24時間前）
+            </p>
           </div>
           
           <p className="text-xs text-gray-500">
