@@ -61,18 +61,33 @@ export const createCallSlot = async (
   return { callSlot, auction };
 };
 
-// インフルエンサーの全Call Slotsを取得
+// インフルエンサーの全Call Slotsを取得（オークション情報も含む）
 export const getInfluencerCallSlots = async (
   userId: string
 ): Promise<CallSlot[]> => {
   const { data, error } = await supabase
     .from('call_slots')
-    .select('*')
+    .select(`
+      *,
+      auctions!call_slot_id (
+        id,
+        end_time,
+        status
+      )
+    `)
     .eq('user_id', userId)
     .order('scheduled_start_time', { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  
+  // オークション情報をCallSlotにマッピング
+  const callSlots = (data || []).map((slot: any) => ({
+    ...slot,
+    auction_end_time: slot.auctions?.[0]?.end_time,
+    auction_id: slot.auctions?.[0]?.id,
+  }));
+
+  return callSlots;
 };
 
 // Call Slotを更新

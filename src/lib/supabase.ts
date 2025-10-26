@@ -57,6 +57,8 @@ export interface CallSlot {
   thumbnail_url: string | null;
   created_at: string;
   updated_at: string;
+  auction_end_time?: string; // オークション終了時間
+  auction_id?: string; // オークションID
 }
 
 export interface Auction {
