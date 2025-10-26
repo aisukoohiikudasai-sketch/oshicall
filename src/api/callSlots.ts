@@ -40,6 +40,12 @@ export const createCallSlot = async (
   const scheduledTime = new Date(input.scheduled_start_time);
   const auctionEndTime = new Date(scheduledTime.getTime() - 24 * 60 * 60 * 1000);
   const auctionStartTime = new Date(); // 今すぐ開始
+  
+  console.log('🕐 オークション時間設定:', {
+    scheduledTime: scheduledTime.toISOString(),
+    auctionEndTime: auctionEndTime.toISOString(),
+    hoursDifference: (scheduledTime.getTime() - auctionEndTime.getTime()) / (1000 * 60 * 60)
+  });
 
   const { data: auction, error: auctionError } = await supabase
     .from('auctions')
@@ -82,21 +88,10 @@ export const getInfluencerCallSlots = async (
 
   if (error) throw error;
   
-  console.log('🔍 取得したデータ:', data);
-  
   // オークション情報をCallSlotにマッピング
   const callSlots = (data || []).map((slot: any) => {
     // auctionsが配列かオブジェクトかを判定
     const auction = Array.isArray(slot.auctions) ? slot.auctions[0] : slot.auctions;
-    
-    console.log('🔍 スロット詳細:', {
-      slotId: slot.id,
-      auctions: slot.auctions,
-      auctionType: Array.isArray(slot.auctions) ? 'array' : 'object',
-      auction: auction,
-      auctionEndTime: auction?.auction_end_time,
-      auctionId: auction?.id
-    });
     
     return {
       ...slot,
