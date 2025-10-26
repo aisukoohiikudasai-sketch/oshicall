@@ -25,6 +25,9 @@ BEGIN
 END $$;
 
 -- 2. オークション終了時間を更新するRPC関数を作成
+-- 既存の関数を削除してから再作成
+DROP FUNCTION IF EXISTS update_auction_end_time(UUID, TIMESTAMP WITH TIME ZONE);
+
 CREATE OR REPLACE FUNCTION update_auction_end_time(
     p_auction_id UUID,
     p_new_end_time TIMESTAMP WITH TIME ZONE
@@ -73,6 +76,9 @@ END;
 $$;
 
 -- 3. オークション終了時間を取得するRPC関数を作成
+-- 既存の関数を削除してから再作成
+DROP FUNCTION IF EXISTS get_auction_end_time(UUID);
+
 CREATE OR REPLACE FUNCTION get_auction_end_time(p_auction_id UUID)
 RETURNS JSON
 LANGUAGE plpgsql
@@ -108,6 +114,9 @@ END;
 $$;
 
 -- 4. オークション作成時に24時間前のデフォルト設定を行う関数を作成
+-- 既存の関数を削除してから再作成
+DROP FUNCTION IF EXISTS create_auction_with_default_end_time(UUID, TIMESTAMP WITH TIME ZONE);
+
 CREATE OR REPLACE FUNCTION create_auction_with_default_end_time(
     p_call_slot_id UUID,
     p_start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -174,6 +183,9 @@ GRANT EXECUTE ON FUNCTION get_auction_end_time(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION create_auction_with_default_end_time(UUID, TIMESTAMP WITH TIME ZONE) TO authenticated;
 
 -- 6. RLSポリシーを追加
+-- 既存のポリシーを削除してから再作成
+DROP POLICY IF EXISTS "Influencers can update their auction end time" ON auctions;
+
 -- インフルエンサーは自分のオークションの終了時間を編集できる
 CREATE POLICY "Influencers can update their auction end time"
 ON auctions FOR UPDATE
