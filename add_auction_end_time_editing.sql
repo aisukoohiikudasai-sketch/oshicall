@@ -19,13 +19,8 @@ BEGIN
         -- NOT NULL制約を追加
         ALTER TABLE auctions ALTER COLUMN auction_end_time SET NOT NULL;
         
-        -- 制約を追加（auction_end_timeはcall_slotsのscheduled_start_timeより前である必要がある）
-        ALTER TABLE auctions ADD CONSTRAINT valid_auction_end_time 
-        CHECK (auction_end_time < (
-            SELECT scheduled_start_time 
-            FROM call_slots 
-            WHERE call_slots.id = auctions.call_slot_id
-        ));
+        -- 制約はアプリケーションレベルでバリデーションを行うため、ここでは追加しない
+        -- サブクエリはCHECK制約で使用できないため
     END IF;
 END $$;
 
