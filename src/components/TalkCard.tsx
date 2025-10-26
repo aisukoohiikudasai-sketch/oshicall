@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, ArrowRight } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { TalkSession } from '../types';
 import CountdownTimer from './CountdownTimer';
 

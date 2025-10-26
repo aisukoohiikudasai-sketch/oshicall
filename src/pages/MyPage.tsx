@@ -12,7 +12,6 @@ import {
   Eye,
   EyeOff,
   Heart,
-  Clock,
   DollarSign,
   Users,
   Sparkles,
@@ -22,6 +21,7 @@ import {
   Save,
   Trash2
 } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   mockBadges, 

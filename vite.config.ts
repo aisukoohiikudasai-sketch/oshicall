@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/',
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    include: ['lucide-react'],
   },
   build: {
     // 環境変数の情報をビルドログに出力（デバッグ用）
