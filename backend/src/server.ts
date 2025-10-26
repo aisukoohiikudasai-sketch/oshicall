@@ -39,6 +39,24 @@ app.use(cors({
   },
   credentials: true
 }));
+
+// CSP ヘッダーを設定
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', 
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com; " +
+    "img-src 'self' data: https: blob:; " +
+    "connect-src 'self' https://wioealhsienyubwegvdu.supabase.co https://api.stripe.com; " +
+    "frame-src 'self' https://js.stripe.com; " +
+    "object-src 'none'; " +
+    "base-uri 'self'; " +
+    "form-action 'self'"
+  );
+  next();
+});
+
 app.use(express.json());
 
 // 静的ファイルの提供（本番環境のみ）
