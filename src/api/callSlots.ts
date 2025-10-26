@@ -86,17 +86,22 @@ export const getInfluencerCallSlots = async (
   
   // オークション情報をCallSlotにマッピング
   const callSlots = (data || []).map((slot: any) => {
+    // auctionsが配列かオブジェクトかを判定
+    const auction = Array.isArray(slot.auctions) ? slot.auctions[0] : slot.auctions;
+    
     console.log('🔍 スロット詳細:', {
       slotId: slot.id,
       auctions: slot.auctions,
-      auctionEndTime: slot.auctions?.[0]?.auction_end_time,
-      auctionId: slot.auctions?.[0]?.id
+      auctionType: Array.isArray(slot.auctions) ? 'array' : 'object',
+      auction: auction,
+      auctionEndTime: auction?.auction_end_time,
+      auctionId: auction?.id
     });
     
     return {
       ...slot,
-      auction_end_time: slot.auctions?.[0]?.auction_end_time || slot.auctions?.[0]?.end_time,
-      auction_id: slot.auctions?.[0]?.id,
+      auction_end_time: auction?.auction_end_time || auction?.end_time,
+      auction_id: auction?.id,
     };
   });
 
