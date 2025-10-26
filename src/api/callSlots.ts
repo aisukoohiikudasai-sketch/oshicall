@@ -48,6 +48,7 @@ export const createCallSlot = async (
       status: 'active',
       start_time: auctionStartTime.toISOString(),
       end_time: auctionEndTime.toISOString(),
+      auction_end_time: auctionEndTime.toISOString(), // auction_end_timeを追加
     })
     .select()
     .single();

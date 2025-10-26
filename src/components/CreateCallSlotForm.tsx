@@ -110,17 +110,8 @@ export default function CreateCallSlotForm({
 
       const callSlot = await createCallSlot(influencerId, callSlotData);
 
-      // オークションを作成（24時間前のデフォルト設定）
-      const { supabase } = await import('../lib/supabase');
-      const { error: auctionError } = await supabase.rpc('create_auction_with_default_end_time', {
-        p_call_slot_id: callSlot.id,
-        p_start_time: new Date().toISOString()
-      });
-
-      if (auctionError) {
-        console.error('オークション作成エラー:', auctionError);
-        // オークション作成に失敗しても通話枠は作成済みなので続行
-      }
+      // オークションは既にcreateCallSlot内で作成されているため、ここでは何もしない
+      console.log('✅ Talk枠とオークションの作成が完了しました');
       
       onSuccess();
     } catch (err: any) {
