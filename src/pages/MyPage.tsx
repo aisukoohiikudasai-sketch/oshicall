@@ -79,6 +79,8 @@ export default function MyPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [dashboardError, setDashboardError] = useState('');
   const [talkSlotsTab, setTalkSlotsTab] = useState<'scheduled' | 'completed'>('scheduled');
+  const [editingAuctionId, setEditingAuctionId] = useState<string | null>(null);
+  const [newAuctionEndTime, setNewAuctionEndTime] = useState<string>('');
   
   // 編集用の状態
   const [editedDisplayName, setEditedDisplayName] = useState('');
@@ -427,25 +429,36 @@ export default function MyPage() {
     }
   };
 
-  const handleEditAuctionEndTime = async (slotId: string) => {
-    const newEndTime = prompt('新しいオークション終了時間を入力してください (YYYY-MM-DDTHH:MM):');
-    if (!newEndTime) return;
+  const handleEditAuctionEndTime = (slotId: string) => {
+    setEditingAuctionId(slotId);
+    setNewAuctionEndTime('');
+  };
+
+  const handleSaveAuctionEndTime = async () => {
+    if (!editingAuctionId || !newAuctionEndTime) return;
 
     try {
       const { supabase } = await import('../lib/supabase');
       const { error } = await supabase.rpc('update_auction_end_time', {
-        p_auction_id: slotId,
-        p_new_end_time: newEndTime
+        p_auction_id: editingAuctionId,
+        p_new_end_time: newAuctionEndTime
       });
 
       if (error) throw error;
 
       alert('オークション終了時間を更新しました');
       await loadCallSlots();
+      setEditingAuctionId(null);
+      setNewAuctionEndTime('');
     } catch (error) {
       console.error('オークション終了時間更新エラー:', error);
       alert('オークション終了時間の更新に失敗しました');
     }
+  };
+
+  const handleCancelAuctionEndTimeEdit = () => {
+    setEditingAuctionId(null);
+    setNewAuctionEndTime('');
   };
 
   // Talk枠の分類
@@ -1560,6 +1573,49 @@ export default function MyPage() {
           onSuccess={handleCreateSuccess}
           onCancel={() => setShowCreateForm(false)}
         />
+      )}
+
+      {/* Auction End Time Edit Modal */}
+      {editingAuctionId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              オークション終了時間を編集
+            </h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                新しい終了時間
+              </label>
+              <input
+                type="datetime-local"
+                value={newAuctionEndTime}
+                onChange={(e) => setNewAuctionEndTime(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                min={new Date().toISOString().slice(0, 16)}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                通話枠開始時間より前に設定してください
+              </p>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={handleSaveAuctionEndTime}
+                disabled={!newAuctionEndTime}
+                className="flex-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                保存
+              </button>
+              <button
+                onClick={handleCancelAuctionEndTimeEdit}
+                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
