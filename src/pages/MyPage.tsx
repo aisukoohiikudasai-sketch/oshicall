@@ -79,9 +79,19 @@ export default function MyPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [dashboardError, setDashboardError] = useState('');
   const [talkSlotsTab, setTalkSlotsTab] = useState<'scheduled' | 'completed'>('scheduled');
-  const [editingAuctionId, setEditingAuctionId] = useState<string | null>(null);
-  const [newAuctionEndTime, setNewAuctionEndTime] = useState<string>('');
-  
+
+  // Talk枠編集用の状態
+  const [editingCallSlot, setEditingCallSlot] = useState<CallSlot | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    scheduled_start_time: '',
+    duration_minutes: 30,
+    starting_price: 0,
+    minimum_bid_increment: 0,
+    auction_end_time: '',
+  });
+
   // 編集用の状態
   const [editedDisplayName, setEditedDisplayName] = useState('');
   const [editedBio, setEditedBio] = useState('');
@@ -429,36 +439,63 @@ export default function MyPage() {
     }
   };
 
-  const handleEditAuctionEndTime = (slotId: string) => {
-    setEditingAuctionId(slotId);
-    setNewAuctionEndTime('');
+  const handleEditCallSlot = (slot: CallSlot) => {
+    setEditingCallSlot(slot);
+    setEditForm({
+      title: slot.title,
+      description: slot.description || '',
+      scheduled_start_time: slot.scheduled_start_time.slice(0, 16), // datetime-local形式に変換
+      duration_minutes: slot.duration_minutes,
+      starting_price: slot.starting_price,
+      minimum_bid_increment: slot.minimum_bid_increment,
+      auction_end_time: slot.auction_end_time?.slice(0, 16) || '',
+    });
   };
 
-  const handleSaveAuctionEndTime = async () => {
-    if (!editingAuctionId || !newAuctionEndTime) return;
+  const handleSaveCallSlot = async () => {
+    if (!editingCallSlot) return;
 
     try {
-      const { supabase } = await import('../lib/supabase');
-      const { error } = await supabase.rpc('update_auction_end_time', {
-        p_auction_id: editingAuctionId,
-        p_new_end_time: newAuctionEndTime
+      setSaving(true);
+
+      // Call Slotを更新
+      const { updateCallSlot } = await import('../api/callSlots');
+      await updateCallSlot(editingCallSlot.id, {
+        title: editForm.title,
+        description: editForm.description,
+        scheduled_start_time: editForm.scheduled_start_time,
+        duration_minutes: editForm.duration_minutes,
+        starting_price: editForm.starting_price,
+        minimum_bid_increment: editForm.minimum_bid_increment,
       });
 
-      if (error) throw error;
+      // オークション終了時間を更新（変更されている場合）
+      if (editForm.auction_end_time && editForm.auction_end_time !== editingCallSlot.auction_end_time?.slice(0, 16)) {
+        const { supabase } = await import('../lib/supabase');
+        if (editingCallSlot.auction_id) {
+          const { error } = await supabase.rpc('update_auction_end_time', {
+            p_auction_id: editingCallSlot.auction_id,
+            p_new_end_time: editForm.auction_end_time
+          });
+          if (error) throw error;
+        }
+      }
 
-      alert('オークション終了時間を更新しました');
+      setSuccessMessage('Talk枠を更新しました');
+      setTimeout(() => setSuccessMessage(''), 3000);
       await loadCallSlots();
-      setEditingAuctionId(null);
-      setNewAuctionEndTime('');
+      setEditingCallSlot(null);
     } catch (error) {
-      console.error('オークション終了時間更新エラー:', error);
-      alert('オークション終了時間の更新に失敗しました');
+      console.error('Talk枠更新エラー:', error);
+      setError('Talk枠の更新に失敗しました');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleCancelAuctionEndTimeEdit = () => {
-    setEditingAuctionId(null);
-    setNewAuctionEndTime('');
+  const handleCancelEditCallSlot = () => {
+    setEditingCallSlot(null);
   };
 
   // Talk枠の分類
@@ -885,34 +922,17 @@ export default function MyPage() {
 
                             {/* オークション終了時間 */}
                             <div className="bg-orange-50 p-2 mb-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                  <Clock className="h-4 w-4 text-orange-600" />
-                                  <span className="text-sm font-bold text-orange-800">
-                                    {slot.auction_end_time ? (
-                                      <>オークション終了: {format(new Date(slot.auction_end_time), 'yyyy年MM月dd日 HH:mm', {
-                                        locale: ja,
-                                      })}</>
-                                    ) : (
-                                      <>オークション終了時間: 未設定</>
-                                    )}
-                                  </span>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    console.log('🔧 編集ボタンクリック:', {
-                                      slotId: slot.id,
-                                      auctionId: slot.auction_id,
-                                      auctionEndTime: slot.auction_end_time
-                                    });
-                                    handleEditAuctionEndTime(slot.auction_id || slot.id);
-                                  }}
-                                  className="flex items-center space-x-1 px-3 py-1.5 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-md transition-colors text-sm font-medium shadow-sm active:scale-95 flex-shrink-0"
-                                  title="オークション終了時間を編集"
-                                >
-                                  <EditIcon className="h-3.5 w-3.5" />
-                                  <span>編集</span>
-                                </button>
+                              <div className="flex items-center space-x-2">
+                                <Clock className="h-4 w-4 text-orange-600" />
+                                <span className="text-sm font-bold text-orange-800">
+                                  {slot.auction_end_time ? (
+                                    <>オークション終了: {format(new Date(slot.auction_end_time), 'yyyy年MM月dd日 HH:mm', {
+                                      locale: ja,
+                                    })}</>
+                                  ) : (
+                                    <>オークション終了時間: 未設定</>
+                                  )}
+                                </span>
                               </div>
                             </div>
 
@@ -935,6 +955,16 @@ export default function MyPage() {
                           <div className="flex space-x-1 ml-2 flex-shrink-0">
                             {talkSlotsTab === 'scheduled' && (
                               <button
+                                onClick={() => handleEditCallSlot(slot)}
+                                className="p-1.5 text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors"
+                                title="Talk枠を編集"
+                              >
+                                <EditIcon className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+
+                            {talkSlotsTab === 'scheduled' && (
+                              <button
                                 onClick={() => handleTogglePublish(slot.id, slot.is_published)}
                                 className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                                 title={slot.is_published ? '非公開にする' : '公開する'}
@@ -946,7 +976,7 @@ export default function MyPage() {
                                 )}
                               </button>
                             )}
-                            
+
                             {talkSlotsTab === 'scheduled' && (
                               <button
                                 onClick={() => handleDelete(slot.id)}
@@ -1586,41 +1616,144 @@ export default function MyPage() {
         />
       )}
 
-      {/* Auction End Time Edit Modal */}
-      {editingAuctionId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              オークション終了時間を編集
+      {/* Talk枠編集モーダル */}
+      {editingCallSlot && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl my-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
+              <EditIcon className="h-5 w-5 text-purple-600" />
+              <span>Talk枠を編集</span>
             </h3>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                新しい終了時間
-              </label>
-              <input
-                type="datetime-local"
-                value={newAuctionEndTime}
-                onChange={(e) => setNewAuctionEndTime(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                min={new Date().toISOString().slice(0, 16)}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                通話枠開始時間より前に設定してください
-              </p>
+
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+              {/* タイトル */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  タイトル <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="例: 30分トーク"
+                />
+              </div>
+
+              {/* 説明 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  説明
+                </label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  rows={3}
+                  placeholder="Talk枠の説明を入力してください"
+                />
+              </div>
+
+              {/* 通話開始時間 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  通話開始時間 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={editForm.scheduled_start_time}
+                  onChange={(e) => setEditForm({ ...editForm, scheduled_start_time: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+              </div>
+
+              {/* 通話時間 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  通話時間（分） <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={editForm.duration_minutes}
+                  onChange={(e) => setEditForm({ ...editForm, duration_minutes: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  min={10}
+                  step={5}
+                />
+              </div>
+
+              {/* 開始価格 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  開始価格（円） <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={editForm.starting_price}
+                  onChange={(e) => setEditForm({ ...editForm, starting_price: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  min={100}
+                  step={100}
+                />
+              </div>
+
+              {/* 最小入札増分 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  最小入札増分（円） <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={editForm.minimum_bid_increment}
+                  onChange={(e) => setEditForm({ ...editForm, minimum_bid_increment: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  min={100}
+                  step={100}
+                />
+              </div>
+
+              {/* オークション終了時間 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  オークション終了時間
+                </label>
+                <input
+                  type="datetime-local"
+                  value={editForm.auction_end_time}
+                  onChange={(e) => setEditForm({ ...editForm, auction_end_time: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  min={new Date().toISOString().slice(0, 16)}
+                  max={editForm.scheduled_start_time}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  通話開始時間より前に設定してください
+                </p>
+              </div>
             </div>
 
-            <div className="flex space-x-3">
+            <div className="flex space-x-3 mt-6">
               <button
-                onClick={handleSaveAuctionEndTime}
-                disabled={!newAuctionEndTime}
-                className="flex-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleSaveCallSlot}
+                disabled={saving || !editForm.title || !editForm.scheduled_start_time}
+                className="flex-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-3 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center space-x-2"
               >
-                保存
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>保存中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    <span>保存</span>
+                  </>
+                )}
               </button>
               <button
-                onClick={handleCancelAuctionEndTimeEdit}
-                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                onClick={handleCancelEditCallSlot}
+                disabled={saving}
+                className="flex-1 bg-gray-500 text-white px-4 py-3 rounded-lg hover:bg-gray-600 transition-colors font-medium"
               >
                 キャンセル
               </button>
