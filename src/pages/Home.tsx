@@ -5,33 +5,57 @@ import { mockTalkSessions } from '../data/mockData';
 import { TalkSession } from '../types';
 import TalkCard from '../components/TalkCard';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { getFollowingInfluencerIds } from '../api/follows';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { supabaseUser } = useAuth();
   const [selectedTalk, setSelectedTalk] = useState<TalkSession | null>(null);
   const [talks, setTalks] = useState<TalkSession[]>([]);
+  const [followingInfluencerIds, setFollowingInfluencerIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // フォロー中のインフルエンサーIDを取得
+  useEffect(() => {
+    const fetchFollowingInfluencers = async () => {
+      if (!supabaseUser) {
+        setFollowingInfluencerIds(new Set());
+        return;
+      }
+
+      try {
+        const ids = await getFollowingInfluencerIds(supabaseUser.id);
+        setFollowingInfluencerIds(new Set(ids));
+        console.log(`👥 フォロー中: ${ids.length}人`);
+      } catch (err) {
+        console.error('フォロー情報取得エラー:', err);
+      }
+    };
+
+    fetchFollowingInfluencers();
+  }, [supabaseUser]);
 
   useEffect(() => {
     const fetchTalks = async () => {
       try {
         setIsLoading(true);
-        
+
         // active_auctions_view から取得
         const { data: auctionData, error: auctionError } = await supabase
           .from('active_auctions_view')
           .select('*')
           .order('end_time', { ascending: true });
-        
+
         if (auctionError) {
           console.error('オークションデータ取得エラー:', auctionError);
           throw auctionError;
         }
-        
+
         console.log('📊 Supabaseから取得したデータ:', auctionData);
         console.log(`📊 取得件数: ${auctionData?.length || 0}件`);
-        
+
           // ビューデータをTalkSession形式に変換
           const talkSessions: TalkSession[] = (auctionData || []).map((item: any) => ({
             id: item.call_slot_id,
@@ -61,10 +85,10 @@ export default function Home() {
             detail_image_url: item.thumbnail_url || item.influencer_image || '/images/talks/default.jpg',
             is_female_only: false,
           }));
-        
+
         console.log(`✅ ${talkSessions.length}件のTalk枠に変換しました`);
         setTalks(talkSessions);
-        
+
       } catch (err) {
         console.error('❌ データ取得エラー:', err);
         setError('データの取得に失敗しました');
@@ -82,7 +106,18 @@ export default function Home() {
     navigate(`/talk/${talk.id}`);
   };
 
-  const sortedTalks = [...talks];
+  // フォロー中のインフルエンサーのTalk枠を優先してソート
+  const sortedTalks = [...talks].sort((a, b) => {
+    const aIsFollowing = followingInfluencerIds.has(a.influencer_id);
+    const bIsFollowing = followingInfluencerIds.has(b.influencer_id);
+
+    // フォロー中を優先
+    if (aIsFollowing && !bIsFollowing) return -1;
+    if (!aIsFollowing && bIsFollowing) return 1;
+
+    // 同じグループ内では元の順序を維持（オークション締切時間順）
+    return 0;
+  });
 
   return (
     <div className="space-y-3">
@@ -110,6 +145,14 @@ export default function Home() {
           ) : (
             <>
               現在 <span className="font-bold text-pink-600">{sortedTalks.length}</span> 件のTalk枠が開催中です
+              {followingInfluencerIds.size > 0 && (
+                <>
+                  {' '}
+                  <span className="text-purple-600">
+                    （フォロー中: {sortedTalks.filter(t => followingInfluencerIds.has(t.influencer_id)).length}件）
+                  </span>
+                </>
+              )}
             </>
           )}
         </p>

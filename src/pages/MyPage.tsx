@@ -1662,7 +1662,34 @@ export default function MyPage() {
                 <input
                   type="datetime-local"
                   value={editForm.scheduled_start_time}
-                  onChange={(e) => setEditForm({ ...editForm, scheduled_start_time: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEditForm({ ...editForm, scheduled_start_time: value });
+
+                    // 通話開始時間が変更されたら、オークション終了時間を自動設定
+                    if (value) {
+                      const scheduledTime = new Date(value);
+                      const now = new Date();
+                      const timeUntilStart = scheduledTime.getTime() - now.getTime();
+                      const hoursUntilStart = timeUntilStart / (60 * 60 * 1000);
+
+                      let defaultEndTime: Date;
+
+                      // 当日（24時間以内）の場合は、Talk枠の5分前をデフォルトに設定
+                      if (hoursUntilStart <= 24) {
+                        defaultEndTime = new Date(scheduledTime.getTime() - 5 * 60 * 1000); // 5分前
+                      } else {
+                        // 24時間以上先の場合は、従来通り24時間前に設定
+                        defaultEndTime = new Date(scheduledTime.getTime() - 24 * 60 * 60 * 1000); // 24時間前
+                      }
+
+                      // デフォルト終了時間が現在時刻より前の場合は、現在時刻の1分後に設定
+                      const minEndTime = new Date(now.getTime() + 60 * 1000); // 現在から1分後
+                      const finalEndTime = defaultEndTime < minEndTime ? minEndTime : defaultEndTime;
+
+                      setEditForm(prev => ({ ...prev, auction_end_time: finalEndTime.toISOString().slice(0, 16) }));
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   min={new Date().toISOString().slice(0, 16)}
                 />
@@ -1727,7 +1754,7 @@ export default function MyPage() {
                   max={editForm.scheduled_start_time}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  通話開始時間より前に設定してください
+                  ※ 通話開始時間より前に設定してください（デフォルト: 24時間以上先の場合は開始時間の24時間前、当日の場合は開始時間の5分前）
                 </p>
               </div>
             </div>

@@ -101,4 +101,16 @@ export interface PurchasedSlot {
   purchased_at: string;
 }
 
+export interface Follow {
+  id: string;
+  follower_id: string;
+  following_id: string;
+  created_at: string;
+}
+
+export interface FollowCounts {
+  followers_count: number;
+  following_count: number;
+}
+
 

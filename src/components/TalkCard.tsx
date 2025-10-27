@@ -1,15 +1,57 @@
-import React from 'react';
-import { Calendar, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, ArrowRight, Heart } from 'lucide-react';
 import { Clock } from 'lucide-react';
 import { TalkSession } from '../types';
 import CountdownTimer from './CountdownTimer';
+import { followInfluencer, unfollowInfluencer, checkFollowStatus } from '../api/follows';
+import { useAuth } from '../contexts/AuthContext';
 
 interface TalkCardProps {
   talk: TalkSession;
   onSelect: (talk: TalkSession) => void;
+  isFollowing?: boolean;
+  onFollowChange?: (isFollowing: boolean) => void;
 }
 
-export default function TalkCard({ talk, onSelect }: TalkCardProps) {
+export default function TalkCard({ talk, onSelect, isFollowing: initialIsFollowing, onFollowChange }: TalkCardProps) {
+  const { supabaseUser } = useAuth();
+  const [isFollowing, setIsFollowing] = useState(initialIsFollowing ?? false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
+
+  useEffect(() => {
+    // 初期フォロー状態を確認
+    if (supabaseUser && !initialIsFollowing) {
+      checkFollowStatus(supabaseUser.id, talk.influencer.id).then(setIsFollowing);
+    }
+  }, [supabaseUser, talk.influencer.id, initialIsFollowing]);
+
+  const handleFollowClick = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // カードのクリックイベントを防ぐ
+
+    if (!supabaseUser) {
+      alert('フォローするにはログインしてください');
+      return;
+    }
+
+    setIsFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await unfollowInfluencer(supabaseUser.id, talk.influencer.id);
+        setIsFollowing(false);
+        onFollowChange?.(false);
+      } else {
+        await followInfluencer(supabaseUser.id, talk.influencer.id);
+        setIsFollowing(true);
+        onFollowChange?.(true);
+      }
+    } catch (error) {
+      console.error('フォロー操作エラー:', error);
+      alert('フォロー操作に失敗しました');
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ja-JP', {
@@ -38,10 +80,26 @@ export default function TalkCard({ talk, onSelect }: TalkCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40"></div>
         
         {/* Host Name - Top */}
-        <div className="absolute top-4 left-4 right-4">
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
           <h3 className="text-xl font-bold text-white drop-shadow-lg">
             {talk.influencer.name}
           </h3>
+          {supabaseUser && supabaseUser.id !== talk.influencer.id && (
+            <button
+              onClick={handleFollowClick}
+              disabled={isFollowLoading}
+              className={`p-2 rounded-full transition-all duration-200 ${
+                isFollowing
+                  ? 'bg-pink-500 text-white hover:bg-pink-600'
+                  : 'bg-white/90 text-pink-500 hover:bg-white'
+              } disabled:opacity-50 shadow-lg`}
+              title={isFollowing ? 'フォロー中' : 'フォローする'}
+            >
+              <Heart
+                className={`h-5 w-5 ${isFollowing ? 'fill-current' : ''}`}
+              />
+            </button>
+          )}
         </div>
 
         {/* Host Message - Bottom */}

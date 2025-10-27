@@ -33,16 +33,27 @@ export default function CreateCallSlotForm({
   // 通話枠開始時間が変更された時にオークション終了時間を自動設定
   const handleScheduledTimeChange = (value: string) => {
     setFormData(prev => ({ ...prev, scheduled_start_time: value }));
-    
+
     if (value) {
       const scheduledTime = new Date(value);
-      const defaultEndTime = new Date(scheduledTime.getTime() - 24 * 60 * 60 * 1000); // 24時間前
       const now = new Date();
-      const minEndTime = new Date(now.getTime() + 60 * 60 * 1000); // 現在から1時間後
-      
-      // デフォルト終了時間が現在から1時間後より前の場合は1時間後に設定
+      const timeUntilStart = scheduledTime.getTime() - now.getTime();
+      const hoursUntilStart = timeUntilStart / (60 * 60 * 1000);
+
+      let defaultEndTime: Date;
+
+      // 当日（24時間以内）の場合は、Talk枠の5分前をデフォルトに設定
+      if (hoursUntilStart <= 24) {
+        defaultEndTime = new Date(scheduledTime.getTime() - 5 * 60 * 1000); // 5分前
+      } else {
+        // 24時間以上先の場合は、従来通り24時間前に設定
+        defaultEndTime = new Date(scheduledTime.getTime() - 24 * 60 * 60 * 1000); // 24時間前
+      }
+
+      // デフォルト終了時間が現在時刻より前の場合は、現在時刻の1分後に設定
+      const minEndTime = new Date(now.getTime() + 60 * 1000); // 現在から1分後
       const finalEndTime = defaultEndTime < minEndTime ? minEndTime : defaultEndTime;
-      
+
       setAuctionEndTime(finalEndTime.toISOString().slice(0, 16));
     }
   };
@@ -58,7 +69,9 @@ export default function CreateCallSlotForm({
       const auctionEnd = new Date(auctionEndTime);
       const now = new Date();
 
-      if (scheduledTime <= now) {
+      // 開始時刻が現在時刻より後かチェック（少し余裕を持たせる）
+      const minStartTime = new Date(now.getTime() + 60 * 1000); // 現在から1分後
+      if (scheduledTime < minStartTime) {
         setError('開始時刻は現在時刻より後に設定してください');
         setLoading(false);
         return;
@@ -157,10 +170,9 @@ export default function CreateCallSlotForm({
     }
   };
 
-  // 現在時刻から25時間後の日時を計算（デフォルト値用）
+  // 現在時刻を取得（最小値として使用）
   const getMinDateTime = () => {
     const date = new Date();
-    date.setHours(date.getHours() + 25);
     return date.toISOString().slice(0, 16);
   };
 
@@ -268,13 +280,9 @@ export default function CreateCallSlotForm({
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              ※ 通話枠開始時間より前に設定してください（デフォルト: 開始時間の24時間前）
+              ※ 通話枠開始時間より前に設定してください（デフォルト: 24時間以上先の場合は開始時間の24時間前、当日の場合は開始時間の5分前）
             </p>
           </div>
-          
-          <p className="text-xs text-gray-500">
-            ※ 開始日時は現在から25時間以上先の日時を設定してください（オークション期間24時間を確保）
-          </p>
 
           {/* 価格設定を横並びに */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
