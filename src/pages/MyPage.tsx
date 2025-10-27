@@ -907,9 +907,11 @@ export default function MyPage() {
                                     });
                                     handleEditAuctionEndTime(slot.auction_id || slot.id);
                                   }}
-                                  className="text-xs text-orange-600 hover:text-orange-800 underline"
+                                  className="flex items-center space-x-1 px-3 py-1.5 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-md transition-colors text-sm font-medium shadow-sm active:scale-95 flex-shrink-0"
+                                  title="オークション終了時間を編集"
                                 >
-                                  編集
+                                  <EditIcon className="h-3.5 w-3.5" />
+                                  <span>編集</span>
                                 </button>
                               </div>
                             </div>
