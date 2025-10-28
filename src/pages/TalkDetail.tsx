@@ -128,7 +128,10 @@ export default function TalkDetail() {
 
   // リアルタイム入札更新のサブスクリプション
   useEffect(() => {
-    if (!auctionId) return;
+    if (!auctionId) {
+      console.log('⚠️ auctionIdが未設定のため、リアルタイム更新を開始できません');
+      return;
+    }
 
     console.log('🔵 リアルタイム更新を開始:', auctionId);
 
@@ -163,6 +166,7 @@ export default function TalkDetail() {
             .single();
 
           if (updatedAuction) {
+            console.log('✅ オークション情報更新:', updatedAuction);
             setCurrentHighestBid(updatedAuction.current_highest_bid);
             if (supabaseUser) {
               setIsMyBid(updatedAuction.current_winner_id === supabaseUser.id);
@@ -170,7 +174,14 @@ export default function TalkDetail() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Realtimeサブスクリプション状態:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ リアルタイム更新の購読に成功しました');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ リアルタイム更新の購読に失敗しました');
+        }
+      });
 
     // クリーンアップ
     return () => {
