@@ -125,12 +125,18 @@ export default function CreateCallSlotForm({
         duration_minutes: formData.duration_minutes,
         starting_price: formData.starting_price,
         minimum_bid_increment: formData.minimum_bid_increment,
+        auction_end_time: auctionEndTime, // オークション終了時間を追加
       };
-      
+
       // 画像URLがある場合のみ追加
       if (thumbnailUrl) {
         callSlotData.thumbnail_url = thumbnailUrl;
       }
+
+      console.log('📤 送信するデータ:', {
+        ...callSlotData,
+        auction_end_time_readable: new Date(auctionEndTime).toLocaleString('ja-JP')
+      });
 
       const callSlot = await createCallSlot(influencerId, callSlotData);
 

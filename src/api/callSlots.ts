@@ -9,6 +9,7 @@ export interface CreateCallSlotInput {
   starting_price: number;
   minimum_bid_increment: number;
   thumbnail_url?: string;
+  auction_end_time: string; // オークション終了時間
 }
 
 // インフルエンサーのCall Slotsを作成
@@ -36,13 +37,14 @@ export const createCallSlot = async (
   if (callSlotError) throw callSlotError;
 
   // 2. オークションを自動作成
-  // オークション期間: Call開始24時間前まで
+  // フロントエンドから送信されたオークション終了時間を使用
   const scheduledTime = new Date(input.scheduled_start_time);
-  const auctionEndTime = new Date(scheduledTime.getTime() - 24 * 60 * 60 * 1000);
+  const auctionEndTime = new Date(input.auction_end_time);
   const auctionStartTime = new Date(); // 今すぐ開始
-  
+
   console.log('🕐 オークション時間設定:', {
     scheduledTime: scheduledTime.toISOString(),
+    auctionStartTime: auctionStartTime.toISOString(),
     auctionEndTime: auctionEndTime.toISOString(),
     hoursDifference: (scheduledTime.getTime() - auctionEndTime.getTime()) / (1000 * 60 * 60)
   });
