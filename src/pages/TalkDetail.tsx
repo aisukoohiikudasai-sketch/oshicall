@@ -26,18 +26,19 @@ export default function TalkDetail() {
   const [showCardModal, setShowCardModal] = useState(false);
   const [pendingBidAmount, setPendingBidAmount] = useState<number>(0);
 
+  // Talk詳細の初期取得
   useEffect(() => {
     const fetchTalkDetail = async () => {
       try {
         setIsLoading(true);
-        
+
         // active_auctions_view から取得
         const { data, error } = await supabase
           .from('active_auctions_view')
           .select('*')
           .eq('call_slot_id', talkId)
           .single();
-        
+
         if (error) {
           console.error('Talk詳細取得エラー:', error);
           // フォールバック: モックデータから取得
@@ -48,11 +49,11 @@ export default function TalkDetail() {
           }
           return;
         }
-        
+
         if (data) {
           // 実際のauction_idを保存
           setAuctionId(data.auction_id);
-          
+
           // ビューデータをTalkSession形式に変換
           const talkSession: TalkSession = {
             id: data.call_slot_id,
@@ -82,9 +83,14 @@ export default function TalkDetail() {
             detail_image_url: data.thumbnail_url || data.influencer_image || '/images/talks/default.jpg',
             is_female_only: false,
           };
-          
+
           setTalk(talkSession);
           setCurrentHighestBid(talkSession.current_highest_bid);
+
+          // 現在のユーザーが最高入札者かチェック
+          if (supabaseUser && data.current_highest_bid) {
+            checkIfUserIsHighestBidder(data.auction_id);
+          }
         }
       } catch (err) {
         console.error('データ取得エラー:', err);
@@ -96,7 +102,82 @@ export default function TalkDetail() {
     if (talkId) {
       fetchTalkDetail();
     }
-  }, [talkId]);
+  }, [talkId, supabaseUser]);
+
+  // ユーザーが最高入札者かチェック
+  const checkIfUserIsHighestBidder = async (auctionIdToCheck: string) => {
+    if (!supabaseUser) return;
+
+    try {
+      // 最高入札を取得
+      const { data: highestBid, error } = await supabase
+        .from('bids')
+        .select('user_id')
+        .eq('auction_id', auctionIdToCheck)
+        .order('bid_amount', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error && highestBid) {
+        setIsMyBid(highestBid.user_id === supabaseUser.id);
+      }
+    } catch (err) {
+      console.error('最高入札者チェックエラー:', err);
+    }
+  };
+
+  // リアルタイム入札更新のサブスクリプション
+  useEffect(() => {
+    if (!auctionId) return;
+
+    console.log('🔵 リアルタイム更新を開始:', auctionId);
+
+    // Supabase Realtime チャンネルを購読
+    const channel = supabase
+      .channel(`auction-${auctionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'bids',
+          filter: `auction_id=eq.${auctionId}`,
+        },
+        async (payload) => {
+          console.log('🔔 新しい入札を検知:', payload.new);
+          const newBid = payload.new as any;
+
+          // 最高入札額を更新
+          setCurrentHighestBid(newBid.bid_amount);
+
+          // 自分の入札かチェック
+          if (supabaseUser) {
+            setIsMyBid(newBid.user_id === supabaseUser.id);
+          }
+
+          // オークション情報も更新
+          const { data: updatedAuction } = await supabase
+            .from('auctions')
+            .select('current_highest_bid, current_winner_id')
+            .eq('id', auctionId)
+            .single();
+
+          if (updatedAuction) {
+            setCurrentHighestBid(updatedAuction.current_highest_bid);
+            if (supabaseUser) {
+              setIsMyBid(updatedAuction.current_winner_id === supabaseUser.id);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // クリーンアップ
+    return () => {
+      console.log('🔵 リアルタイム更新を停止:', auctionId);
+      supabase.removeChannel(channel);
+    };
+  }, [auctionId, supabaseUser]);
 
   if (isLoading) {
     return (
@@ -201,24 +282,30 @@ export default function TalkDetail() {
         console.error('❌ 入札保存エラー詳細:', bidError);
         throw new Error(`入札データの保存に失敗しました: ${bidError.message || bidError.code}`);
       }
-      
+
       console.log('✅ 入札保存成功:', bidData);
 
-      // UI更新
+      // オークション情報を更新（最高入札額と入札者を記録）
+      const { error: updateError } = await supabase.rpc(
+        'update_auction_highest_bid',
+        {
+          p_auction_id: auctionId,
+          p_bid_amount: bidAmount,
+          p_user_id: supabaseUser.id,
+        }
+      );
+
+      if (updateError) {
+        console.error('❌ オークション更新エラー:', updateError);
+        throw new Error(`オークション情報の更新に失敗しました: ${updateError.message}`);
+      }
+
+      console.log('✅ オークション情報更新成功');
+
+      // UI更新（リアルタイムサブスクリプションでも更新されるが、即座に反映）
       setCurrentHighestBid(bidAmount);
       setIsMyBid(true);
       alert(`✅ ¥${formatPrice(bidAmount)} で入札しました！`);
-      
-      // 入札後、Talk情報を再取得して最新状態を反映
-      const { data: updatedTalk } = await supabase
-        .from('active_auctions_view')
-        .select('*')
-        .eq('call_slot_id', talkId)
-        .single();
-      
-      if (updatedTalk) {
-        setCurrentHighestBid(updatedTalk.current_highest_bid || bidAmount);
-      }
     } catch (error: any) {
       console.error('入札処理エラー:', error);
       throw error;
