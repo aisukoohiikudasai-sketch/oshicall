@@ -1764,7 +1764,7 @@ export default function MyPage() {
                   max={editForm.scheduled_start_time}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  ※ 通話開始時間より前に設定してください（デフォルト: 24時間以上先の場合は開始時間の24時間前、当日の場合は開始時間の5分前）
+                  ※ 通話開始時間より前に設定してください（デフォルト: 48時間以上先の場合は開始時間の24時間前、48時間以内の場合は開始時間の5分前）
                 </p>
               </div>
             </div>
