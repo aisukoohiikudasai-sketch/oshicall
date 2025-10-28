@@ -170,8 +170,22 @@ interface CallSlotPayload {
 }
 
 serve(async (req) => {
+  // CORSヘッダーとOPTIONSリクエストの処理
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      },
+    });
+  }
+
   try {
     console.log('📧 新規Talk枠通知処理開始');
+    console.log('📧 リクエストメソッド:', req.method);
+    console.log('📧 リクエストURL:', req.url);
 
     const payload = await req.json();
     const callSlot: CallSlotPayload = payload.record;
@@ -321,14 +335,26 @@ serve(async (req) => {
       results,
       timestamp: new Date().toISOString(),
     }), {
-      headers: { 'Content-Type': 'application/json' },
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
     });
 
   } catch (error: any) {
     console.error('❌ エラー:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('❌ エラースタック:', error.stack);
+    return new Response(JSON.stringify({
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
     });
   }
 });
