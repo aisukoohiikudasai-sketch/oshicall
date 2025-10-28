@@ -1673,21 +1673,31 @@ export default function MyPage() {
                       const timeUntilStart = scheduledTime.getTime() - now.getTime();
                       const hoursUntilStart = timeUntilStart / (60 * 60 * 1000);
 
-                      let defaultEndTime: Date;
+                      console.log('📅 Talk開始時間:', scheduledTime.toLocaleString('ja-JP'));
+                      console.log('⏱️  現在時刻からの時間差:', hoursUntilStart.toFixed(2), '時間');
 
-                      // 48時間以内の場合は、Talk枠の5分前をデフォルトに設定
+                      let auctionEndTime: Date;
+
+                      // 48時間以内の場合は、Talk枠の5分前に設定
                       if (hoursUntilStart <= 48) {
-                        defaultEndTime = new Date(scheduledTime.getTime() - 5 * 60 * 1000); // 5分前
+                        auctionEndTime = new Date(scheduledTime.getTime() - 5 * 60 * 1000); // 5分前
+                        console.log('✅ 48時間以内 → 5分前に設定:', auctionEndTime.toLocaleString('ja-JP'));
                       } else {
                         // 48時間以上先の場合は、24時間前に設定
-                        defaultEndTime = new Date(scheduledTime.getTime() - 24 * 60 * 60 * 1000); // 24時間前
+                        auctionEndTime = new Date(scheduledTime.getTime() - 24 * 60 * 60 * 1000); // 24時間前
+                        console.log('✅ 48時間以降 → 24時間前に設定:', auctionEndTime.toLocaleString('ja-JP'));
                       }
 
-                      // デフォルト終了時間が現在時刻より前の場合は、現在時刻の1分後に設定
-                      const minEndTime = new Date(now.getTime() + 60 * 1000); // 現在から1分後
-                      const finalEndTime = defaultEndTime < minEndTime ? minEndTime : defaultEndTime;
+                      // datetime-local形式に変換（ローカルタイムゾーン）
+                      const year = auctionEndTime.getFullYear();
+                      const month = String(auctionEndTime.getMonth() + 1).padStart(2, '0');
+                      const day = String(auctionEndTime.getDate()).padStart(2, '0');
+                      const hours = String(auctionEndTime.getHours()).padStart(2, '0');
+                      const minutes = String(auctionEndTime.getMinutes()).padStart(2, '0');
+                      const formattedTime = `${year}-${month}-${day}T${hours}:${minutes}`;
 
-                      setEditForm(prev => ({ ...prev, auction_end_time: finalEndTime.toISOString().slice(0, 16) }));
+                      console.log('📝 設定するオークション終了時間:', formattedTime);
+                      setEditForm(prev => ({ ...prev, auction_end_time: formattedTime }));
                     }
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
