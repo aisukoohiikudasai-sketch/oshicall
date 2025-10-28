@@ -3,7 +3,6 @@
 // Deno.serve()を使用して認証をバイパス
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { Resend } from 'https://esm.sh/resend@3.0.0';
 
 // === メールテンプレート（インライン） ===
 
@@ -154,7 +153,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY') || '');
+const resendApiKey = Deno.env.get('RESEND_API_KEY') || '';
 const appUrl = Deno.env.get('APP_URL') || 'https://oshicall-2936440db16b.herokuapp.com';
 const fromEmail = Deno.env.get('FROM_EMAIL') || 'OshiCall <noreply@oshicall.com>';
 
@@ -209,21 +208,60 @@ Deno.serve(async (req) => {
 
     console.log(`📧 インフルエンサー: ${influencer.display_name}`);
 
-    const { data: followers, error: followersError } = await supabase
+    // フォロワーIDを取得
+    const { data: follows, error: followersError } = await supabase
       .from('follows')
-      .select(`
-        follower_id,
-        users!follows_follower_id_fkey(email, display_name)
-      `)
+      .select('follower_id')
       .eq('following_id', callSlot.user_id);
 
     if (followersError) {
       throw new Error(`フォロワー取得エラー: ${followersError.message}`);
     }
 
-    if (!followers || followers.length === 0) {
+    if (!follows || follows.length === 0) {
       console.log('⏭️  フォロワーがいないため通知スキップ');
       return new Response(JSON.stringify({ message: 'フォロワーがいないため通知スキップ' }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // フォロワーのユーザー情報を取得（auth_user_id経由でemailを取得）
+    const followerIds = follows.map(f => f.follower_id);
+    const { data: usersData, error: usersError } = await supabase
+      .from('users')
+      .select('id, display_name, auth_user_id')
+      .in('id', followerIds);
+
+    if (usersError) {
+      throw new Error(`フォロワー情報取得エラー: ${usersError.message}`);
+    }
+
+    if (!usersData || usersData.length === 0) {
+      console.log('⏭️  フォロワーユーザー情報が見つからないため通知スキップ');
+      return new Response(JSON.stringify({ message: 'フォロワー情報が見つかりません' }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // auth.usersからemailを取得
+    const followers = [];
+    for (const user of usersData) {
+      const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(user.auth_user_id);
+
+      if (!authError && authUser?.user?.email) {
+        followers.push({
+          id: user.id,
+          display_name: user.display_name,
+          email: authUser.user.email,
+        });
+      } else {
+        console.warn(`⚠️  ユーザー ${user.id} のemailが取得できません:`, authError?.message);
+      }
+    }
+
+    if (followers.length === 0) {
+      console.log('⏭️  emailが取得できたフォロワーがいないため通知スキップ');
+      return new Response(JSON.stringify({ message: 'emailが取得できませんでした' }), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
@@ -276,46 +314,54 @@ Deno.serve(async (req) => {
 
     const results = [];
     for (const follower of followers) {
-      const followerUser = follower.users as any;
-
-      if (!followerUser?.email) {
-        console.warn(`⚠️  フォロワー ${follower.follower_id} のメールアドレスが見つかりません`);
+      if (!follower?.email) {
+        console.warn(`⚠️  フォロワー ${follower.id} のメールアドレスが見つかりません`);
         continue;
       }
 
       try {
         const followerEmailData = {
           ...emailData,
-          followerName: followerUser.display_name || 'お客様',
+          followerName: follower.display_name || 'お客様',
         };
 
-        const { data: emailResult, error: emailError } = await resend.emails.send({
-          from: fromEmail,
-          to: followerUser.email,
-          subject: `✨ ${influencer.display_name}さんの新しいTalk枠が公開されました！`,
-          html: generateNewTalkSlotEmail(followerEmailData),
-          text: generateNewTalkSlotEmailPlainText(followerEmailData),
+        // Resend APIに直接fetchで送信
+        const response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: follower.email,
+            subject: `✨ ${influencer.display_name}さんの新しいTalk枠が公開されました！`,
+            html: generateNewTalkSlotEmail(followerEmailData),
+            text: generateNewTalkSlotEmailPlainText(followerEmailData),
+          }),
         });
 
-        if (emailError) {
-          console.error(`❌ メール送信エラー (${followerUser.email}):`, emailError);
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error(`❌ メール送信エラー (${follower.email}):`, errorData);
           results.push({
-            email: followerUser.email,
+            email: follower.email,
             status: 'error',
-            error: emailError.message,
+            error: errorData.message || `HTTP ${response.status}`,
           });
         } else {
-          console.log(`✅ メール送信成功 (${followerUser.email}): ${emailResult?.id}`);
+          const emailResult = await response.json();
+          console.log(`✅ メール送信成功 (${follower.email}): ${emailResult.id}`);
           results.push({
-            email: followerUser.email,
+            email: follower.email,
             status: 'success',
-            messageId: emailResult?.id,
+            messageId: emailResult.id,
           });
         }
       } catch (error: any) {
-        console.error(`❌ メール送信エラー (${followerUser.email}):`, error);
+        console.error(`❌ メール送信エラー (${follower.email}):`, error);
         results.push({
-          email: followerUser.email,
+          email: follower.email,
           status: 'error',
           error: error.message,
         });

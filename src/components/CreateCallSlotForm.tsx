@@ -42,11 +42,11 @@ export default function CreateCallSlotForm({
 
       let defaultEndTime: Date;
 
-      // 当日（24時間以内）の場合は、Talk枠の5分前をデフォルトに設定
-      if (hoursUntilStart <= 24) {
+      // 48時間以内の場合は、Talk枠の5分前をデフォルトに設定
+      if (hoursUntilStart <= 48) {
         defaultEndTime = new Date(scheduledTime.getTime() - 5 * 60 * 1000); // 5分前
       } else {
-        // 24時間以上先の場合は、従来通り24時間前に設定
+        // 48時間以上先の場合は、24時間前に設定
         defaultEndTime = new Date(scheduledTime.getTime() - 24 * 60 * 60 * 1000); // 24時間前
       }
 
