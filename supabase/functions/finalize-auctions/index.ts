@@ -1,7 +1,6 @@
 // Supabase Edge Function: オークション終了処理
 // Cron: 毎分実行
-
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+// Deno.serve()を使用
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@14.5.0?target=deno';
 import { Resend } from 'https://esm.sh/resend@3.0.0';
@@ -29,7 +28,7 @@ interface AuctionToFinalize {
   highest_bidder_id: string;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   try {
     console.log('🔵 オークション終了処理開始');
 
