@@ -161,12 +161,15 @@ const appUrl = Deno.env.get('APP_URL') || 'https://oshicall-2936440db16b.herokua
 const fromEmail = Deno.env.get('FROM_EMAIL') || 'OshiCall <noreply@oshicall.com>';
 
 interface AuctionToFinalize {
-  auction_id: string;
+  id: string;
   call_slot_id: string;
-  influencer_user_id: string;
   end_time: string;
   current_highest_bid: number;
-  highest_bidder_id: string;
+  current_winner_id: string;
+  status: string;
+  call_slots: {
+    user_id: string;
+  };
 }
 
 Deno.serve(async (req) => {
@@ -176,8 +179,16 @@ Deno.serve(async (req) => {
     // 1. 終了したオークションを取得
     const now = new Date().toISOString();
     const { data: endedAuctions, error: auctionsError } = await supabase
-      .from('active_auctions_view')
-      .select('auction_id, call_slot_id, influencer_user_id, end_time, current_highest_bid, highest_bidder_id')
+      .from('auctions')
+      .select(`
+        id,
+        call_slot_id,
+        end_time,
+        current_highest_bid,
+        current_winner_id,
+        status,
+        call_slots!inner(user_id)
+      `)
       .eq('status', 'active')
       .lte('end_time', now);
 
@@ -198,26 +209,29 @@ Deno.serve(async (req) => {
 
     for (const auction of endedAuctions) {
       try {
-        console.log(`🔵 オークション処理: ${auction.auction_id}`);
+        const auctionId = auction.id;
+        const influencerUserId = auction.call_slots.user_id;
+
+        console.log(`🔵 オークション処理: ${auctionId}`);
 
         // 2. 最高入札を取得
         const { data: highestBid, error: bidError } = await supabase
           .from('bids')
           .select('*')
-          .eq('auction_id', auction.auction_id)
+          .eq('auction_id', auctionId)
           .order('bid_amount', { ascending: false })
           .limit(1)
           .single();
 
         if (bidError || !highestBid) {
-          console.log(`⚠️ 入札なし: ${auction.auction_id}`);
+          console.log(`⚠️ 入札なし: ${auctionId}`);
           // オークションを終了状態に更新
           await supabase
             .from('auctions')
             .update({ status: 'ended' })
-            .eq('id', auction.auction_id);
-          
-          results.push({ auction_id: auction.auction_id, status: 'no_bids' });
+            .eq('id', auctionId);
+
+          results.push({ auction_id: auctionId, status: 'no_bids' });
           continue;
         }
 
@@ -242,8 +256,8 @@ Deno.serve(async (req) => {
               .insert({
                 call_slot_id: auction.call_slot_id,
                 buyer_user_id: highestBid.user_id,
-                influencer_user_id: auction.influencer_user_id,
-                auction_id: auction.auction_id,
+                influencer_user_id: influencerUserId,
+                auction_id: auctionId,
                 purchased_price: highestBid.bid_amount,
                 platform_fee: platformFee,
                 influencer_payout: influencerPayout,
@@ -296,7 +310,7 @@ Deno.serve(async (req) => {
               const { data: influencer, error: influencerError } = await supabase
                 .from('users')
                 .select('display_name, profile_image_url')
-                .eq('id', auction.influencer_user_id)
+                .eq('id', influencerUserId)
                 .single();
 
               // auth.usersからemailを取得
@@ -371,13 +385,13 @@ Deno.serve(async (req) => {
             await supabase
               .from('auctions')
               .update({ status: 'ended', winner_user_id: highestBid.user_id })
-              .eq('id', auction.auction_id);
+              .eq('id', auctionId);
 
             // 9. 他の入札者の与信をキャンセル
             const { data: otherBids } = await supabase
               .from('bids')
               .select('stripe_payment_intent_id, user_id')
-              .eq('auction_id', auction.auction_id)
+              .eq('auction_id', auctionId)
               .neq('user_id', highestBid.user_id);
 
             if (otherBids && otherBids.length > 0) {
@@ -397,23 +411,23 @@ Deno.serve(async (req) => {
             // 10. ユーザー統計を更新
             await supabase.rpc('update_user_statistics', {
               p_fan_id: highestBid.user_id,
-              p_influencer_id: auction.influencer_user_id,
+              p_influencer_id: influencerUserId,
               p_amount: highestBid.bid_amount,
             });
 
             results.push({
-              auction_id: auction.auction_id,
+              auction_id: auctionId,
               status: 'success',
               winner_id: highestBid.user_id,
               amount: highestBid.bid_amount,
             });
 
-            console.log(`✅ オークション終了処理完了: ${auction.auction_id}`);
+            console.log(`✅ オークション終了処理完了: ${auctionId}`);
 
           } catch (captureError: any) {
             console.error(`❌ 決済確定エラー: ${captureError.message}`);
             results.push({
-              auction_id: auction.auction_id,
+              auction_id: auctionId,
               status: 'capture_failed',
               error: captureError.message,
             });
@@ -422,7 +436,7 @@ Deno.serve(async (req) => {
       } catch (error: any) {
         console.error(`❌ オークション処理エラー: ${error.message}`);
         results.push({
-          auction_id: auction.auction_id,
+          auction_id: auction.id,
           status: 'error',
           error: error.message,
         });
