@@ -126,69 +126,61 @@ export default function TalkDetail() {
     }
   };
 
-  // リアルタイム入札更新のサブスクリプション
+  // ポーリング方式で入札情報を定期的に更新（3秒ごと）
   useEffect(() => {
     if (!auctionId) {
-      console.log('⚠️ auctionIdが未設定のため、リアルタイム更新を開始できません');
+      console.log('⚠️ auctionIdが未設定のため、ポーリングを開始できません');
       return;
     }
 
-    console.log('🔵 リアルタイム更新を開始:', auctionId);
+    console.log('🔵 ポーリング開始: オークション情報を3秒ごとに更新します', auctionId);
 
-    // Supabase Realtime チャンネルを購読
-    const channel = supabase
-      .channel(`auction-${auctionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'bids',
-          filter: `auction_id=eq.${auctionId}`,
-        },
-        async (payload) => {
-          console.log('🔔 新しい入札を検知:', payload.new);
-          const newBid = payload.new as any;
+    const fetchAuctionUpdate = async () => {
+      try {
+        // オークション情報を取得
+        const { data: updatedAuction, error } = await supabase
+          .from('auctions')
+          .select('current_highest_bid, current_winner_id')
+          .eq('id', auctionId)
+          .single();
 
-          // 最高入札額を更新
-          setCurrentHighestBid(newBid.bid_amount);
-
-          // 自分の入札かチェック
-          if (supabaseUser) {
-            setIsMyBid(newBid.user_id === supabaseUser.id);
+        if (!error && updatedAuction) {
+          // 最高入札額が変わった場合のみ更新
+          if (updatedAuction.current_highest_bid !== currentHighestBid) {
+            console.log('🔔 新しい入札を検知:', {
+              old: currentHighestBid,
+              new: updatedAuction.current_highest_bid,
+              winner_id: updatedAuction.current_winner_id
+            });
+            setCurrentHighestBid(updatedAuction.current_highest_bid);
           }
 
-          // オークション情報も更新
-          const { data: updatedAuction } = await supabase
-            .from('auctions')
-            .select('current_highest_bid, current_winner_id')
-            .eq('id', auctionId)
-            .single();
-
-          if (updatedAuction) {
-            console.log('✅ オークション情報更新:', updatedAuction);
-            setCurrentHighestBid(updatedAuction.current_highest_bid);
-            if (supabaseUser) {
-              setIsMyBid(updatedAuction.current_winner_id === supabaseUser.id);
+          // 自分が最高入札者かチェック
+          if (supabaseUser) {
+            const isWinning = updatedAuction.current_winner_id === supabaseUser.id;
+            if (isWinning !== isMyBid) {
+              setIsMyBid(isWinning);
+              console.log(isWinning ? '✅ あなたが最高入札者です' : '⚠️ 他のユーザーが最高入札者です');
             }
           }
         }
-      )
-      .subscribe((status) => {
-        console.log('📡 Realtimeサブスクリプション状態:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ リアルタイム更新の購読に成功しました');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ リアルタイム更新の購読に失敗しました');
-        }
-      });
+      } catch (err) {
+        console.error('❌ ポーリングエラー:', err);
+      }
+    };
+
+    // 初回実行
+    fetchAuctionUpdate();
+
+    // 3秒ごとにポーリング
+    const intervalId = setInterval(fetchAuctionUpdate, 3000);
 
     // クリーンアップ
     return () => {
-      console.log('🔵 リアルタイム更新を停止:', auctionId);
-      supabase.removeChannel(channel);
+      console.log('🔵 ポーリング停止:', auctionId);
+      clearInterval(intervalId);
     };
-  }, [auctionId, supabaseUser]);
+  }, [auctionId, supabaseUser, currentHighestBid, isMyBid]);
 
   if (isLoading) {
     return (
