@@ -93,6 +93,7 @@ export interface TalkSession {
   auction_end_time: string;
   starting_price: number;
   current_highest_bid: number;
+  buy_now_price?: number | null;
   winner_id?: string;
   status: 'upcoming' | 'active' | 'completed' | 'cancelled';
   created_at: string;

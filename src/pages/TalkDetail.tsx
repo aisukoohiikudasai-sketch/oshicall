@@ -32,10 +32,10 @@ export default function TalkDetail() {
       try {
         setIsLoading(true);
 
-        // active_auctions_view から取得
+        // active_auctions_view から取得（buy_now_priceも含める）
         const { data, error } = await supabase
           .from('active_auctions_view')
-          .select('*')
+          .select('*, call_slots!inner(buy_now_price)')
           .eq('call_slot_id', talkId)
           .single();
 
@@ -78,6 +78,7 @@ export default function TalkDetail() {
             auction_end_time: data.end_time,
             starting_price: data.starting_price,
             current_highest_bid: data.current_highest_bid || data.starting_price,
+            buy_now_price: data.call_slots?.buy_now_price || null,
             status: data.status === 'active' ? 'upcoming' : 'ended',
             created_at: new Date().toISOString(),
             detail_image_url: data.thumbnail_url || data.influencer_image || '/images/talks/default.jpg',
