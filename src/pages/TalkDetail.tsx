@@ -32,12 +32,57 @@ export default function TalkDetail() {
       try {
         setIsLoading(true);
 
-        // active_auctions_view から取得（buy_now_priceも含める）
-        const { data, error } = await supabase
-          .from('active_auctions_view')
-          .select('*, call_slots!inner(buy_now_price)')
+        // auctionsとcall_slotsから直接取得
+        const { data: auctionData, error } = await supabase
+          .from('auctions')
+          .select(`
+            id,
+            call_slot_id,
+            status,
+            start_time,
+            end_time,
+            current_highest_bid,
+            current_winner_id,
+            call_slots!inner(
+              id,
+              user_id,
+              title,
+              description,
+              scheduled_start_time,
+              duration_minutes,
+              starting_price,
+              minimum_bid_increment,
+              buy_now_price,
+              thumbnail_url,
+              users!call_slots_user_id_fkey(
+                id,
+                display_name,
+                bio,
+                profile_image_url,
+                total_calls_completed,
+                average_rating
+              )
+            )
+          `)
           .eq('call_slot_id', talkId)
+          .eq('status', 'active')
           .single();
+
+        const data = auctionData ? {
+          auction_id: auctionData.id,
+          call_slot_id: auctionData.call_slot_id,
+          status: auctionData.status,
+          end_time: auctionData.end_time,
+          current_highest_bid: auctionData.current_highest_bid,
+          current_winner_id: auctionData.current_winner_id,
+          ...auctionData.call_slots,
+          influencer_id: auctionData.call_slots.user_id,
+          influencer_name: auctionData.call_slots.users?.display_name,
+          influencer_bio: auctionData.call_slots.users?.bio,
+          influencer_image: auctionData.call_slots.users?.profile_image_url,
+          total_calls_completed: auctionData.call_slots.users?.total_calls_completed,
+          average_rating: auctionData.call_slots.users?.average_rating,
+        } : null;
 
         if (error) {
           console.error('Talk詳細取得エラー:', error);
@@ -78,7 +123,7 @@ export default function TalkDetail() {
             auction_end_time: data.end_time,
             starting_price: data.starting_price,
             current_highest_bid: data.current_highest_bid || data.starting_price,
-            buy_now_price: data.call_slots?.buy_now_price || null,
+            buy_now_price: data.buy_now_price || null,
             status: data.status === 'active' ? 'upcoming' : 'ended',
             created_at: new Date().toISOString(),
             detail_image_url: data.thumbnail_url || data.influencer_image || '/images/talks/default.jpg',
