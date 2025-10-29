@@ -89,8 +89,10 @@ export default function MyPage() {
     duration_minutes: 30,
     starting_price: 0,
     minimum_bid_increment: 0,
+    buy_now_price: null as number | null,
     auction_end_time: '',
   });
+  const [editHasBuyNowPrice, setEditHasBuyNowPrice] = useState(false);
 
   // 編集用の状態
   const [editedDisplayName, setEditedDisplayName] = useState('');
@@ -448,8 +450,10 @@ export default function MyPage() {
       duration_minutes: slot.duration_minutes,
       starting_price: slot.starting_price,
       minimum_bid_increment: slot.minimum_bid_increment,
+      buy_now_price: slot.buy_now_price,
       auction_end_time: slot.auction_end_time?.slice(0, 16) || '',
     });
+    setEditHasBuyNowPrice(slot.buy_now_price !== null && slot.buy_now_price !== undefined);
   };
 
   const handleSaveCallSlot = async () => {
@@ -467,6 +471,7 @@ export default function MyPage() {
         duration_minutes: editForm.duration_minutes,
         starting_price: editForm.starting_price,
         minimum_bid_increment: editForm.minimum_bid_increment,
+        buy_now_price: editHasBuyNowPrice ? editForm.buy_now_price : null,
       });
 
       // オークション終了時間を更新（変更されている場合）
@@ -1748,6 +1753,48 @@ export default function MyPage() {
                   min={100}
                   step={100}
                 />
+              </div>
+
+              {/* 即決価格設定 */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="editHasBuyNowPrice"
+                    checked={editHasBuyNowPrice}
+                    onChange={(e) => {
+                      setEditHasBuyNowPrice(e.target.checked);
+                      if (!e.target.checked) {
+                        setEditForm({ ...editForm, buy_now_price: null });
+                      }
+                    }}
+                    className="h-4 w-4 text-purple-500 focus:ring-purple-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="editHasBuyNowPrice" className="text-sm font-medium text-gray-700">
+                    即決価格を設定する
+                  </label>
+                </div>
+
+                {editHasBuyNowPrice && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      即決価格（円） <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={editForm.buy_now_price || ''}
+                      onChange={(e) => setEditForm({ ...editForm, buy_now_price: parseInt(e.target.value) })}
+                      min={editForm.starting_price + 100}
+                      step={100}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder={`${editForm.starting_price + 500}以上`}
+                      required={editHasBuyNowPrice}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      ※ この価格で即座に落札できます。開始価格より高く設定してください。
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* オークション終了時間 */}

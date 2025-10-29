@@ -8,6 +8,7 @@ export interface CreateCallSlotInput {
   duration_minutes: number;
   starting_price: number;
   minimum_bid_increment: number;
+  buy_now_price?: number | null; // 即決価格
   thumbnail_url?: string;
   auction_end_time: string; // オークション終了時間
 }
@@ -28,6 +29,7 @@ export const createCallSlot = async (
       duration_minutes: input.duration_minutes,
       starting_price: input.starting_price,
       minimum_bid_increment: input.minimum_bid_increment,
+      buy_now_price: input.buy_now_price || null,
       thumbnail_url: input.thumbnail_url || null,
       is_published: true,
     })

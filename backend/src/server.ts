@@ -261,6 +261,137 @@ app.post('/api/stripe/authorize-payment', async (req: Request, res: Response) =>
 });
 
 // ============================================
+// 即決購入
+// ============================================
+app.post('/buy-now', async (req: Request, res: Response) => {
+  try {
+    const { auctionId, userId, buyNowPrice, paymentIntentId } = req.body;
+
+    console.log('🔵 即決購入処理開始:', { auctionId, userId, buyNowPrice });
+
+    // 1. オークション情報を取得
+    const { data: auction, error: auctionError } = await supabase
+      .from('auctions')
+      .select('id, call_slot_id, status, call_slots!inner(user_id, buy_now_price)')
+      .eq('id', auctionId)
+      .single();
+
+    if (auctionError || !auction) {
+      throw new Error('オークションが見つかりません');
+    }
+
+    if (auction.status !== 'active') {
+      throw new Error('このオークションは終了しています');
+    }
+
+    // 即決価格が設定されているか確認
+    const callSlot: any = auction.call_slots;
+    if (!callSlot.buy_now_price) {
+      throw new Error('このオークションには即決価格が設定されていません');
+    }
+
+    if (buyNowPrice !== callSlot.buy_now_price) {
+      throw new Error('即決価格が一致しません');
+    }
+
+    const influencerUserId = callSlot.user_id;
+    const platformFee = Math.round(buyNowPrice * 0.2);
+    const influencerPayout = buyNowPrice - platformFee;
+
+    // 2. 決済を確定（キャプチャ）
+    console.log('🔵 Payment Intent Capture:', paymentIntentId);
+    const capturedPayment = await stripe.paymentIntents.capture(paymentIntentId);
+    console.log('✅ 決済確定成功:', capturedPayment.id);
+
+    // 3. purchased_slotsテーブルに記録
+    const { data: purchasedSlot, error: purchaseError } = await supabase
+      .from('purchased_slots')
+      .insert({
+        call_slot_id: auction.call_slot_id,
+        buyer_user_id: userId,
+        influencer_user_id: influencerUserId,
+        auction_id: auctionId,
+        purchased_price: buyNowPrice,
+        platform_fee: platformFee,
+        influencer_payout: influencerPayout,
+      })
+      .select()
+      .single();
+
+    if (purchaseError) {
+      throw purchaseError;
+    }
+
+    console.log('✅ purchased_slots記録成功:', purchasedSlot.id);
+
+    // 4. payment_transactionsテーブルに記録
+    const chargeId = capturedPayment.latest_charge
+      ? (typeof capturedPayment.latest_charge === 'string'
+          ? capturedPayment.latest_charge
+          : capturedPayment.latest_charge.id)
+      : null;
+
+    await supabase.from('payment_transactions').insert({
+      purchased_slot_id: purchasedSlot.id,
+      stripe_payment_intent_id: capturedPayment.id,
+      stripe_charge_id: chargeId,
+      amount: buyNowPrice,
+      platform_fee: platformFee,
+      influencer_payout: influencerPayout,
+      status: 'captured',
+    });
+
+    console.log('✅ payment_transactions記録成功');
+
+    // 5. オークションを終了状態に更新
+    await supabase
+      .from('auctions')
+      .update({ status: 'ended', winner_user_id: userId })
+      .eq('id', auctionId);
+
+    console.log('✅ オークション終了処理完了');
+
+    // 6. 他の入札者の与信をキャンセル
+    const { data: otherBids } = await supabase
+      .from('bids')
+      .select('stripe_payment_intent_id')
+      .eq('auction_id', auctionId)
+      .neq('user_id', userId);
+
+    if (otherBids && otherBids.length > 0) {
+      console.log(`🔵 他の入札者の与信をキャンセル: ${otherBids.length}件`);
+      for (const bid of otherBids) {
+        if (bid.stripe_payment_intent_id) {
+          try {
+            await stripe.paymentIntents.cancel(bid.stripe_payment_intent_id);
+            console.log(`✅ 与信キャンセル: ${bid.stripe_payment_intent_id}`);
+          } catch (cancelError) {
+            console.warn(`⚠️ 与信キャンセル失敗（継続）:`, cancelError);
+          }
+        }
+      }
+    }
+
+    // 7. ユーザー統計を更新
+    await supabase.rpc('update_user_statistics', {
+      p_fan_id: userId,
+      p_influencer_id: influencerUserId,
+      p_amount: buyNowPrice,
+    });
+
+    console.log('✅ 即決購入完了');
+
+    res.json({
+      success: true,
+      purchasedSlotId: purchasedSlot.id,
+    });
+  } catch (error: any) {
+    console.error('❌ 即決購入エラー:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
 // 以前の与信をキャンセル
 // ============================================
 app.post('/api/stripe/cancel-authorization', async (req: Request, res: Response) => {

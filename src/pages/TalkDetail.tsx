@@ -315,6 +315,59 @@ export default function TalkDetail() {
     }
   };
 
+  const processBuyNow = async (buyNowPrice: number) => {
+    if (!user || !supabaseUser) {
+      throw new Error('ログインが必要です');
+    }
+
+    try {
+      console.log('🔵 即決購入処理開始:', { buyNowPrice, auctionId });
+
+      // Stripe PaymentIntentを作成して与信確保
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/create-payment-intent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: buyNowPrice,
+          authUserId: user.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '与信確保に失敗しました');
+      }
+
+      const { paymentIntentId } = await response.json();
+
+      // 即決購入APIを呼び出し
+      const buyNowResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/buy-now`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          auctionId,
+          userId: supabaseUser.id,
+          buyNowPrice,
+          paymentIntentId,
+        }),
+      });
+
+      if (!buyNowResponse.ok) {
+        const error = await buyNowResponse.json();
+        throw new Error(error.error || '即決購入に失敗しました');
+      }
+
+      console.log('✅ 即決購入成功');
+    } catch (error: any) {
+      console.error('即決購入エラー:', error);
+      throw error;
+    }
+  };
+
   const handleBid = async (increment: number) => {
     const newBidAmount = currentHighestBid + increment;
     
@@ -350,7 +403,7 @@ export default function TalkDetail() {
 
   const handleCustomBid = async () => {
     const amount = parseInt(customAmount);
-    
+
     if (amount <= currentHighestBid) {
       alert('現在の最高価格より高い金額を入力してください');
       return;
@@ -362,14 +415,14 @@ export default function TalkDetail() {
       setShowAuthModal(true);
       return;
     }
-    
+
     // ステップ2: カード登録チェック
     if (!supabaseUser.has_payment_method) {
       setPendingBidAmount(amount);
       setShowCardModal(true);
       return;
     }
-    
+
     // ステップ3: 与信確保を試行
     try {
       await processBid(amount);
@@ -377,6 +430,41 @@ export default function TalkDetail() {
       setCustomAmount('');
     } catch (error: any) {
       alert(`入札に失敗しました: ${error.message}`);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!talk.buy_now_price) return;
+
+    const buyNowPrice = talk.buy_now_price;
+
+    // ステップ1: ログインチェック
+    if (!user || !supabaseUser) {
+      setPendingBidAmount(buyNowPrice);
+      setShowAuthModal(true);
+      return;
+    }
+
+    // ステップ2: カード登録チェック
+    if (!supabaseUser.has_payment_method) {
+      setPendingBidAmount(buyNowPrice);
+      setShowCardModal(true);
+      return;
+    }
+
+    // 確認ダイアログ
+    if (!confirm(`即決価格 ¥${formatPrice(buyNowPrice)} で落札しますか？\nこの操作は取り消せません。`)) {
+      return;
+    }
+
+    // ステップ3: 即決購入を実行
+    try {
+      await processBuyNow(buyNowPrice);
+      alert(`✅ ¥${formatPrice(buyNowPrice)} で即決落札しました！`);
+      // オークション詳細ページから購入済みページへリダイレクト
+      navigate('/purchased-talks');
+    } catch (error: any) {
+      alert(`即決落札に失敗しました: ${error.message}`);
     }
   };
 
@@ -491,6 +579,19 @@ export default function TalkDetail() {
             </button>
           </div>
 
+          {/* Buy Now Button */}
+          {talk.buy_now_price && (
+            <div className="flex justify-center">
+              <button
+                onClick={() => handleBuyNow()}
+                className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-8 py-3 rounded-full font-bold hover:from-purple-700 hover:to-indigo-800 transition-all duration-200 shadow-lg text-base flex items-center space-x-2"
+              >
+                <span>⚡</span>
+                <span>即決で落札（¥{formatPrice(talk.buy_now_price)}）</span>
+              </button>
+            </div>
+          )}
+
           {/* Current Highest Price */}
           <div className={`backdrop-blur-sm rounded-xl p-3 shadow-lg transition-colors duration-300 ${
             isMyBid ? 'bg-green-100 border-2 border-green-300' : 'bg-white/90'
@@ -504,6 +605,11 @@ export default function TalkDetail() {
                   ¥{formatPrice(currentHighestBid)}
                   {isMyBid && <span className="ml-2 text-sm bg-green-200 text-green-800 px-2 py-1 rounded-full">You</span>}
                 </p>
+                {talk.buy_now_price && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    即決価格: <span className="font-bold text-purple-600">¥{formatPrice(talk.buy_now_price)}</span>
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => navigate(`/bid-history/${talkId}`)}

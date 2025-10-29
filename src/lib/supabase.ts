@@ -53,6 +53,7 @@ export interface CallSlot {
   duration_minutes: number;
   starting_price: number;
   minimum_bid_increment: number;
+  buy_now_price: number | null; // 即決価格
   is_published: boolean;
   thumbnail_url: string | null;
   created_at: string;

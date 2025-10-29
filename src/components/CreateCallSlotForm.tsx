@@ -21,9 +21,11 @@ export default function CreateCallSlotForm({
     duration_minutes: 15,
     starting_price: 1000,
     minimum_bid_increment: 100,
+    buy_now_price: null,
     thumbnail_url: undefined,
   });
   const [auctionEndTime, setAuctionEndTime] = useState('');
+  const [hasBuyNowPrice, setHasBuyNowPrice] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -100,6 +102,15 @@ export default function CreateCallSlotForm({
         return;
       }
 
+      // 即決価格が設定されている場合のバリデーション
+      if (hasBuyNowPrice && formData.buy_now_price) {
+        if (formData.buy_now_price <= formData.starting_price) {
+          setError('即決価格は開始価格より高く設定してください');
+          setLoading(false);
+          return;
+        }
+      }
+
       // 画像をアップロード（設定されている場合）
       let thumbnailUrl: string | undefined = formData.thumbnail_url;
       if (imageFile) {
@@ -125,6 +136,7 @@ export default function CreateCallSlotForm({
         duration_minutes: formData.duration_minutes,
         starting_price: formData.starting_price,
         minimum_bid_increment: formData.minimum_bid_increment,
+        buy_now_price: hasBuyNowPrice ? formData.buy_now_price : null,
         auction_end_time: auctionEndTime, // オークション終了時間を追加
       };
 
@@ -338,6 +350,50 @@ export default function CreateCallSlotForm({
                 required
               />
             </div>
+          </div>
+
+          {/* 即決価格設定 */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="hasBuyNowPrice"
+                checked={hasBuyNowPrice}
+                onChange={(e) => {
+                  setHasBuyNowPrice(e.target.checked);
+                  if (!e.target.checked) {
+                    setFormData(prev => ({ ...prev, buy_now_price: null }));
+                  }
+                }}
+                className="h-4 w-4 text-pink-500 focus:ring-pink-500 border-gray-300 rounded"
+              />
+              <label htmlFor="hasBuyNowPrice" className="text-sm font-medium text-gray-700">
+                即決価格を設定する
+              </label>
+            </div>
+
+            {hasBuyNowPrice && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <DollarSign className="inline h-4 w-4 mr-1" />
+                  即決価格（円） <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="buy_now_price"
+                  value={formData.buy_now_price || ''}
+                  onChange={handleChange}
+                  min={formData.starting_price + 100}
+                  step={100}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm"
+                  placeholder={`${formData.starting_price + 500}以上`}
+                  required={hasBuyNowPrice}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  ※ この価格で即座に落札できます。開始価格より高く設定してください。
+                </p>
+              </div>
+            )}
           </div>
 
           {/* サムネイル画像 */}
