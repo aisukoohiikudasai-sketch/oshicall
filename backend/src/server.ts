@@ -263,7 +263,7 @@ app.post('/api/stripe/authorize-payment', async (req: Request, res: Response) =>
 // ============================================
 // 即決購入
 // ============================================
-app.post('/buy-now', async (req: Request, res: Response) => {
+app.post('/api/buy-now', async (req: Request, res: Response) => {
   try {
     const { auctionId, userId, buyNowPrice, paymentIntentId } = req.body;
 

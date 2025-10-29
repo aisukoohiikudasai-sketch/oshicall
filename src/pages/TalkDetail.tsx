@@ -370,14 +370,26 @@ export default function TalkDetail() {
       console.log('🔵 即決購入処理開始:', { buyNowPrice, auctionId });
 
       // Stripe PaymentIntentを作成して与信確保
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/create-payment-intent`, {
+      const { data: customerData } = await supabase
+        .from('users')
+        .select('stripe_customer_id')
+        .eq('id', supabaseUser.id)
+        .single();
+
+      if (!customerData?.stripe_customer_id) {
+        throw new Error('顧客情報が見つかりません');
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/stripe/authorize-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           amount: buyNowPrice,
-          authUserId: user.id,
+          customerId: customerData.stripe_customer_id,
+          auctionId: auctionId,
+          userId: supabaseUser.id,
         }),
       });
 
@@ -389,7 +401,7 @@ export default function TalkDetail() {
       const { paymentIntentId } = await response.json();
 
       // 即決購入APIを呼び出し
-      const buyNowResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/buy-now`, {
+      const buyNowResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/buy-now`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
