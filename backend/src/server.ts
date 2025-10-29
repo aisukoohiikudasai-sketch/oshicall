@@ -308,10 +308,10 @@ app.post('/api/buy-now', async (req: Request, res: Response) => {
       .from('purchased_slots')
       .insert({
         call_slot_id: auction.call_slot_id,
-        buyer_user_id: userId,
-        influencer_user_id: influencerUserId,
+        fan_id: userId,
+        influencer_id: influencerUserId,
         auction_id: auctionId,
-        purchased_price: buyNowPrice,
+        winning_bid_amount: buyNowPrice,
         platform_fee: platformFee,
         influencer_payout: influencerPayout,
       })
