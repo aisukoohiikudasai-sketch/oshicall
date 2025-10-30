@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   User as UserIcon, 
   Calendar, 
@@ -46,6 +47,7 @@ import { calculateOshiRank, calculatePoints } from '../data/mockData';
 
 export default function MyPage() {
   const { user, supabaseUser, refreshUser } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'profile' | 'rank' | 'badges' | 'activity' | 'collection' | 'privacy'>('profile');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -112,41 +114,12 @@ export default function MyPage() {
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [emailInput, setEmailInput] = useState('');
 
-  // デモモード: ログイン無しでもダミーデータでマイページを表示
-  const isDemoMode = !user;
-  
-  // デモモード用のダミーデータ
-  const demoProfile: UserProfile = {
-    id: 'demo',
-    username: 'demo_user',
-    email: 'demo@example.com',
-    avatar_url: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh6XGT5Hz9MpAiyfTHlBczavuUjyTBza9zWdzYmoifglj0p1lsylcTEScnpSa-Youh7YXw-ssgO-mMQmw-DBz4NeesioQPTe8beOH_QS-A4JMnfZAGP-01gxPQrS-pPEnrnJxbdVnWguhCC/s400/pose_pien_uruuru_woman.png',
-    nickname: 'デモユーザー',
-    bio: 'これはデモ用のプロフィールです。実際のデータは表示されません。',
-    oshi_tags: ['#デモ', '#テスト'],
-    fan_tags: ['#デモファン'],
-    total_spent: 0,
-    successful_bids: 0,
-    created_at: new Date().toISOString(),
-    oshi_rank: {
-      level: 'Newbie',
-      points: 0,
-      title: '初心者ファン',
-      description: '初心者ファン',
-      color: 'green'
-    },
-    total_points: 0,
-    call_count: 0,
-    call_minutes: 0,
-    bid_count: 0,
-    event_count: 0,
-    badges: [],
-    privacy_settings: {
-      profile_visibility: 'public',
-      call_history_visibility: 'public',
-      influencer_visibility: {}
+  // 未ログインユーザーのリダイレクト
+  useEffect(() => {
+    if (!user || !supabaseUser) {
+      navigate('/');
     }
-  };
+  }, [user, supabaseUser, navigate]);
 
   // 初回ユーザー検出ロジック
   useEffect(() => {
@@ -713,7 +686,7 @@ export default function MyPage() {
   return (
     <div className="bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 min-h-screen">
       {/* Role Selection Modal - First Time User */}
-      {showRoleSelection && !isDemoMode && (
+      {showRoleSelection && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
@@ -752,29 +725,18 @@ export default function MyPage() {
         </div>
       )}
 
-      {/* Demo Mode Notice */}
-      {isDemoMode && (
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-3 md:p-4 text-center">
-          <div className="flex items-center justify-center space-x-2 text-yellow-800">
-            <Sparkles className="h-4 w-4 md:h-5 md:w-5" />
-            <span className="font-medium text-sm md:text-base">デモモード - サンプルデータで表示中</span>
-            <Sparkles className="h-4 w-4 md:h-5 md:w-5" />
-          </div>
-        </div>
-      )}
-
       {/* Profile Header - スッキリ版 */}
       <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
         <div className="flex items-center space-x-4 p-6">
           <div className="relative group flex-shrink-0">
             <div className="h-20 w-20 rounded-full overflow-hidden border-2 border-gray-200 shadow-md">
               <img
-                src={imagePreview || (isDemoMode ? demoProfile.avatar_url : profile?.avatar_url) || '/images/default-avatar.png'}
-                alt={isDemoMode ? demoProfile.nickname : (supabaseUser?.display_name || profile?.nickname || profile?.username) || 'ユーザー'}
+                src={imagePreview || profile?.avatar_url || '/images/default-avatar.png'}
+                alt={supabaseUser?.display_name || profile?.nickname || profile?.username || 'ユーザー'}
                 className="h-full w-full object-cover"
               />
             </div>
-            {!isDemoMode && (
+            {(
               <label className="absolute -bottom-1 -right-1 bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 transition-colors cursor-pointer shadow-md">
                 <Camera className="h-3 w-3" />
                 <input
@@ -785,7 +747,7 @@ export default function MyPage() {
                 />
               </label>
             )}
-            {!isDemoMode && supabaseUser?.is_influencer && (
+            {supabaseUser?.is_influencer && (
               <div className="absolute -top-1 -right-1 bg-purple-500 text-white px-2 py-1 text-xs font-bold rounded-full shadow-md">
                 ✨
               </div>
@@ -794,7 +756,7 @@ export default function MyPage() {
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-3 mb-2">
-              {isEditingProfile && !isDemoMode ? (
+              {isEditingProfile ? (
                 <input
                   type="text"
                   value={editedDisplayName}
@@ -805,10 +767,10 @@ export default function MyPage() {
                 />
               ) : (
                 <h1 className="text-xl font-bold text-gray-800 truncate">
-                  {isDemoMode ? demoProfile.nickname : (supabaseUser?.display_name || profile?.nickname || profile?.username) || 'ユーザー'}
+                  {supabaseUser?.display_name || profile?.nickname || profile?.username || 'ユーザー'}
                 </h1>
               )}
-              {!isDemoMode && (
+              {(
                 <>
                   {isEditingProfile ? (
                     <div className="flex items-center space-x-2">
@@ -849,12 +811,12 @@ export default function MyPage() {
               )}
             </div>
             
-            {!isDemoMode && user?.email && (
+            {user?.email && (
               <p className="text-xs text-gray-600 truncate">{user.email}</p>
             )}
             
             {/* 統計情報 - スッキリ版 */}
-            {!isDemoMode && (
+            {(
               <div className="flex space-x-8 mt-4">
                 {supabaseUser?.is_influencer ? (
                   <>
@@ -874,15 +836,15 @@ export default function MyPage() {
                 ) : (
                   <>
                     <div className="text-center">
-                      <div className="text-sm font-bold text-pink-600">¥{formatPrice(isDemoMode ? demoProfile.total_spent : (supabaseUser?.total_spent || profile?.total_spent || 0))}</div>
+                      <div className="text-sm font-bold text-pink-600">¥{formatPrice((supabaseUser?.total_spent || profile?.total_spent || 0))}</div>
                       <div className="text-xs text-gray-600">支払い</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm font-bold text-green-600">{isDemoMode ? demoProfile.call_count : (supabaseUser?.total_calls_purchased || profile?.call_count || 0)}</div>
+                      <div className="text-sm font-bold text-green-600">{supabaseUser?.total_calls_purchased || profile?.call_count || 0}</div>
                       <div className="text-xs text-gray-600">通話</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm font-bold text-purple-600">{isDemoMode ? demoProfile.total_points : (profile?.total_points || 0)}</div>
+                      <div className="text-sm font-bold text-purple-600">{profile?.total_points || 0}</div>
                       <div className="text-xs text-gray-600">ポイント</div>
                     </div>
                   </>
@@ -906,7 +868,7 @@ export default function MyPage() {
       </div>
 
       {/* Talk枠管理 - スッキリ版 */}
-      {!isDemoMode && supabaseUser?.is_influencer && (
+      {supabaseUser?.is_influencer && (
         <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
           <div className="flex justify-between items-center p-6 border-b border-gray-200">
             <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
@@ -1145,7 +1107,7 @@ export default function MyPage() {
           <div className="p-6">
             <h2 className="text-lg font-bold text-gray-800 mb-4">プロフィール設定</h2>
               
-              {isDemoMode && (
+              {(
                 <div className="bg-blue-50 p-3 mb-4">
                   <p className="text-blue-800 text-sm">
                     💡 デモモードでは編集機能は表示されません。実際のアプリケーションでは、ここでプロフィールを編集できます。
@@ -1153,7 +1115,7 @@ export default function MyPage() {
                 </div>
               )}
               
-              {isEditingProfile && !isDemoMode ? (
+              {isEditingProfile ? (
                 <div className="space-y-4">
                   <div className="bg-blue-50 p-3">
                     <p className="text-blue-800 text-sm">
@@ -1179,7 +1141,7 @@ export default function MyPage() {
                   <div>
                     <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">推しタグ</label>
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {(isDemoMode ? demoProfile.oshi_tags : (profile?.oshi_tags || [])).map((tag, index) => (
+                      {((profile?.oshi_tags || [])).map((tag, index) => (
                         <span
                           key={index}
                           className="bg-pink-100 text-pink-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium flex items-center space-x-2"
@@ -1215,7 +1177,7 @@ export default function MyPage() {
                   <div>
                     <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">ファンタグ</label>
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {(isDemoMode ? demoProfile.fan_tags : (profile?.fan_tags || [])).map((tag, index) => (
+                      {((profile?.fan_tags || [])).map((tag, index) => (
                         <span
                           key={index}
                           className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium flex items-center space-x-2"
@@ -1253,14 +1215,14 @@ export default function MyPage() {
                   <div>
                     <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3">自己紹介</h3>
                     <p className="text-sm md:text-base text-gray-600 bg-gray-50 rounded-lg p-3 md:p-4">
-                      {isDemoMode ? demoProfile.bio : (supabaseUser?.bio || profile?.bio || '自己紹介が設定されていません')}
+                      {(supabaseUser?.bio || profile?.bio || '自己紹介が設定されていません')}
                     </p>
                   </div>
                   
                   <div>
                     <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3">推しタグ</h3>
                     <div className="flex flex-wrap gap-2">
-                      {(isDemoMode ? demoProfile.oshi_tags : (profile?.oshi_tags || [])).map((tag, index) => (
+                      {((profile?.oshi_tags || [])).map((tag, index) => (
                         <span
                           key={index}
                           className="bg-pink-100 text-pink-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium"
@@ -1274,7 +1236,7 @@ export default function MyPage() {
                   <div>
                     <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3">ファンタグ</h3>
                     <div className="flex flex-wrap gap-2">
-                      {(isDemoMode ? demoProfile.fan_tags : (profile?.fan_tags || [])).map((tag, index) => (
+                      {((profile?.fan_tags || [])).map((tag, index) => (
                         <span
                           key={index}
                           className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium"
@@ -1553,7 +1515,7 @@ export default function MyPage() {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">プライバシー設定</h2>
               
-              {isDemoMode && (
+              {(
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <p className="text-blue-800 text-sm">
                     💡 デモモードでは設定変更は無効です。実際のアプリケーションでは、ここでプライバシー設定を変更できます。
@@ -1571,7 +1533,7 @@ export default function MyPage() {
                         name="profile_visibility"
                         value="public"
                         checked={profile.privacy_settings.profile_visibility === 'public'}
-                        onChange={(e) => !isDemoMode && setProfile({
+                        onChange={(e) => setProfile({
                           ...profile,
                           privacy_settings: {
                             ...profile.privacy_settings,
@@ -1590,7 +1552,7 @@ export default function MyPage() {
                         name="profile_visibility"
                         value="link_only"
                         checked={profile.privacy_settings.profile_visibility === 'link_only'}
-                        onChange={(e) => !isDemoMode && setProfile({
+                        onChange={(e) => setProfile({
                           ...profile,
                           privacy_settings: {
                             ...profile.privacy_settings,
@@ -1609,7 +1571,7 @@ export default function MyPage() {
                         name="profile_visibility"
                         value="private"
                         checked={profile.privacy_settings.profile_visibility === 'private'}
-                        onChange={(e) => !isDemoMode && setProfile({
+                        onChange={(e) => setProfile({
                           ...profile,
                           privacy_settings: {
                             ...profile.privacy_settings,
@@ -1634,7 +1596,7 @@ export default function MyPage() {
                         name="call_history_visibility"
                         value="public"
                         checked={profile.privacy_settings.call_history_visibility === 'public'}
-                        onChange={(e) => !isDemoMode && setProfile({
+                        onChange={(e) => setProfile({
                           ...profile,
                           privacy_settings: {
                             ...profile.privacy_settings,
@@ -1653,7 +1615,7 @@ export default function MyPage() {
                         name="call_history_visibility"
                         value="private"
                         checked={profile.privacy_settings.call_history_visibility === 'private'}
-                        onChange={(e) => !isDemoMode && setProfile({
+                        onChange={(e) => setProfile({
                           ...profile,
                           privacy_settings: {
                             ...profile.privacy_settings,
