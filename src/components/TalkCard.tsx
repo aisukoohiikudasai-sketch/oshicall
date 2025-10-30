@@ -5,6 +5,7 @@ import { TalkSession } from '../types';
 import CountdownTimer from './CountdownTimer';
 import { followInfluencer, unfollowInfluencer, checkFollowStatus } from '../api/follows';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface TalkCardProps {
   talk: TalkSession;
@@ -15,6 +16,7 @@ interface TalkCardProps {
 
 export default function TalkCard({ talk, onSelect, isFollowing: initialIsFollowing, onFollowChange }: TalkCardProps) {
   const { supabaseUser } = useAuth();
+  const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing ?? false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
 
@@ -81,9 +83,15 @@ export default function TalkCard({ talk, onSelect, isFollowing: initialIsFollowi
         
         {/* Host Name - Top */}
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-white drop-shadow-lg">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/i/${talk.influencer.id}`);
+            }}
+            className="text-xl font-bold text-white drop-shadow-lg hover:text-pink-200 transition-colors"
+          >
             {talk.influencer.name}
-          </h3>
+          </button>
           {supabaseUser && supabaseUser.id !== talk.influencer.id && (
             <button
               onClick={handleFollowClick}
