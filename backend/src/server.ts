@@ -48,17 +48,13 @@ const allowedOrigins = getAllowedOrigins();
 
 console.log('🌐 CORS許可オリジン:', allowedOrigins);
 
-app.use(cors({
+// CORSミドルウェア（APIルートのみに適用）
+const corsMiddleware = cors({
   origin: function (origin, callback) {
-    // 開発環境では origin が undefined の場合がある（Postmanなど）
+    // ブラウザからの直接ナビゲーション（GET /）ではoriginが undefined
+    // これは正常な動作なので許可する
     if (!origin) {
-      // 開発環境のみoriginなしを許可
-      if (process.env.NODE_ENV !== 'production') {
-        callback(null, true);
-      } else {
-        console.log('❌ CORS blocked: No origin header in production');
-        callback(new Error('Not allowed by CORS'));
-      }
+      callback(null, true);
       return;
     }
 
@@ -70,7 +66,11 @@ app.use(cors({
     }
   },
   credentials: true
-}));
+});
+
+// APIルートにのみCORSを適用
+app.use('/api', corsMiddleware);
+app.use('/health', corsMiddleware);
 
 // CSP ヘッダーを設定
 app.use((req, res, next) => {
