@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, History, Edit3, Share2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, History, Edit3, Share2, Info } from 'lucide-react';
 import { mockTalkSessions, mockBids } from '../data/mockData';
 import { TalkSession } from '../types';
 import CountdownTimer from '../components/CountdownTimer';
@@ -624,6 +624,20 @@ export default function TalkDetail() {
             <p className="text-sm md:text-base text-white drop-shadow-md bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 inline-block">
               {talk.host_message}
             </p>
+          </div>
+
+          {/* Payment Timing Explanation */}
+          <div className="bg-blue-500/90 backdrop-blur-sm border-2 border-blue-300 rounded-xl p-3 shadow-lg">
+            <div className="flex items-start space-x-2">
+              <Info className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-white">
+                <p className="font-bold mb-1">💡 お支払いのタイミング</p>
+                <p className="text-xs leading-relaxed">
+                  入札時点では料金は発生しません。<br />
+                  <span className="font-bold">オークション終了後、最高入札者として落札した場合のみ</span>、登録済みのカードから自動決済されます。
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Quick Bid Buttons */}
