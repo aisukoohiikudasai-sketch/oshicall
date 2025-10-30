@@ -31,11 +31,12 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
     rootElement.scrollTop = 0;
   }, [children]);
 
+  // ログイン状態に応じてナビゲーション項目を動的に生成
   const navItems = [
     { id: 'home', label: 'ホーム', icon: Calendar },
     { id: 'talk', label: 'Talk', icon: Video },
     { id: 'rankings', label: 'ランキング', icon: Crown },
-    { id: 'mypage', label: 'マイページ', icon: User },
+    ...(user ? [{ id: 'mypage', label: 'マイページ', icon: User }] : []),
   ];
 
   return (
