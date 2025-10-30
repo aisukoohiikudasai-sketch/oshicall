@@ -21,16 +21,48 @@ const supabase = createClient(
 );
 
 // CORS設定
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'https://oshicall-2936440db16b.herokuapp.com'
-];
+const getAllowedOrigins = () => {
+  const origins: string[] = [];
+
+  // 本番環境のドメイン（常に許可）
+  origins.push('https://oshi-talk.com');
+  origins.push('https://www.oshi-talk.com');
+  origins.push('https://oshicall-2936440db16b.herokuapp.com'); // 移行期間用
+
+  // 開発環境の場合はlocalhostも許可
+  if (process.env.NODE_ENV !== 'production') {
+    origins.push('http://localhost:5173');
+    origins.push('http://localhost:5174');
+    origins.push('http://localhost:3000');
+  }
+
+  // 環境変数で追加のオリジンを指定可能
+  if (process.env.FRONTEND_URL) {
+    origins.push(process.env.FRONTEND_URL);
+  }
+
+  return origins;
+};
+
+const allowedOrigins = getAllowedOrigins();
+
+console.log('🌐 CORS許可オリジン:', allowedOrigins);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // 開発環境では origin が undefined の場合がある
-    if (!origin || allowedOrigins.includes(origin)) {
+    // 開発環境では origin が undefined の場合がある（Postmanなど）
+    if (!origin) {
+      // 開発環境のみoriginなしを許可
+      if (process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        console.log('❌ CORS blocked: No origin header in production');
+        callback(new Error('Not allowed by CORS'));
+      }
+      return;
+    }
+
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.log('❌ CORS blocked origin:', origin);
