@@ -50,7 +50,7 @@ export default function Layout({ children, onNavigate }: LayoutProps) {
             >
               <Heart className="h-8 w-8 text-pink-500 fill-current" />
               <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-                推しトーク
+                OshiTalk
               </h1>
             </button>
             
