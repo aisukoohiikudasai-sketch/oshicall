@@ -98,6 +98,9 @@ export default function MyPage() {
   const [editedDisplayName, setEditedDisplayName] = useState('');
   const [editedBio, setEditedBio] = useState('');
   const [imagePreview, setImagePreview] = useState<string>('');
+
+  // ロール選択モーダル
+  const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -145,19 +148,31 @@ export default function MyPage() {
     }
   };
 
+  // 初回ユーザー検出ロジック
+  useEffect(() => {
+    if (supabaseUser) {
+      const hasCompletedOnboarding = localStorage.getItem(`onboarding_${supabaseUser.id}`);
+
+      // オンボーディングが完了していない かつ インフルエンサーでもない場合
+      if (!hasCompletedOnboarding && !supabaseUser.is_influencer) {
+        setShowRoleSelection(true);
+      }
+    }
+  }, [supabaseUser]);
+
   // 実際のユーザーデータをロード
   useEffect(() => {
     if (supabaseUser) {
       setEditedDisplayName(supabaseUser.display_name);
       setEditedBio(supabaseUser.bio || '');
       setImagePreview(supabaseUser.profile_image_url || '');
-      
+
       // ユーザー統計を取得
       loadUserStats();
-      
+
       // バッジ、活動ログ、コレクションを取得
       loadUserData();
-      
+
       // インフルエンサーの場合、Stripe Connect状態を確認
       if (supabaseUser.is_influencer) {
         checkStripeAccountStatus();
@@ -631,6 +646,34 @@ export default function MyPage() {
     }
   };
 
+  // ロール選択ハンドラー
+  const handleRoleSelection = async (role: 'fan' | 'influencer') => {
+    if (!supabaseUser) return;
+
+    try {
+      if (role === 'fan') {
+        // ファンとして続行
+        localStorage.setItem(`onboarding_${supabaseUser.id}`, 'fan');
+        setShowRoleSelection(false);
+      } else {
+        // インフルエンサー申請
+        const { error } = await supabase
+          .from('users')
+          .update({ influencer_application_status: 'pending' })
+          .eq('id', supabaseUser.id);
+
+        if (error) throw error;
+
+        localStorage.setItem(`onboarding_${supabaseUser.id}`, 'influencer_pending');
+        setShowRoleSelection(false);
+        alert('インフルエンサー申請を受け付けました。審査後にご連絡いたします。');
+      }
+    } catch (err: any) {
+      console.error('ロール選択エラー:', err);
+      alert('エラーが発生しました。もう一度お試しください。');
+    }
+  };
+
   const addTag = (type: 'oshi' | 'fan') => {
     if (newTag.trim() && profile && !profile[`${type}_tags`].includes(newTag.trim())) {
       setProfile({
@@ -669,6 +712,46 @@ export default function MyPage() {
 
   return (
     <div className="bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 min-h-screen">
+      {/* Role Selection Modal - First Time User */}
+      {showRoleSelection && !isDemoMode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+              OshiTalkへようこそ！
+            </h2>
+            <p className="text-gray-600 mb-6 text-center">
+              あなたの利用方法を選択してください
+            </p>
+
+            <div className="space-y-4">
+              {/* Fan Option */}
+              <button
+                onClick={() => handleRoleSelection('fan')}
+                className="w-full p-6 border-2 border-pink-300 rounded-xl hover:border-pink-500 hover:bg-pink-50 transition-all"
+              >
+                <div className="text-4xl mb-2">💕</div>
+                <h3 className="font-bold text-gray-900 mb-2">ファンとして参加</h3>
+                <p className="text-sm text-gray-600">
+                  推しのTalk枠に入札して、通話を楽しみたい
+                </p>
+              </button>
+
+              {/* Influencer Option */}
+              <button
+                onClick={() => handleRoleSelection('influencer')}
+                className="w-full p-6 border-2 border-purple-300 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all"
+              >
+                <div className="text-4xl mb-2">✨</div>
+                <h3 className="font-bold text-gray-900 mb-2">Talk枠を作成したい</h3>
+                <p className="text-sm text-gray-600">
+                  自分のTalk枠を作成して、ファンと通話したい
+                </p>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Demo Mode Notice */}
       {isDemoMode && (
         <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-3 md:p-4 text-center">
