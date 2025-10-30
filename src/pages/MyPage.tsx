@@ -103,9 +103,17 @@ export default function MyPage() {
 
   // ロール選択モーダル
   const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [showInfluencerApplication, setShowInfluencerApplication] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // インフルエンサー申請フォーム
+  const [applicationForm, setApplicationForm] = useState({
+    realName: '',
+    affiliation: '',
+    snsLinks: ['']
+  });
   
   // Stripe Connect関連の状態
   const [stripeAccountStatus, setStripeAccountStatus] = useState<string>('not_setup');
@@ -629,22 +637,116 @@ export default function MyPage() {
         localStorage.setItem(`onboarding_${supabaseUser.id}`, 'fan');
         setShowRoleSelection(false);
       } else {
-        // インフルエンサー申請
-        const { error } = await supabase
-          .from('users')
-          .update({ influencer_application_status: 'pending' })
-          .eq('id', supabaseUser.id);
-
-        if (error) throw error;
-
-        localStorage.setItem(`onboarding_${supabaseUser.id}`, 'influencer_pending');
+        // インフルエンサー申請フォームを表示
         setShowRoleSelection(false);
-        alert('インフルエンサー申請を受け付けました。審査後にご連絡いたします。');
+        setShowInfluencerApplication(true);
       }
     } catch (err: any) {
       console.error('ロール選択エラー:', err);
       alert('エラーが発生しました。もう一度お試しください。');
     }
+  };
+
+  // インフルエンサー申請送信
+  const handleInfluencerApplicationSubmit = async () => {
+    if (!supabaseUser) return;
+
+    // バリデーション
+    if (!applicationForm.realName.trim()) {
+      alert('お名前を入力してください。');
+      return;
+    }
+
+    if (!applicationForm.affiliation.trim()) {
+      alert('所属を入力してください。');
+      return;
+    }
+
+    const validSnsLinks = applicationForm.snsLinks.filter(link => link.trim());
+    if (validSnsLinks.length === 0) {
+      alert('少なくとも1つのSNSアカウントを入力してください。');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError('');
+
+      // データベースに申請ステータスを保存
+      const { error: dbError } = await supabase
+        .from('users')
+        .update({
+          influencer_application_status: 'pending',
+          bio: `${applicationForm.realName} | ${applicationForm.affiliation}`
+        })
+        .eq('id', supabaseUser.id);
+
+      if (dbError) throw dbError;
+
+      // バックエンドにメール送信リクエスト
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/send-influencer-application`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: supabaseUser.id,
+          displayName: supabaseUser.display_name,
+          email: supabaseUser.email,
+          realName: applicationForm.realName,
+          affiliation: applicationForm.affiliation,
+          snsLinks: validSnsLinks
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('メール送信に失敗しました');
+      }
+
+      localStorage.setItem(`onboarding_${supabaseUser.id}`, 'influencer_pending');
+      setShowInfluencerApplication(false);
+      alert('インフルエンサー申請を受け付けました。審査後にご連絡いたします。\n通常、1〜3営業日以内に審査結果をメールでお知らせします。');
+
+      // フォームをリセット
+      setApplicationForm({
+        realName: '',
+        affiliation: '',
+        snsLinks: ['']
+      });
+    } catch (err: any) {
+      console.error('インフルエンサー申請エラー:', err);
+      setError(err.message || 'エラーが発生しました。もう一度お試しください。');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // SNSリンク追加
+  const addSnsLink = () => {
+    if (applicationForm.snsLinks.length < 5) {
+      setApplicationForm({
+        ...applicationForm,
+        snsLinks: [...applicationForm.snsLinks, '']
+      });
+    }
+  };
+
+  // SNSリンク削除
+  const removeSnsLink = (index: number) => {
+    setApplicationForm({
+      ...applicationForm,
+      snsLinks: applicationForm.snsLinks.filter((_, i) => i !== index)
+    });
+  };
+
+  // SNSリンク更新
+  const updateSnsLink = (index: number, value: string) => {
+    const newLinks = [...applicationForm.snsLinks];
+    newLinks[index] = value;
+    setApplicationForm({
+      ...applicationForm,
+      snsLinks: newLinks
+    });
   };
 
   const addTag = (type: 'oshi' | 'fan') => {
@@ -719,6 +821,120 @@ export default function MyPage() {
                 <p className="text-sm text-gray-600">
                   自分のTalk枠を作成して、ファンと通話したい
                 </p>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Influencer Application Modal */}
+      {showInfluencerApplication && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl my-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+              インフルエンサー申請
+            </h2>
+            <p className="text-gray-600 mb-6 text-center text-sm">
+              以下の情報を入力してください。審査後、1〜3営業日以内にご連絡いたします。
+            </p>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* お名前 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  お名前 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={applicationForm.realName}
+                  onChange={(e) => setApplicationForm({ ...applicationForm, realName: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="山田 太郎"
+                  disabled={saving}
+                />
+              </div>
+
+              {/* 所属 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  所属 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={applicationForm.affiliation}
+                  onChange={(e) => setApplicationForm({ ...applicationForm, affiliation: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="フリーランス、所属事務所名など"
+                  disabled={saving}
+                />
+              </div>
+
+              {/* SNSアカウントリンク */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  SNSアカウントリンク <span className="text-red-500">*</span>
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Instagram、X（Twitter）、TikTokなどのアカウントURLを入力してください
+                </p>
+                {applicationForm.snsLinks.map((link, index) => (
+                  <div key={index} className="flex items-center space-x-2 mb-2">
+                    <input
+                      type="url"
+                      value={link}
+                      onChange={(e) => updateSnsLink(index, e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="https://instagram.com/yourname"
+                      disabled={saving}
+                    />
+                    {applicationForm.snsLinks.length > 1 && (
+                      <button
+                        onClick={() => removeSnsLink(index)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        disabled={saving}
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {applicationForm.snsLinks.length < 5 && (
+                  <button
+                    onClick={addSnsLink}
+                    className="text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center space-x-1"
+                    disabled={saving}
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>SNSリンクを追加</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-8">
+              <button
+                onClick={() => {
+                  setShowInfluencerApplication(false);
+                  setShowRoleSelection(true);
+                  setApplicationForm({ realName: '', affiliation: '', snsLinks: [''] });
+                }}
+                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium"
+                disabled={saving}
+              >
+                戻る
+              </button>
+              <button
+                onClick={handleInfluencerApplicationSubmit}
+                disabled={saving}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? '送信中...' : '申請を送信'}
               </button>
             </div>
           </div>

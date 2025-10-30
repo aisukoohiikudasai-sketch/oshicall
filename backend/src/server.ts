@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { createCallsRouter } from './routes/calls';
+import influencerApplicationRouter from './routes/influencerApplication';
 
 dotenv.config();
 
@@ -101,6 +102,7 @@ if (process.env.NODE_ENV === 'production') {
 // ============================================
 const callsRouter = createCallsRouter(supabase);
 app.use('/api/calls', callsRouter);
+app.use('/api', influencerApplicationRouter);
 
 // ============================================
 // Stripe Customer作成
