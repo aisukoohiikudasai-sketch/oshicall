@@ -1,6 +1,6 @@
 # Supabase 認証セットアップガイド
 
-このガイドでは、OshiCall アプリケーションを Clerk から Supabase 認証に移行する手順を説明します。
+このガイドでは、OshiTalk アプリケーションを Clerk から Supabase 認証に移行する手順を説明します。
 
 ## 1. 環境変数の設定
 

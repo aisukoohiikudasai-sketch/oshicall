@@ -1,6 +1,6 @@
-# OshiCall Backend API
+# OshiTalk Backend API
 
-OshiCallのバックエンドAPIサーバー（Express + TypeScript）
+OshiTalkのバックエンドAPIサーバー（Express + TypeScript）
 
 ## 機能
 

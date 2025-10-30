@@ -62,7 +62,7 @@ Supabase Dashboard → Project Settings → Edge Functions で設定:
 
 ```bash
 RESEND_API_KEY=re_xxxxxxxxxxxxx
-FROM_EMAIL=OshiCall <noreply@oshicall.com>
+FROM_EMAIL=OshiTalk <noreply@oshicall.com>
 APP_URL=https://oshicall-2936440db16b.herokuapp.com
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key

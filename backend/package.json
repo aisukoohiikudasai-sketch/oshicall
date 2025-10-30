@@ -1,7 +1,7 @@
 {
-  "name": "oshicall-backend",
+  "name": "oshitalk-backend",
   "version": "1.0.0",
-  "description": "OshiCall backend API server",
+  "description": "推しトーク backend API server",
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/server.ts",

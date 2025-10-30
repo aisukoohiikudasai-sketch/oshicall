@@ -74,7 +74,7 @@ Talk 詳細ページに「共有」ボタンを追加しました：
 
 ```html
 <!-- index.htmlに追加 -->
-<meta property="og:title" content="あいりとのTalk - OshiCall" />
+<meta property="og:title" content="あいりとのTalk - OshiTalk" />
 <meta property="og:description" content="今日もお喋りしましょうね〜✨" />
 <meta
   property="og:image"

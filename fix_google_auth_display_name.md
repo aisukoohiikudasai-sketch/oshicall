@@ -29,9 +29,9 @@ Google 認証画面で Supabase の Project ID が表示されている
 1. **Google Cloud Console** にアクセス
 2. **APIs & Services** → **OAuth consent screen** に移動
 3. **App information** セクションで以下を設定：
-   - **App name**: `OshiCall`
+   - **App name**: `OshiTalk`
    - **User support email**: 適切なメールアドレス
-   - **App logo**: OshiCall のロゴ画像（オプション）
+   - **App logo**: OshiTalk のロゴ画像（オプション）
 
 #### 承認済みドメインの設定
 
@@ -70,11 +70,11 @@ const getRedirectUrl = () => {
 1. **ブラウザのキャッシュをクリア**
 2. **プライベートブラウジングモード**でアクセス
 3. **Google 認証を試行**
-4. **認証画面で「OshiCall」が表示されることを確認**
+4. **認証画面で「OshiTalk」が表示されることを確認**
 
 #### 確認項目
 
-- [ ] 認証画面で「OshiCall」が表示される
+- [ ] 認証画面で「OshiTalk」が表示される
 - [ ] Project ID ではなくサービス名が表示される
 - [ ] ロゴが表示される（設定した場合）
 - [ ] 認証フローが正常に動作する

@@ -32,7 +32,7 @@ Value: re_5dwz19Je_N8kL15s134R2xbbHGXigybgr
 #### 変数2: FROM_EMAIL
 ```
 Name: FROM_EMAIL
-Value: OshiCall <noreply@oshicall.com>
+Value: OshiTalk <noreply@oshicall.com>
 ```
 **Save** をクリック
 

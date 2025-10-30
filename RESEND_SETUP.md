@@ -13,7 +13,7 @@
 1. Resendダッシュボードにログイン
 2. 左メニューから「API Keys」を選択
 3. 「Create API Key」をクリック
-4. 名前を入力（例: `OshiCall Production`）
+4. 名前を入力（例: `OshiTalk Production`）
 5. 権限は「Sending access」を選択
 6. API Keyをコピー（**一度しか表示されないため注意**）
 
@@ -46,7 +46,7 @@
 
 ```
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-FROM_EMAIL=OshiCall <noreply@oshicall.com>
+FROM_EMAIL=OshiTalk <noreply@oshicall.com>
 APP_URL=https://oshicall-2936440db16b.herokuapp.com
 ```
 
@@ -58,7 +58,7 @@ APP_URL=https://oshicall-2936440db16b.herokuapp.com
 ```bash
 # Resend設定
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-FROM_EMAIL=OshiCall <noreply@oshicall.com>
+FROM_EMAIL=OshiTalk <noreply@oshicall.com>
 APP_URL=http://localhost:5173
 ```
 
@@ -67,7 +67,7 @@ APP_URL=http://localhost:5173
 ```bash
 # Supabase Edge Functionの環境変数を設定
 supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-supabase secrets set FROM_EMAIL="OshiCall <noreply@oshicall.com>"
+supabase secrets set FROM_EMAIL="OshiTalk <noreply@oshicall.com>"
 supabase secrets set APP_URL=http://localhost:5173
 ```
 

@@ -29,7 +29,7 @@ export default function HowItWorks() {
     {
       step: 1,
       title: 'アカウント作成',
-      description: '無料でアカウントを作成して、OshiCallの世界へようこそ！',
+      description: '無料でアカウントを作成して、推しトークの世界へようこそ！',
     },
     {
       step: 2,
@@ -68,7 +68,7 @@ export default function HowItWorks() {
           </h1>
           
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-            OshiCallは、あなたの大好きなアイドルとビデオ通話できる権利をオークション形式で競える
+            推しトークは、あなたの大好きなアイドルとビデオ通話できる権利をオークション形式で競える
             革新的なマーケットプレイスです。特別な時間を手に入れて、推しとの距離を縮めましょう。
           </p>
           
@@ -98,7 +98,7 @@ export default function HowItWorks() {
       {/* Features Section */}
       <section className="py-16">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">OshiCallの特徴</h2>
+          <h2 className="text-4xl font-bold text-gray-800 mb-4">推しトークの特徴</h2>
           <p className="text-xl text-gray-600">推しとの特別な時間を実現する4つの理由</p>
         </div>
 

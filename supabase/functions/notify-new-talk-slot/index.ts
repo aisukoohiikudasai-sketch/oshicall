@@ -100,9 +100,9 @@ function generateNewTalkSlotEmail(data: NewTalkSlotEmailData): string {
           </tr>
           <tr>
             <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <p style="margin: 0 0 10px; color: #6b7280; font-size: 14px;">このメールは OshiCall から自動送信されています</p>
+              <p style="margin: 0 0 10px; color: #6b7280; font-size: 14px;">このメールは OshiTalk から自動送信されています</p>
               <p style="margin: 0 0 10px; color: #9ca3af; font-size: 12px;">フォロー設定を変更したい場合は、マイページから設定できます</p>
-              <p style="margin: 0; color: #9ca3af; font-size: 12px;">© ${new Date().getFullYear()} OshiCall. All rights reserved.</p>
+              <p style="margin: 0; color: #9ca3af; font-size: 12px;">© ${new Date().getFullYear()} OshiTalk. All rights reserved.</p>
             </td>
           </tr>
         </table>
@@ -141,9 +141,9 @@ ${data.talkDescription ? data.talkDescription + '\n\n' : ''}日時: ${data.talkD
 素敵なTalk体験をお楽しみください。
 
 ━━━━━━━━━━━━━━━━━━━━━━
-このメールは OshiCall から自動送信されています
+このメールは OshiTalk から自動送信されています
 フォロー設定を変更したい場合は、マイページから設定できます
-© ${new Date().getFullYear()} OshiCall. All rights reserved.
+© ${new Date().getFullYear()} OshiTalk. All rights reserved.
   `.trim();
 }
 
@@ -155,7 +155,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const resendApiKey = Deno.env.get('RESEND_API_KEY') || '';
 const appUrl = Deno.env.get('APP_URL') || 'https://oshicall-2936440db16b.herokuapp.com';
-const fromEmail = Deno.env.get('FROM_EMAIL') || 'OshiCall <noreply@oshicall.com>';
+const fromEmail = Deno.env.get('FROM_EMAIL') || 'OshiTalk <noreply@oshicall.com>';
 
 interface CallSlotPayload {
   id: string;

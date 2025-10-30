@@ -99,7 +99,7 @@ export default function Rankings() {
           <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-4 drop-shadow-lg">
             ランキング
           </h1>
-          <p className="text-base md:text-xl text-gray-700 font-medium">✨ OshiCallのトップパフォーマーをチェック ✨</p>
+          <p className="text-base md:text-xl text-gray-700 font-medium">✨ 推しトークのトップパフォーマーをチェック ✨</p>
         </div>
       </div>
 
@@ -281,7 +281,7 @@ export default function Rankings() {
       {/* Fun Facts */}
       <div className="bg-gradient-to-r from-pink-100 via-purple-100 to-indigo-100 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl border-2 border-pink-200">
         <h3 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-4 md:mb-6 text-center">
-          📊 OshiCall統計 📊
+          📊 推しトーク統計 📊
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 text-center">
           <div className="space-y-2 md:space-y-3 bg-white rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
