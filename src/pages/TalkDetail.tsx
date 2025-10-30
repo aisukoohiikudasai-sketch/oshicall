@@ -601,12 +601,20 @@ export default function TalkDetail() {
             <Share2 className="h-6 w-6" />
           </button>
 
-          {/* Host Name */}
-          <div className="flex-1">
+          {/* Host Name with Avatar - Clickable */}
+          <button
+            onClick={() => navigate(`/i/${talk.influencer_id}`)}
+            className="flex-1 flex items-center space-x-3 hover:opacity-80 transition-opacity"
+          >
+            <img
+              src={talk.influencer.avatar_url}
+              alt={talk.influencer.name}
+              className="h-12 w-12 md:h-14 md:w-14 rounded-full border-2 border-white shadow-lg object-cover flex-shrink-0"
+            />
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-lg truncate">
               {talk.influencer.name}
             </h1>
-          </div>
+          </button>
         </div>
 
         {/* Host Message and Bidding Section - Bottom */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar } from 'lucide-react';
+import { Calendar, Search } from 'lucide-react';
 import { mockTalkSessions } from '../data/mockData';
 import { TalkSession } from '../types';
 import TalkCard from '../components/TalkCard';
@@ -16,6 +16,7 @@ export default function Home() {
   const [followingInfluencerIds, setFollowingInfluencerIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // フォロー中のインフルエンサーIDを取得
   useEffect(() => {
@@ -106,8 +107,19 @@ export default function Home() {
     navigate(`/talk/${talk.id}`);
   };
 
+  // 検索フィルター
+  const filteredTalks = talks.filter((talk) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      talk.title.toLowerCase().includes(query) ||
+      talk.influencer.name.toLowerCase().includes(query) ||
+      talk.description.toLowerCase().includes(query)
+    );
+  });
+
   // フォロー中のインフルエンサーのTalk枠を優先してソート
-  const sortedTalks = [...talks].sort((a, b) => {
+  const sortedTalks = [...filteredTalks].sort((a, b) => {
     const aIsFollowing = followingInfluencerIds.has(a.influencer_id);
     const bIsFollowing = followingInfluencerIds.has(b.influencer_id);
 
@@ -122,11 +134,23 @@ export default function Home() {
   return (
     <div className="space-y-3">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0 pt-6">
-        <div className="text-center md:text-left w-full md:w-auto">
+      <div className="flex flex-col space-y-3 pt-6">
+        <div className="text-center md:text-left w-full">
           <h1 className="text-xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-3">
             推しとつながる、あなただけの時間
           </h1>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="インフルエンサー名やTalk枠のタイトルで検索..."
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+          />
         </div>
       </div>
 
@@ -144,13 +168,22 @@ export default function Home() {
             <span>読み込み中...</span>
           ) : (
             <>
-              現在 <span className="font-bold text-pink-600">{sortedTalks.length}</span> 件のTalk枠が開催中です
-              {followingInfluencerIds.size > 0 && (
+              {searchQuery ? (
                 <>
-                  {' '}
-                  <span className="text-purple-600">
-                    （フォロー中: {sortedTalks.filter(t => followingInfluencerIds.has(t.influencer_id)).length}件）
-                  </span>
+                  「<span className="font-bold text-pink-600">{searchQuery}</span>」の検索結果: {' '}
+                  <span className="font-bold text-pink-600">{sortedTalks.length}</span> 件
+                </>
+              ) : (
+                <>
+                  現在 <span className="font-bold text-pink-600">{sortedTalks.length}</span> 件のTalk枠が開催中です
+                  {followingInfluencerIds.size > 0 && (
+                    <>
+                      {' '}
+                      <span className="text-purple-600">
+                        （フォロー中: {sortedTalks.filter(t => followingInfluencerIds.has(t.influencer_id)).length}件）
+                      </span>
+                    </>
+                  )}
                 </>
               )}
             </>
@@ -178,13 +211,22 @@ export default function Home() {
       )}
 
       {/* Empty State */}
-      {sortedTalks.length === 0 && (
+      {!isLoading && sortedTalks.length === 0 && (
         <div className="text-center py-12">
           <div className="text-gray-400 mb-4">
             <Calendar className="h-16 w-16 mx-auto" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">現在開催中のTalk枠がありません</h3>
-          <p className="text-gray-500">新しいTalk枠が追加されるまでお待ちください</p>
+          {searchQuery ? (
+            <>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">検索結果が見つかりません</h3>
+              <p className="text-gray-500">別のキーワードで検索してみてください</p>
+            </>
+          ) : (
+            <>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">現在開催中のTalk枠がありません</h3>
+              <p className="text-gray-500">新しいTalk枠が追加されるまでお待ちください</p>
+            </>
+          )}
         </div>
       )}
     </div>

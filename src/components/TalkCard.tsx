@@ -88,9 +88,16 @@ export default function TalkCard({ talk, onSelect, isFollowing: initialIsFollowi
               e.stopPropagation();
               navigate(`/i/${talk.influencer.id}`);
             }}
-            className="text-xl font-bold text-white drop-shadow-lg hover:text-pink-200 transition-colors"
+            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
-            {talk.influencer.name}
+            <img
+              src={talk.influencer.avatar_url}
+              alt={talk.influencer.name}
+              className="h-10 w-10 rounded-full border-2 border-white shadow-lg object-cover"
+            />
+            <span className="text-xl font-bold text-white drop-shadow-lg">
+              {talk.influencer.name}
+            </span>
           </button>
           {supabaseUser && supabaseUser.id !== talk.influencer.id && (
             <button

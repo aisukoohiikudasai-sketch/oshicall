@@ -11,7 +11,6 @@ import Rankings from './pages/Rankings';
 import HowItWorks from './pages/HowItWorks';
 import InfluencerDashboard from './pages/InfluencerDashboard';
 import InfluencerPage from './pages/InfluencerPage';
-import ExplorePage from './pages/ExplorePage';
 import CallPage from './pages/CallPage';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -35,7 +34,6 @@ function AppContent() {
     <Layout onNavigate={handleNavigate}>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/explore" element={<ExplorePage />} />
         <Route path="/i/:influencerId" element={<InfluencerPage />} />
         <Route path="/talk" element={<Talk />} />
         <Route path="/talk/:talkId" element={<TalkDetail />} />
