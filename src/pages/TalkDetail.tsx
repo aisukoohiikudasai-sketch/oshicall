@@ -26,6 +26,10 @@ export default function TalkDetail() {
   const [showCardModal, setShowCardModal] = useState(false);
   const [pendingBidAmount, setPendingBidAmount] = useState<number>(0);
 
+  // オークション完了モーダル
+  const [showAuctionCompleteModal, setShowAuctionCompleteModal] = useState(false);
+  const [isWinner, setIsWinner] = useState(false);
+
   // Talk詳細の初期取得
   useEffect(() => {
     const fetchTalkDetail = async () => {
@@ -186,11 +190,24 @@ export default function TalkDetail() {
         // オークション情報を取得
         const { data: updatedAuction, error } = await supabase
           .from('auctions')
-          .select('current_highest_bid, current_winner_id')
+          .select('current_highest_bid, current_winner_id, status, winner_user_id')
           .eq('id', auctionId)
           .single();
 
         if (!error && updatedAuction) {
+          // オークション終了を検知
+          if (updatedAuction.status === 'ended' && !showAuctionCompleteModal) {
+            console.log('🎉 オークション終了を検知');
+
+            // 落札者かどうかを判定
+            const userIsWinner = supabaseUser && updatedAuction.winner_user_id === supabaseUser.id;
+            setIsWinner(userIsWinner);
+            setShowAuctionCompleteModal(true);
+
+            console.log(userIsWinner ? '🏆 あなたが落札者です！' : '😢 別の方が落札されました');
+            return; // ポーリング終了
+          }
+
           // 最高入札額が変わった場合のみ更新
           if (updatedAuction.current_highest_bid !== currentHighestBid) {
             console.log('🔔 新しい入札を検知:', {
@@ -226,7 +243,7 @@ export default function TalkDetail() {
       console.log('🔵 ポーリング停止:', auctionId);
       clearInterval(intervalId);
     };
-  }, [auctionId, supabaseUser, currentHighestBid, isMyBid]);
+  }, [auctionId, supabaseUser, currentHighestBid, isMyBid, showAuctionCompleteModal]);
 
   if (isLoading) {
     return (
@@ -778,6 +795,61 @@ export default function TalkDetail() {
         onClose={() => setShowCardModal(false)}
         onSuccess={handleCardRegistrationSuccess}
       />
+
+      {/* Auction Complete Modal */}
+      {showAuctionCompleteModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md text-center animate-bounce-in shadow-2xl">
+            {isWinner ? (
+              <>
+                {/* 落札者向けメッセージ */}
+                <div className="mb-6">
+                  <div className="text-6xl mb-4">🎉</div>
+                  <h2 className="text-3xl font-bold text-pink-600 mb-2">おめでとうございます！</h2>
+                  <p className="text-lg text-gray-700 mb-4">
+                    あなたがこのTalkの落札者です
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Talk予定画面を確認してください
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowAuctionCompleteModal(false);
+                    navigate('/mypage?tab=talks');
+                  }}
+                  className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg"
+                >
+                  Talkタブへ移動
+                </button>
+              </>
+            ) : (
+              <>
+                {/* 落札者以外向けメッセージ */}
+                <div className="mb-6">
+                  <div className="text-6xl mb-4">😢</div>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">残念！</h2>
+                  <p className="text-lg text-gray-700 mb-4">
+                    このTalkは別の方が落札されました
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    次回は落札できますように！
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowAuctionCompleteModal(false);
+                    navigate('/');
+                  }}
+                  className="w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white py-4 rounded-xl font-bold text-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-lg"
+                >
+                  トップページへ
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
