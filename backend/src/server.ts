@@ -25,9 +25,11 @@ const supabase = createClient(
 const getAllowedOrigins = () => {
   const origins: string[] = [];
 
-  // 本番環境のドメイン（常に許可）
+  // 本番環境のドメイン（HTTP/HTTPS両方許可）
   origins.push('https://oshi-talk.com');
   origins.push('https://www.oshi-talk.com');
+  origins.push('http://oshi-talk.com');
+  origins.push('http://www.oshi-talk.com');
   origins.push('https://oshicall-2936440db16b.herokuapp.com'); // 移行期間用
 
   // 開発環境の場合はlocalhostも許可
