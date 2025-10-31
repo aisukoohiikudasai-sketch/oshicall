@@ -381,7 +381,8 @@ export default function TalkDetail() {
         throw new Error('顧客情報が見つかりません');
       }
 
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/stripe/authorize-payment`, {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
+      const response = await fetch(`${backendUrl}/api/stripe/authorize-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -402,7 +403,7 @@ export default function TalkDetail() {
       const { paymentIntentId } = await response.json();
 
       // 即決購入APIを呼び出し
-      const buyNowResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/buy-now`, {
+      const buyNowResponse = await fetch(`${backendUrl}/api/buy-now`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
