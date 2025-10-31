@@ -158,7 +158,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const resendApiKey = Deno.env.get('RESEND_API_KEY') || '';
 const appUrl = Deno.env.get('APP_URL') || 'https://oshicall-2936440db16b.herokuapp.com';
-const fromEmail = Deno.env.get('FROM_EMAIL') || 'OshiTalk <noreply@oshicall.com>';
+const fromEmail = Deno.env.get('FROM_EMAIL') || 'OshiTalk <info@oshi-talk.com>';
 
 interface AuctionToFinalize {
   id: string;
@@ -356,6 +356,7 @@ Deno.serve(async (req) => {
                   body: JSON.stringify({
                     from: fromEmail,
                     to: winnerEmail,
+                    reply_to: 'info@oshi-talk.com',
                     subject: `🎉 落札おめでとうございます！${callSlot.title}`,
                     html: generateAuctionWinEmail(emailData),
                     text: generateAuctionWinEmailPlainText(emailData),

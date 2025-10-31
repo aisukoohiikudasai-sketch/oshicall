@@ -155,7 +155,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const resendApiKey = Deno.env.get('RESEND_API_KEY') || '';
 const appUrl = Deno.env.get('APP_URL') || 'https://oshicall-2936440db16b.herokuapp.com';
-const fromEmail = Deno.env.get('FROM_EMAIL') || 'OshiTalk <noreply@oshicall.com>';
+const fromEmail = Deno.env.get('FROM_EMAIL') || 'OshiTalk <info@oshi-talk.com>';
 
 interface CallSlotPayload {
   id: string;
@@ -335,6 +335,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: fromEmail,
             to: follower.email,
+            reply_to: 'info@oshi-talk.com',
             subject: `✨ ${influencer.display_name}さんの新しいTalk枠が公開されました！`,
             html: generateNewTalkSlotEmail(followerEmailData),
             text: generateNewTalkSlotEmailPlainText(followerEmailData),

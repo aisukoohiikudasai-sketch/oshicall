@@ -63,11 +63,11 @@ UPDATE users SET influencer_application_status = 'rejected' WHERE id = '${userId
 
     // メール送信
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: process.env.SMTP_FROM || 'OshiTalk <info@oshi-talk.com>',
       to: 'info@style-elements.com',
       subject: `【OshiTalk】新規インフルエンサー申請 - ${realName}`,
       text: emailBody,
-      replyTo: email,
+      replyTo: email, // 申請者のメールアドレスに返信可能
     };
 
     await transporter.sendMail(mailOptions);
