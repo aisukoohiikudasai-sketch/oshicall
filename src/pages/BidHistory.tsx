@@ -75,7 +75,8 @@ export default function BidHistory() {
                   <div>
                     <p className="font-medium text-gray-800">{bid.user.username}</p>
                     <p className="text-sm text-gray-500">
-                      {new Date(bid.created_at).toLocaleDateString('ja-JP', {
+                      {new Date(bid.created_at).toLocaleString('ja-JP', {
+                        timeZone: 'Asia/Tokyo',
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',
