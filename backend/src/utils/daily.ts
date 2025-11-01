@@ -165,3 +165,62 @@ export const generateMeetingToken = async (
     throw new Error(`トークン生成に失敗しました: ${error.response?.data?.error || error.message}`);
   }
 };
+
+/**
+ * Daily.co Webhookを作成
+ * 全ドメインのイベントを受信するWebhookを設定
+ */
+export const createDailyWebhook = async (webhookUrl: string): Promise<any> => {
+  try {
+    const dailyApi = getDailyApi();
+
+    console.log('🔵 Daily.co Webhook作成:', webhookUrl);
+
+    const response = await dailyApi.post('/webhooks', {
+      url: webhookUrl,
+      event_types: [
+        'participant.joined',
+        'participant.left',
+        'room.ended',
+        'meeting.ended'
+      ],
+      // circuit-breaker: 3回失敗したらFAILED状態になる
+      retry_config: 'circuit-breaker'
+    });
+
+    console.log('✅ Webhook作成成功:', response.data);
+    return response.data;
+
+  } catch (error: any) {
+    console.error('❌ Webhook作成エラー:', error.response?.data || error.message);
+    throw new Error(`Webhook作成に失敗: ${error.response?.data?.error || error.message}`);
+  }
+};
+
+/**
+ * Daily.co Webhookの一覧を取得
+ */
+export const listDailyWebhooks = async (): Promise<any[]> => {
+  try {
+    const dailyApi = getDailyApi();
+    const response = await dailyApi.get('/webhooks');
+    return response.data.data || [];
+  } catch (error: any) {
+    console.error('❌ Webhook一覧取得エラー:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+/**
+ * Daily.co Webhookを削除
+ */
+export const deleteDailyWebhook = async (webhookId: string): Promise<void> => {
+  try {
+    const dailyApi = getDailyApi();
+    await dailyApi.delete(`/webhooks/${webhookId}`);
+    console.log('✅ Webhook削除成功:', webhookId);
+  } catch (error: any) {
+    console.error('❌ Webhook削除エラー:', error.response?.data || error.message);
+    throw error;
+  }
+};

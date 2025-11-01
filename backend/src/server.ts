@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { createCallsRouter } from './routes/calls';
+import { createDailyAdminRouter } from './routes/dailyAdmin';
+import { createDailyWebhookRouter } from './routes/dailyWebhook';
 import influencerApplicationRouter from './routes/influencerApplication';
 
 dotenv.config();
@@ -103,7 +105,12 @@ if (process.env.NODE_ENV === 'production') {
 // ルーター
 // ============================================
 const callsRouter = createCallsRouter(supabase);
+const dailyAdminRouter = createDailyAdminRouter(supabase);
+const dailyWebhookRouter = createDailyWebhookRouter(supabase);
+
 app.use('/api/calls', callsRouter);
+app.use('/api/daily-admin', dailyAdminRouter);
+app.use('/api/daily', dailyWebhookRouter);
 app.use('/api', influencerApplicationRouter);
 
 // ============================================
