@@ -176,16 +176,9 @@ export const createDailyWebhook = async (webhookUrl: string): Promise<any> => {
 
     console.log('🔵 Daily.co Webhook作成:', webhookUrl);
 
+    // Daily.coは全イベントを自動的に送信するため、event_typesは指定しない
     const response = await dailyApi.post('/webhooks', {
-      url: webhookUrl,
-      event_types: [
-        'participant.joined',
-        'participant.left',
-        'room.ended',
-        'meeting.ended'
-      ],
-      // circuit-breaker: 3回失敗したらFAILED状態になる
-      retry_config: 'circuit-breaker'
+      url: webhookUrl
     });
 
     console.log('✅ Webhook作成成功:', response.data);
