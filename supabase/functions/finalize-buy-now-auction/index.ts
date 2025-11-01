@@ -14,9 +14,9 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 Deno.serve(async (req) => {
   try {
-    const { auctionId } = await req.json();
+    const { auctionId, winnerId } = await req.json();
 
-    console.log('🔵 即決購入オークション終了処理開始:', auctionId);
+    console.log('🔵 即決購入オークション終了処理開始:', { auctionId, winnerId });
 
     // 1. オークション情報を取得
     const { data: auction, error: auctionError } = await supabase
@@ -38,23 +38,32 @@ Deno.serve(async (req) => {
     }
 
     // 2. オークションステータスを終了に更新
+    console.log('🔵 オークションステータスを終了に更新:', { auctionId, winnerId });
     const { error: updateError } = await supabase
       .from('auctions')
       .update({ status: 'ended' })
       .eq('id', auctionId);
 
     if (updateError) {
+      console.error('❌ オークションステータス更新エラー:', updateError);
       throw updateError;
     }
 
     console.log('✅ オークションステータスを終了に更新しました');
 
     // 3. 即決購入者以外の入札を取得してPaymentIntentをキャンセル
+    // winnerIdが渡されている場合はそれを使用、なければcurrent_winner_idを使用
+    const actualWinnerId = winnerId || auction.current_winner_id;
+
+    if (!actualWinnerId) {
+      console.warn('⚠️ 落札者IDが特定できません');
+    }
+
     const { data: otherBids } = await supabase
       .from('bids')
       .select('stripe_payment_intent_id, user_id')
       .eq('auction_id', auctionId)
-      .neq('user_id', auction.current_winner_id || '');
+      .neq('user_id', actualWinnerId || '');
 
     if (otherBids && otherBids.length > 0) {
       console.log(`🔵 ${otherBids.length}件の他の入札をキャンセルします`);

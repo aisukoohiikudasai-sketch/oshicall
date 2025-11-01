@@ -339,7 +339,24 @@ app.post('/api/buy-now', async (req: Request, res: Response) => {
     const capturedPayment = await stripe.paymentIntents.capture(paymentIntentId);
     console.log('✅ 決済確定成功:', capturedPayment.id);
 
-    // 3. purchased_slotsテーブルに記録
+    // 3. オークション情報を更新（落札者と落札額）
+    console.log('🔵 オークション情報を更新:', { userId, buyNowPrice });
+    const { error: updateAuctionError } = await supabase
+      .from('auctions')
+      .update({
+        current_winner_id: userId,
+        current_highest_bid: buyNowPrice,
+      })
+      .eq('id', auctionId);
+
+    if (updateAuctionError) {
+      console.error('❌ オークション情報更新エラー:', updateAuctionError);
+      throw updateAuctionError;
+    }
+
+    console.log('✅ オークション情報更新成功');
+
+    // 4. purchased_slotsテーブルに記録
     const { data: purchasedSlot, error: purchaseError } = await supabase
       .from('purchased_slots')
       .insert({
@@ -379,7 +396,7 @@ app.post('/api/buy-now', async (req: Request, res: Response) => {
 
     console.log('✅ payment_transactions記録成功');
 
-    // 5. Edge Functionを呼び出してオークションを終了
+    // 6. Edge Functionを呼び出してオークションを終了
     console.log('🔵 オークション終了Edge Functionを呼び出し');
     const edgeFunctionUrl = `${process.env.SUPABASE_URL}/functions/v1/finalize-buy-now-auction`;
 
@@ -389,11 +406,12 @@ app.post('/api/buy-now', async (req: Request, res: Response) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ auctionId }),
+        body: JSON.stringify({ auctionId, winnerId: userId }),
       });
 
       if (!finalizeResponse.ok) {
-        console.warn('⚠️ オークション終了処理でエラー（継続）:', await finalizeResponse.text());
+        const errorText = await finalizeResponse.text();
+        console.warn('⚠️ オークション終了処理でエラー（継続）:', errorText);
       } else {
         console.log('✅ オークション終了処理完了');
       }
