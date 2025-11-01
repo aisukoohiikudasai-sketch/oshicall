@@ -27,9 +27,13 @@
 
 ### バックエンド・サービス
 
-- **Authentication**: Supabase Auth
+- **Authentication**: Supabase Auth (Google OAuth)
 - **Database**: Supabase (PostgreSQL)
-- **Payment**: Stripe
+- **Payment**: Stripe (Connect for influencers)
+- **Video Calls**: Daily.co
+- **Email**: Resend
+
+詳細は [`docs/TECH_STACK.md`](./docs/TECH_STACK.md) を参照してください。
 
 ## 開発環境セットアップ
 
@@ -71,7 +75,11 @@ VITE_STRIPE_PUBLISHABLE_KEY=your-stripe-publishable-key
    - [Stripe](https://stripe.com/)でアカウント作成
    - Dashboard > Developers > API keys から Publishable Key を取得
 
-詳細なセットアップ手順は [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) をご覧ください。
+詳細なセットアップ手順は以下をご覧ください：
+- Database: [`docs/setup/SUPABASE_SETUP.md`](./docs/setup/SUPABASE_SETUP.md)
+- Payment: [`docs/setup/STRIPE_SETUP_STEP_BY_STEP.md`](./docs/setup/STRIPE_SETUP_STEP_BY_STEP.md)
+- Email: [`docs/setup/RESEND_SETUP.md`](./docs/setup/RESEND_SETUP.md)
+- Video: [`docs/guides/DAILY_SETUP_GUIDE.md`](./docs/guides/DAILY_SETUP_GUIDE.md)
 
 ### ステップ 3: 開発サーバーの起動
 
@@ -84,31 +92,40 @@ npm run dev
 
 ## デプロイ
 
-### GitHub Pages
-
-1. GitHub リポジトリの Settings > Pages でソースを「GitHub Actions」に設定
-2. メインブランチにプッシュすると自動デプロイ
-
-### Netlify
-
-1. Netlify アカウントを作成
-2. GitHub リポジトリと連携
-3. ビルド設定：
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-
-### Heroku
+本番環境は Heroku にデプロイされています。詳細は [`docs/setup/UNIFIED_DEPLOYMENT.md`](./docs/setup/UNIFIED_DEPLOYMENT.md) を参照してください。
 
 ```bash
 # Heroku CLIでログイン
 heroku login
 
-# アプリを作成
-heroku create oshicall
-
 # デプロイ
 git push heroku main
 ```
+
+## ドキュメント
+
+### セットアップガイド
+- [Supabase セットアップ](./docs/setup/SUPABASE_SETUP.md)
+- [Stripe セットアップ](./docs/setup/STRIPE_SETUP_STEP_BY_STEP.md)
+- [統合デプロイメント](./docs/setup/UNIFIED_DEPLOYMENT.md)
+- [マルチ環境セットアップ](./docs/setup/MULTI_ENVIRONMENT_SETUP.md)
+
+### 機能ガイド
+- [管理者ガイド](./docs/guides/ADMIN_GUIDE.md)
+- [オークション確定ガイド](./docs/guides/AUCTION_FINALIZATION_GUIDE.md)
+- [インフルエンサー管理](./docs/guides/INFLUENCER_MANAGEMENT.md)
+- [Daily.co セットアップ](./docs/guides/DAILY_SETUP_GUIDE.md)
+
+### 開発リファレンス
+- [開発ガイド](./docs/DEVELOPMENT.md)
+- [クイックスタート](./docs/QUICK_START.md)
+- [技術スタック](./docs/TECH_STACK.md)
+- [次のステップ](./docs/NEXT_STEPS.md)
+
+### SQLスクリプト
+- マイグレーション: `sql/migrations/`
+- 修正スクリプト: `sql/fixes/`
+- テストスクリプト: `sql/tests/`
 
 ## ライセンス
 
