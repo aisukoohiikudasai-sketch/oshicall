@@ -168,7 +168,7 @@ interface AuctionToFinalize {
   current_winner_id: string;
   status: string;
   call_slots: {
-    user_id: string;
+    influencer_id: string;
   };
 }
 
@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
         current_highest_bid,
         current_winner_id,
         status,
-        call_slots!inner(user_id)
+        call_slots!inner(influencer_id)
       `)
       .eq('status', 'active')
       .lte('end_time', now);
@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
     for (const auction of endedAuctions) {
       try {
         const auctionId = auction.id;
-        const influencerUserId = auction.call_slots.user_id;
+        const influencerUserId = auction.call_slots.influencer_id;
 
         console.log(`🔵 オークション処理: ${auctionId}`);
 
@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        console.log(`🔵 最高入札: ¥${highestBid.bid_amount} by ${highestBid.user_id}`);
+        console.log(`🔵 最高入札: ¥${highestBid.bid_amount} by ${highestBid.fan_id}`);
 
         // 3. 落札者の与信を決済確定（capture）
         if (highestBid.stripe_payment_intent_id) {
@@ -255,10 +255,10 @@ Deno.serve(async (req) => {
               .from('purchased_slots')
               .insert({
                 call_slot_id: auction.call_slot_id,
-                fan_user_id: highestBid.user_id,
-                influencer_user_id: influencerUserId,
+                fan_id: highestBid.user_id,
+                influencer_id: influencerUserId,
                 auction_id: auctionId,
-                purchased_price: highestBid.bid_amount,
+                winning_bid_amount: highestBid.bid_amount,
                 platform_fee: platformFee,
                 influencer_payout: influencerPayout,
               })
@@ -296,7 +296,7 @@ Deno.serve(async (req) => {
               const { data: winnerUserData, error: userError } = await supabase
                 .from('users')
                 .select('id, display_name, auth_user_id')
-                .eq('id', highestBid.user_id)
+                .eq('id', highestBid.fan_id)
                 .single();
 
               // Call Slot情報を取得
@@ -385,15 +385,15 @@ Deno.serve(async (req) => {
             // 8. オークションを終了状態に更新
             await supabase
               .from('auctions')
-              .update({ status: 'ended', current_winner_id: highestBid.user_id })
+              .update({ status: 'ended', current_winner_id: highestBid.fan_id })
               .eq('id', auctionId);
 
             // 9. 他の入札者の与信をキャンセル
             const { data: otherBids } = await supabase
               .from('bids')
-              .select('stripe_payment_intent_id, user_id')
+              .select('stripe_payment_intent_id, fan_id')
               .eq('auction_id', auctionId)
-              .neq('user_id', highestBid.user_id);
+              .neq('fan_id', highestBid.fan_id);
 
             if (otherBids && otherBids.length > 0) {
               console.log(`🔵 他の入札者の与信をキャンセル: ${otherBids.length}件`);
@@ -411,7 +411,7 @@ Deno.serve(async (req) => {
 
             // 10. ユーザー統計を更新
             await supabase.rpc('update_user_statistics', {
-              p_fan_id: highestBid.user_id,
+              p_fan_id: highestBid.fan_id,
               p_influencer_id: influencerUserId,
               p_amount: highestBid.bid_amount,
             });
@@ -419,7 +419,7 @@ Deno.serve(async (req) => {
             results.push({
               auction_id: auctionId,
               status: 'success',
-              winner_id: highestBid.user_id,
+              winner_id: highestBid.fan_id,
               amount: highestBid.bid_amount,
             });
 
@@ -434,13 +434,13 @@ Deno.serve(async (req) => {
 
               await supabase
                 .from('auctions')
-                .update({ status: 'ended', current_winner_id: highestBid.user_id })
+                .update({ status: 'ended', current_winner_id: highestBid.fan_id })
                 .eq('id', auctionId);
 
               results.push({
                 auction_id: auctionId,
                 status: 'already_captured',
-                winner_id: highestBid.user_id,
+                winner_id: highestBid.fan_id,
               });
             } else {
               results.push({
