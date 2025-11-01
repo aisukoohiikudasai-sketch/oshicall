@@ -82,6 +82,7 @@ export default function Home() {
             starting_price: item.starting_price,
             current_highest_bid: item.current_highest_bid || item.starting_price,
             status: item.status === 'active' ? 'upcoming' : 'ended',
+            auction_status: item.status, // オークションの実際のステータスを保持
             created_at: new Date().toISOString(),
             detail_image_url: item.thumbnail_url || item.influencer_image || '/images/talks/default.jpg',
             is_female_only: false,
@@ -118,16 +119,25 @@ export default function Home() {
     );
   });
 
-  // フォロー中のインフルエンサーのTalk枠を優先してソート
+  // 優先順位に基づいてソート
   const sortedTalks = [...filteredTalks].sort((a, b) => {
+    const aAuctionStatus = (a as any).auction_status || 'ended';
+    const bAuctionStatus = (b as any).auction_status || 'ended';
     const aIsFollowing = followingInfluencerIds.has(a.influencer_id);
     const bIsFollowing = followingInfluencerIds.has(b.influencer_id);
 
-    // フォロー中を優先
+    // 1. オークションが開催中（active）を優先
+    const aIsActive = aAuctionStatus === 'active';
+    const bIsActive = bAuctionStatus === 'active';
+
+    if (aIsActive && !bIsActive) return -1;
+    if (!aIsActive && bIsActive) return 1;
+
+    // 2. 同じオークション状態の中で、フォロー中を優先
     if (aIsFollowing && !bIsFollowing) return -1;
     if (!aIsFollowing && bIsFollowing) return 1;
 
-    // 同じグループ内ではオークション終了時刻が近い順にソート
+    // 3. 同じグループ内ではオークション終了時刻が近い順にソート
     const aEndTime = new Date(a.auction_end_time).getTime();
     const bEndTime = new Date(b.auction_end_time).getTime();
     return aEndTime - bEndTime;
