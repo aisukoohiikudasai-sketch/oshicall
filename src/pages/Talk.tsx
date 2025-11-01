@@ -61,7 +61,13 @@ export default function Talk() {
   }, [supabaseUser?.id, isInfluencer]);
 
   const handleTalkSelect = (talk: TalkSession) => {
-    navigate(`/live-talk/${talk.id}`);
+    // Navigate to the call page if purchased_slot_id exists
+    if (talk.purchased_slot_id) {
+      navigate(`/call/${talk.purchased_slot_id}`);
+    } else {
+      // Fallback to live-talk if no purchased_slot_id (shouldn't happen for purchased talks)
+      navigate(`/live-talk/${talk.id}`);
+    }
   };
 
   const tabs = [

@@ -83,6 +83,7 @@ export interface Influencer {
 
 export interface TalkSession {
   id: string;
+  purchased_slot_id?: string; // ID of the purchased_slots record for joining calls
   influencer_id: string;
   influencer: Influencer;
   title: string;
@@ -95,7 +96,7 @@ export interface TalkSession {
   current_highest_bid: number;
   buy_now_price?: number | null;
   winner_id?: string;
-  status: 'upcoming' | 'active' | 'completed' | 'cancelled';
+  status: 'upcoming' | 'active' | 'completed' | 'cancelled' | 'won';
   created_at: string;
   detail_image_url: string;
   is_female_only: boolean;

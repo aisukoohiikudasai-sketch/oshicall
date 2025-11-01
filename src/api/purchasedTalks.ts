@@ -43,14 +43,15 @@ export const getPurchasedTalks = async (userId: string) => {
     const talkSessions: TalkSession[] = purchasedSlots.map((slot: any) => {
       const callSlot = slot.call_slots;
       const influencer = callSlot?.users;
-      
+
       // 予定のTalkか過去のTalkかを判定
       const now = new Date();
       const talkDate = new Date(callSlot?.scheduled_start_time);
       const isUpcoming = talkDate > now && slot.call_status !== 'completed';
-      
+
       return {
         id: callSlot?.id || slot.id,
+        purchased_slot_id: slot.id, // purchased_slots.id for joining calls
         influencer_id: influencer?.id,
         influencer: {
           id: influencer?.id || '',
@@ -163,6 +164,7 @@ export const getInfluencerHostedTalks = async (userId: string) => {
 
       return {
         id: callSlot?.id || slot.id,
+        purchased_slot_id: slot.id, // purchased_slots.id for joining calls
         influencer_id: userId,
         influencer: {
           id: fan?.id || '',
