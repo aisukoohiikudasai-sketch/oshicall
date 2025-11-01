@@ -1,42 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trophy, Crown, TrendingUp, Users, Sparkles, Star, Gem } from 'lucide-react';
-import { mockInfluencers } from '../data/mockData';
+import { getInfluencerRankings, getBidderRankings, getRankingStats } from '../api/rankings';
+import type { InfluencerRanking, BidderRanking, RankingStats } from '../api/rankings';
 
 export default function Rankings() {
   const [activeTab, setActiveTab] = useState<'influencers' | 'bidders'>('influencers');
+  const [influencerRankings, setInfluencerRankings] = useState<InfluencerRanking[]>([]);
+  const [bidderRankings, setBidderRankings] = useState<BidderRanking[]>([]);
+  const [stats, setStats] = useState<RankingStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ja-JP').format(price);
   };
 
-  const sortedInfluencers = [...mockInfluencers].sort((a, b) => b.total_earned - a.total_earned);
+  // データ取得
+  useEffect(() => {
+    const fetchRankings = async () => {
+      try {
+        setLoading(true);
+        const [influencers, bidders, statistics] = await Promise.all([
+          getInfluencerRankings(10),
+          getBidderRankings(10),
+          getRankingStats(),
+        ]);
+        setInfluencerRankings(influencers);
+        setBidderRankings(bidders);
+        setStats(statistics);
+      } catch (error) {
+        console.error('Error fetching rankings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const mockBidders = [
-    {
-      id: '1',
-      username: 'user123',
-      avatar_url: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100',
-      total_spent: 150000,
-      successful_bids: 8,
-      rank: 1,
-    },
-    {
-      id: '2',
-      username: 'otaku_fan',
-      avatar_url: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
-      total_spent: 120000,
-      successful_bids: 6,
-      rank: 2,
-    },
-    {
-      id: '3',
-      username: 'anime_lover',
-      avatar_url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100',
-      total_spent: 95000,
-      successful_bids: 5,
-      rank: 3,
-    },
-  ];
+    fetchRankings();
+  }, []);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -139,10 +138,19 @@ export default function Rankings() {
                 <h2 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-2">
                   💰 総獲得金額ランキング 💰
                 </h2>
-                <p className="text-gray-600 text-sm md:text-base">今月のトップパフォーマーたち</p>
+                <p className="text-gray-600 text-sm md:text-base">トップパフォーマーたち</p>
               </div>
-              
-              {sortedInfluencers.map((influencer, index) => (
+
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">ランキング読み込み中...</p>
+                </div>
+              ) : influencerRankings.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-600">まだランキングデータがありません</p>
+                </div>
+              ) : influencerRankings.map((influencer, index) => (
                 <div
                   key={influencer.id}
                   className={`p-4 md:p-8 rounded-xl md:rounded-2xl border-4 transition-all duration-500 hover:scale-105 transform ${getRankGlow(index + 1)} ${
@@ -213,15 +221,24 @@ export default function Rankings() {
                 </h2>
                 <p className="text-gray-600 text-sm md:text-base">最も熱いビッダーたち</p>
               </div>
-              
-              {mockBidders.map((bidder) => (
+
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">ランキング読み込み中...</p>
+                </div>
+              ) : bidderRankings.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-600">まだランキングデータがありません</p>
+                </div>
+              ) : bidderRankings.map((bidder, index) => (
                 <div
                   key={bidder.id}
-                  className={`p-4 md:p-8 rounded-xl md:rounded-2xl border-4 transition-all duration-500 hover:scale-105 transform ${getRankGlow(bidder.rank)} ${
-                    bidder.rank <= 3 
-                      ? bidder.rank === 1 
-                        ? 'border-yellow-300 bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-100' 
-                        : bidder.rank === 2
+                  className={`p-4 md:p-8 rounded-xl md:rounded-2xl border-4 transition-all duration-500 hover:scale-105 transform ${getRankGlow(index + 1)} ${
+                    index < 3
+                      ? index === 0
+                        ? 'border-yellow-300 bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-100'
+                        : index === 1
                         ? 'border-gray-300 bg-gradient-to-r from-gray-50 via-slate-50 to-gray-100'
                         : 'border-amber-300 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100'
                       : 'border-purple-200 bg-gradient-to-r from-white via-purple-50 to-pink-50'
@@ -229,18 +246,18 @@ export default function Rankings() {
                 >
                   <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8">
                     <div className="flex flex-col md:flex-row items-center md:items-center space-y-4 md:space-y-0 md:space-x-6">
-                      <div className={`p-3 md:p-4 rounded-full text-white ${getRankBadge(bidder.rank)}`}>
-                        {getRankIcon(bidder.rank)}
+                      <div className={`p-3 md:p-4 rounded-full text-white ${getRankBadge(index + 1)}`}>
+                        {getRankIcon(index + 1)}
                       </div>
                       <div className="relative">
                         <img
-                          src={bidder.avatar_url}
+                          src={bidder.avatar_url || 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100'}
                           alt={bidder.username}
                           className={`h-20 w-20 md:h-24 md:w-24 rounded-full object-cover border-4 shadow-xl ${
-                            bidder.rank <= 3 ? 'border-yellow-300' : 'border-purple-300'
+                            index < 3 ? 'border-yellow-300' : 'border-purple-300'
                           }`}
                         />
-                        {bidder.rank <= 3 && (
+                        {index < 3 && (
                           <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2">
                             <Sparkles className="h-4 w-4 md:h-6 md:w-6 text-purple-400 animate-pulse" />
                           </div>
@@ -256,7 +273,7 @@ export default function Rankings() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="text-center md:text-right space-y-2 md:space-y-3">
                       <div className="text-3xl md:text-4xl font-black bg-gradient-to-r from-purple-500 to-pink-600 bg-clip-text text-transparent">
                         ¥{formatPrice(bidder.total_spent)}
@@ -264,9 +281,9 @@ export default function Rankings() {
                       <div className="text-base md:text-lg text-gray-600 font-bold">
                         💰 総支払い額
                       </div>
-                      {bidder.rank <= 3 && (
+                      {index < 3 && (
                         <div className="text-xs md:text-sm font-bold text-purple-600 animate-pulse">
-                          🏆 TOP {bidder.rank} 達成！
+                          🏆 TOP {index + 1} 達成！
                         </div>
                       )}
                     </div>
@@ -285,17 +302,23 @@ export default function Rankings() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 text-center">
           <div className="space-y-2 md:space-y-3 bg-white rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-            <div className="text-3xl md:text-5xl font-black bg-gradient-to-r from-pink-500 to-rose-600 bg-clip-text text-transparent">¥2,450,000</div>
+            <div className="text-3xl md:text-5xl font-black bg-gradient-to-r from-pink-500 to-rose-600 bg-clip-text text-transparent">
+              {stats ? `¥${formatPrice(stats.total_transaction_amount)}` : '¥0'}
+            </div>
             <div className="text-base md:text-lg text-gray-700 font-bold">💰 総取引額</div>
-            <div className="text-xs md:text-sm text-gray-500">今月の累計</div>
+            <div className="text-xs md:text-sm text-gray-500">累計</div>
           </div>
           <div className="space-y-2 md:space-y-3 bg-white rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-            <div className="text-3xl md:text-5xl font-black bg-gradient-to-r from-purple-500 to-indigo-600 bg-clip-text text-transparent">127</div>
+            <div className="text-3xl md:text-5xl font-black bg-gradient-to-r from-purple-500 to-indigo-600 bg-clip-text text-transparent">
+              {stats ? stats.total_talks_completed : 0}
+            </div>
             <div className="text-base md:text-lg text-gray-700 font-bold">🎤 成立したTalk数</div>
-            <div className="text-xs md:text-sm text-gray-500">今月の実績</div>
+            <div className="text-xs md:text-sm text-gray-500">累計実績</div>
           </div>
           <div className="space-y-2 md:space-y-3 bg-white rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-            <div className="text-3xl md:text-5xl font-black bg-gradient-to-r from-indigo-500 to-blue-600 bg-clip-text text-transparent">4.9</div>
+            <div className="text-3xl md:text-5xl font-black bg-gradient-to-r from-indigo-500 to-blue-600 bg-clip-text text-transparent">
+              {stats ? stats.average_rating.toFixed(1) : '0.0'}
+            </div>
             <div className="text-base md:text-lg text-gray-700 font-bold">⭐ 平均満足度</div>
             <div className="text-xs md:text-sm text-gray-500">ユーザー評価</div>
           </div>
