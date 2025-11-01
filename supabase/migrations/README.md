@@ -114,10 +114,8 @@ supabase migration list
 
 ## 参考ドキュメント
 
-- [マイグレーション管理](../../docs/setup/MIGRATION_MANAGEMENT.md) - 完全ガイド
-- [クイックスタート](../../docs/setup/MIGRATION_QUICKSTART.md) - 今すぐ始める
-- [CLI認証](../../docs/setup/SUPABASE_CLI_AUTH.md) - 認証方法
-- [環境変数設定](../../docs/setup/MIGRATION_ENV_SETUP.md) - 環境変数の詳細
+- **[データベースマイグレーション管理](../../docs/setup/DATABASE_MIGRATIONS.md)** - 完全ガイド（クイックスタート、認証、環境変数、ベストプラクティス）
+- [Supabase CLI 認証](../../docs/setup/SUPABASE_CLI_AUTH.md) - supabase login vs 環境変数の詳細
 
 ## 次のステップ
 
