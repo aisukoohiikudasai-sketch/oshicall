@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, History, Calendar } from 'lucide-react';
+import { Trophy, History, Calendar, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { getUpcomingPurchasedTalks, getCompletedPurchasedTalks } from '../api/purchasedTalks';
+import { getUpcomingPurchasedTalks, getCompletedPurchasedTalks, getUpcomingHostedTalks, getCompletedHostedTalks } from '../api/purchasedTalks';
 import TalkCard from '../components/TalkCard';
 import { TalkSession } from '../types';
 
@@ -14,29 +14,34 @@ export default function Talk() {
   const [pastTalks, setPastTalks] = useState<TalkSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isInfluencer = supabaseUser?.is_influencer || false;
 
   useEffect(() => {
-    const loadPurchasedTalks = async () => {
+    const loadTalks = async () => {
       if (!supabaseUser?.id) return;
 
       try {
         setIsLoading(true);
         setError(null);
 
-        // 予定のTalkと過去のTalkを並行して取得
+        // インフルエンサーかファンかで取得する関数を切り替え
         const [upcoming, completed] = await Promise.all([
-          getUpcomingPurchasedTalks(supabaseUser.id),
-          getCompletedPurchasedTalks(supabaseUser.id)
+          isInfluencer
+            ? getUpcomingHostedTalks(supabaseUser.id)
+            : getUpcomingPurchasedTalks(supabaseUser.id),
+          isInfluencer
+            ? getCompletedHostedTalks(supabaseUser.id)
+            : getCompletedPurchasedTalks(supabaseUser.id)
         ]);
 
         setUpcomingTalks(upcoming);
         setPastTalks(completed);
       } catch (err) {
-        console.error('落札済みTalk取得エラー:', err);
+        console.error('Talk取得エラー:', err);
         // 実際のデータベースエラーの場合のみエラーを表示
         if (err instanceof Error && (
-          err.message.includes('database') || 
-          err.message.includes('network') || 
+          err.message.includes('database') ||
+          err.message.includes('network') ||
           err.message.includes('connection') ||
           err.message.includes('timeout')
         )) {
@@ -52,15 +57,19 @@ export default function Talk() {
       }
     };
 
-    loadPurchasedTalks();
-  }, [supabaseUser?.id]);
+    loadTalks();
+  }, [supabaseUser?.id, isInfluencer]);
 
   const handleTalkSelect = (talk: TalkSession) => {
     navigate(`/live-talk/${talk.id}`);
   };
 
   const tabs = [
-    { id: 'upcoming', label: '落札したTalk', icon: Trophy },
+    {
+      id: 'upcoming',
+      label: isInfluencer ? 'ホストするTalk' : '落札したTalk',
+      icon: isInfluencer ? Users : Trophy
+    },
     { id: 'history', label: '過去の実績', icon: History },
   ];
 
@@ -68,8 +77,14 @@ export default function Talk() {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">マイTalk</h1>
-        <p className="text-gray-600">落札したTalkと過去の実績を確認できます</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          {isInfluencer ? 'ホストするTalk' : 'マイTalk'}
+        </h1>
+        <p className="text-gray-600">
+          {isInfluencer
+            ? '販売済みのTalk枠と過去の実績を確認できます'
+            : '落札したTalkと過去の実績を確認できます'}
+        </p>
       </div>
 
       {/* Tabs */}
@@ -102,8 +117,10 @@ export default function Talk() {
 
           {activeTab === 'upcoming' && (
             <div className="space-y-6">
-              <h2 className="text-xl font-bold text-gray-800">予定されているTalk</h2>
-              
+              <h2 className="text-xl font-bold text-gray-800">
+                {isInfluencer ? '予定されているTalk' : '予定されているTalk'}
+              </h2>
+
               {isLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -113,23 +130,33 @@ export default function Talk() {
               ) : upcomingTalks.length > 0 ? (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {upcomingTalks.map((talk) => (
-                    <TalkCard 
-                      key={talk.id} 
-                      talk={talk} 
+                    <TalkCard
+                      key={talk.id}
+                      talk={talk}
                       onSelect={handleTalkSelect}
                     />
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <Trophy className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">落札したTalk枠がありません</h3>
-                  <p className="text-gray-500 mb-4">気になるTalk枠を見つけて入札してみましょう！</p>
-                  <button 
-                    onClick={() => navigate('/')}
+                  {isInfluencer ? (
+                    <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                  ) : (
+                    <Trophy className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                  )}
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {isInfluencer ? '販売済みのTalk枠がありません' : '落札したTalk枠がありません'}
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    {isInfluencer
+                      ? 'Talk枠を作成して販売しましょう！'
+                      : '気になるTalk枠を見つけて入札してみましょう！'}
+                  </p>
+                  <button
+                    onClick={() => navigate(isInfluencer ? '/mypage' : '/')}
                     className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-pink-600 hover:to-purple-700 transition-all duration-200"
                   >
-                    Talk枠を探す
+                    {isInfluencer ? 'Talk枠を作成' : 'Talk枠を探す'}
                   </button>
                 </div>
               )}

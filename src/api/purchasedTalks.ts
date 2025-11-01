@@ -101,7 +101,119 @@ export const getUpcomingPurchasedTalks = async (userId: string) => {
 export const getCompletedPurchasedTalks = async (userId: string) => {
   const allTalks = await getPurchasedTalks(userId);
   const now = new Date();
-  
+
+  return allTalks.filter(talk => {
+    const talkDate = new Date(talk.start_time);
+    return talkDate <= now || talk.status === 'completed';
+  });
+};
+
+// インフルエンサー用：ホストするTalk（販売済みスロット）を取得
+export const getInfluencerHostedTalks = async (userId: string) => {
+  try {
+    // インフルエンサーが販売したTalkを取得
+    const { data: purchasedSlots, error } = await supabase
+      .from('purchased_slots')
+      .select(`
+        id,
+        purchased_at,
+        call_status,
+        winning_bid_amount,
+        fan_user_id,
+        call_slots (
+          id,
+          title,
+          description,
+          scheduled_start_time,
+          duration_minutes,
+          thumbnail_url
+        )
+      `)
+      .eq('influencer_user_id', userId)
+      .order('call_slots(scheduled_start_time)', { ascending: true });
+
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
+    }
+
+    // データが空の場合は空の配列を返す
+    if (!purchasedSlots || purchasedSlots.length === 0) {
+      return [];
+    }
+
+    // ファン情報を取得
+    const fanIds = [...new Set(purchasedSlots.map((slot: any) => slot.fan_user_id))];
+    const { data: fans } = await supabase
+      .from('users')
+      .select('id, display_name, profile_image_url')
+      .in('id', fanIds);
+
+    const fansMap = new Map(fans?.map(f => [f.id, f]) || []);
+
+    // TalkSession形式に変換
+    const talkSessions: TalkSession[] = purchasedSlots.map((slot: any) => {
+      const callSlot = slot.call_slots;
+      const fan = fansMap.get(slot.fan_user_id);
+
+      // 予定のTalkか過去のTalkかを判定
+      const now = new Date();
+      const talkDate = new Date(callSlot?.scheduled_start_time);
+      const isUpcoming = talkDate > now && slot.call_status !== 'completed';
+
+      return {
+        id: callSlot?.id || slot.id,
+        influencer_id: userId,
+        influencer: {
+          id: fan?.id || '',
+          name: fan?.display_name || '購入者',
+          username: fan?.display_name || '購入者',
+          avatar_url: fan?.profile_image_url || '/images/default-avatar.png',
+          description: '',
+          follower_count: 0,
+          total_earned: 0,
+          total_talks: 0,
+          rating: 0,
+          created_at: new Date().toISOString(),
+        },
+        title: callSlot?.title || 'Talk枠',
+        description: callSlot?.description || '',
+        host_message: callSlot?.description || `${fan?.display_name}さんとのTalk`,
+        start_time: callSlot?.scheduled_start_time || new Date().toISOString(),
+        end_time: callSlot?.scheduled_start_time
+          ? new Date(new Date(callSlot.scheduled_start_time).getTime() + (callSlot.duration_minutes || 30) * 60000).toISOString()
+          : new Date().toISOString(),
+        auction_end_time: callSlot?.scheduled_start_time || new Date().toISOString(),
+        starting_price: slot.winning_bid_amount || 0,
+        current_highest_bid: slot.winning_bid_amount || 0,
+        status: isUpcoming ? 'won' : 'completed',
+        created_at: slot.purchased_at || new Date().toISOString(),
+        detail_image_url: callSlot?.thumbnail_url || '/images/talks/default.jpg',
+        is_female_only: false,
+      };
+    });
+
+    return talkSessions;
+  } catch (error) {
+    console.error('ホストTalk取得エラー:', error);
+    throw error;
+  }
+};
+
+export const getUpcomingHostedTalks = async (userId: string) => {
+  const allTalks = await getInfluencerHostedTalks(userId);
+  const now = new Date();
+
+  return allTalks.filter(talk => {
+    const talkDate = new Date(talk.start_time);
+    return talkDate > now && talk.status === 'won';
+  });
+};
+
+export const getCompletedHostedTalks = async (userId: string) => {
+  const allTalks = await getInfluencerHostedTalks(userId);
+  const now = new Date();
+
   return allTalks.filter(talk => {
     const talkDate = new Date(talk.start_time);
     return talkDate <= now || talk.status === 'completed';
