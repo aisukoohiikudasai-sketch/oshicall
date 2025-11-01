@@ -18,17 +18,14 @@ export const createCallSlot = async (
   userId: string,
   input: CreateCallSlotInput
 ): Promise<{ callSlot: CallSlot; auction: Auction }> => {
-  // datetime-local形式の値をJST (UTC+9)として明示的に扱う
-  // 例: "2025-01-15T14:30" → "2025-01-15T14:30:00+09:00"
-  const scheduledTimeLocal = input.scheduled_start_time;
+  // フロントエンドからUTC形式のISO文字列が送信される
+  // 例: "2025-01-15T14:30:00.000Z"
+  const scheduledTimeUTC = input.scheduled_start_time;
+  const auctionEndTimeUTC = input.auction_end_time;
 
-  // datetime-local形式にタイムゾーンオフセットを追加
-  // ブラウザの入力は常にJSTとして扱う
-  const scheduledTimeWithTZ = `${scheduledTimeLocal}:00+09:00`;
-
-  console.log('📅 Talk開始時間変換:', {
-    input: scheduledTimeLocal,
-    withTimezone: scheduledTimeWithTZ
+  console.log('📅 Talk開始時間:', {
+    scheduled_start_time: scheduledTimeUTC,
+    auction_end_time: auctionEndTimeUTC
   });
 
   // 1. Call Slotを作成
@@ -38,7 +35,7 @@ export const createCallSlot = async (
       user_id: userId,
       title: input.title,
       description: input.description,
-      scheduled_start_time: scheduledTimeWithTZ, // タイムゾーン付きで保存
+      scheduled_start_time: scheduledTimeUTC, // UTC形式で保存
       duration_minutes: input.duration_minutes,
       starting_price: input.starting_price,
       minimum_bid_increment: input.minimum_bid_increment,
@@ -52,14 +49,12 @@ export const createCallSlot = async (
   if (callSlotError) throw callSlotError;
 
   // 2. オークションを自動作成
-  // フロントエンドから送信されたオークション終了時間を使用
-  const auctionEndTimeWithTZ = `${input.auction_end_time}:00+09:00`;
   const auctionStartTime = new Date(); // 今すぐ開始
 
   console.log('🕐 オークション時間設定:', {
-    scheduledTime: scheduledTimeWithTZ,
+    scheduledTime: scheduledTimeUTC,
     auctionStartTime: auctionStartTime.toISOString(),
-    auctionEndTime: auctionEndTimeWithTZ
+    auctionEndTime: auctionEndTimeUTC
   });
 
   const { data: auction, error: auctionError } = await supabase
@@ -68,8 +63,8 @@ export const createCallSlot = async (
       call_slot_id: callSlot.id,
       status: 'active',
       start_time: auctionStartTime.toISOString(),
-      end_time: auctionEndTimeWithTZ, // タイムゾーン付きで保存
-      auction_end_time: auctionEndTimeWithTZ, // auction_end_timeも同じ値
+      end_time: auctionEndTimeUTC, // UTC形式で保存
+      auction_end_time: auctionEndTimeUTC, // auction_end_timeも同じ値
     })
     .select()
     .single();

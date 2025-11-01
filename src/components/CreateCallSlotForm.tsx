@@ -128,16 +128,20 @@ export default function CreateCallSlotForm({
         setUploadingImage(false);
       }
 
+      // datetime-localの値をISO形式（UTC）に変換
+      const scheduledTimeUTC = new Date(formData.scheduled_start_time).toISOString();
+      const auctionEndTimeUTC = new Date(auctionEndTime).toISOString();
+
       // Talk枠を作成
       const callSlotData: CreateCallSlotInput = {
         title: formData.title,
         description: formData.description,
-        scheduled_start_time: formData.scheduled_start_time,
+        scheduled_start_time: scheduledTimeUTC, // UTC形式で送信
         duration_minutes: formData.duration_minutes,
         starting_price: formData.starting_price,
         minimum_bid_increment: formData.minimum_bid_increment,
         buy_now_price: hasBuyNowPrice ? formData.buy_now_price : null,
-        auction_end_time: auctionEndTime, // オークション終了時間を追加
+        auction_end_time: auctionEndTimeUTC, // UTC形式で送信
       };
 
       // 画像URLがある場合のみ追加
