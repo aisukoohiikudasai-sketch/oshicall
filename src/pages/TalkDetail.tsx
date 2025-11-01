@@ -20,7 +20,12 @@ export default function TalkDetail() {
   const [auctionId, setAuctionId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [currentHighestBid, setCurrentHighestBid] = useState<number>(0);
-  
+
+  // オークション終了後の状態管理
+  const [auctionStatus, setAuctionStatus] = useState<'active' | 'ended'>('active');
+  const [isWinner, setIsWinner] = useState<boolean>(false);
+  const [userHasBid, setUserHasBid] = useState<boolean>(false);
+
   // モーダル管理
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCardModal, setShowCardModal] = useState(false);
@@ -32,7 +37,7 @@ export default function TalkDetail() {
       try {
         setIsLoading(true);
 
-        // auctionsとcall_slotsから直接取得
+        // auctionsとcall_slotsから直接取得（activeとended両方を取得）
         const { data: auctionData, error } = await supabase
           .from('auctions')
           .select(`
@@ -43,6 +48,7 @@ export default function TalkDetail() {
             end_time,
             current_highest_bid,
             current_winner_id,
+            winner_user_id,
             call_slots!inner(
               id,
               user_id,
@@ -65,7 +71,6 @@ export default function TalkDetail() {
             )
           `)
           .eq('call_slot_id', talkId)
-          .eq('status', 'active')
           .single();
 
         const data = auctionData ? {
@@ -75,6 +80,7 @@ export default function TalkDetail() {
           end_time: auctionData.end_time,
           current_highest_bid: auctionData.current_highest_bid,
           current_winner_id: auctionData.current_winner_id,
+          winner_user_id: auctionData.winner_user_id,
           ...auctionData.call_slots,
           influencer_id: auctionData.call_slots.user_id,
           influencer_name: auctionData.call_slots.users?.display_name,
@@ -143,8 +149,35 @@ export default function TalkDetail() {
           setTalk(talkSession);
           setCurrentHighestBid(talkSession.current_highest_bid);
 
-          // 現在のユーザーが最高入札者かチェック
-          if (supabaseUser && data.current_highest_bid) {
+          // オークションステータスを設定
+          setAuctionStatus(data.status as 'active' | 'ended');
+
+          // オークション終了後の状態を設定
+          if (data.status === 'ended' && supabaseUser) {
+            // 落札者かどうかを判定
+            const userIsWinner = data.winner_user_id === supabaseUser.id;
+            setIsWinner(userIsWinner);
+
+            // ユーザーが入札したかどうかを確認
+            const { data: userBids, error: bidsError } = await supabase
+              .from('bids')
+              .select('id')
+              .eq('auction_id', data.auction_id)
+              .eq('user_id', supabaseUser.id)
+              .limit(1);
+
+            if (!bidsError && userBids && userBids.length > 0) {
+              setUserHasBid(true);
+            }
+
+            console.log('🏁 オークション終了状態:', {
+              isWinner: userIsWinner,
+              hasBid: userBids && userBids.length > 0,
+            });
+          }
+
+          // 現在のユーザーが最高入札者かチェック（アクティブな場合のみ）
+          if (supabaseUser && data.current_highest_bid && data.status === 'active') {
             checkIfUserIsHighestBidder(data.auction_id);
           }
         }
@@ -191,7 +224,7 @@ export default function TalkDetail() {
 
     console.log('🔵 ポーリング開始: オークション情報を3秒ごとに更新します', auctionId);
 
-    let hasShownModal = false; // モーダルを一度だけ表示するためのフラグ
+    let hasDetectedEnd = false; // オークション終了を一度だけ検知するためのフラグ
 
     const fetchAuctionUpdate = async () => {
       try {
@@ -203,14 +236,36 @@ export default function TalkDetail() {
           .single();
 
         if (!error && updatedAuction) {
-          // オークション終了を検知（一度だけページ遷移）
-          if (updatedAuction.status === 'ended' && !hasShownModal) {
+          // オークション終了を検知（一度だけ状態を更新）
+          if (updatedAuction.status === 'ended' && !hasDetectedEnd) {
             console.log('🎉 オークション終了を検知');
-            hasShownModal = true;
+            hasDetectedEnd = true;
 
-            // オークション完了画面に遷移
-            console.log('🔄 オークション完了画面に遷移します');
-            navigate(`/auction-complete/${talkId}`);
+            // オークション終了状態を設定
+            setAuctionStatus('ended');
+
+            // 落札者かどうかを判定
+            if (supabaseUser) {
+              const userIsWinner = updatedAuction.winner_user_id === supabaseUser.id;
+              setIsWinner(userIsWinner);
+
+              // ユーザーが入札したかどうかを確認
+              const { data: userBids, error: bidsError } = await supabase
+                .from('bids')
+                .select('id')
+                .eq('auction_id', auctionId)
+                .eq('user_id', supabaseUser.id)
+                .limit(1);
+
+              if (!bidsError && userBids && userBids.length > 0) {
+                setUserHasBid(true);
+              }
+
+              console.log('🏁 オークション終了（ポーリング検知）:', {
+                isWinner: userIsWinner,
+                hasBid: userBids && userBids.length > 0,
+              });
+            }
             return; // ポーリングを停止
           }
 
@@ -593,20 +648,112 @@ export default function TalkDetail() {
 
   const quickBidOptions = [10, 100, 1000];
 
+  // オークション終了後の画面
+  if (auctionStatus === 'ended') {
+    return (
+      <div
+        className="min-h-screen relative flex items-center justify-center p-4"
+        style={{
+          backgroundImage: `url(${talk.detail_image_url || talk.influencer.avatar_url})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* 背景のオーバーレイ */}
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-lg"></div>
+
+        {/* メインコンテンツ */}
+        <div className="relative z-10 bg-white rounded-3xl p-8 max-w-2xl w-full text-center shadow-2xl">
+          {isWinner ? (
+            <>
+              {/* 落札者向けメッセージ */}
+              <div className="mb-8">
+                <div className="text-8xl mb-6 animate-bounce">🎉</div>
+                <h1 className="text-4xl md:text-5xl font-bold text-pink-600 mb-4">
+                  おめでとうございます！
+                </h1>
+                <p className="text-2xl text-gray-800 mb-6">
+                  オークションに落札されました
+                </p>
+                <p className="text-gray-600 mb-6">
+                  マイページのTalkタブで予定を確認できます。<br />
+                  通話開始時刻になりましたら、通知が届きます。
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/mypage?tab=talks')}
+                className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg"
+              >
+                Talk予定を確認する
+              </button>
+            </>
+          ) : userHasBid ? (
+            <>
+              {/* 入札者（非落札者）向けメッセージ */}
+              <div className="mb-8">
+                <div className="text-8xl mb-6">😢</div>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+                  残念！
+                </h1>
+                <p className="text-xl text-gray-700 mb-6">
+                  このTalkは別の方が落札されました
+                </p>
+                <p className="text-gray-600 mb-6">
+                  次回は落札できますように！<br />
+                  {talk.influencer.name}さんの他のTalk枠もチェックしてみてください。
+                </p>
+              </div>
+              <button
+                onClick={() => navigate(`/i/${talk.influencer_id}`)}
+                className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg"
+              >
+                他の枠をチェックする
+              </button>
+            </>
+          ) : (
+            <>
+              {/* 閲覧者（非入札者）向けメッセージ */}
+              <div className="mb-8">
+                <div className="text-8xl mb-6">📭</div>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+                  オークション終了
+                </h1>
+                <p className="text-xl text-gray-700 mb-6">
+                  このTalk枠のオークションは終了しました
+                </p>
+                <p className="text-gray-600 mb-6">
+                  他にも魅力的なTalk枠がたくさんあります。<br />
+                  ぜひチェックしてみてください！
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/')}
+                className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg"
+              >
+                他のTalk枠を見る
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // オークション進行中の画面
   return (
     <div className="min-h-screen flex flex-col -mx-4 sm:-mx-6 lg:-mx-8 -mt-12 pb-12 md:pb-0">
       {/* Hero Section with Host Photo */}
       <div className="relative flex-1 min-h-[calc(100vh-48px-48px)] overflow-hidden">
         {/* Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover"
-          style={{ 
+          style={{
             backgroundImage: `url(${talk.detail_image_url || talk.influencer.avatar_url})`,
             backgroundPosition: 'center top',
             backgroundAttachment: 'scroll'
           }}
         />
-        
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
 
