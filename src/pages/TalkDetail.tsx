@@ -185,6 +185,8 @@ export default function TalkDetail() {
 
     console.log('🔵 ポーリング開始: オークション情報を3秒ごとに更新します', auctionId);
 
+    let hasShownModal = false; // モーダルを一度だけ表示するためのフラグ
+
     const fetchAuctionUpdate = async () => {
       try {
         // オークション情報を取得
@@ -195,9 +197,10 @@ export default function TalkDetail() {
           .single();
 
         if (!error && updatedAuction) {
-          // オークション終了を検知
-          if (updatedAuction.status === 'ended' && !showAuctionCompleteModal) {
+          // オークション終了を検知（一度だけモーダル表示）
+          if (updatedAuction.status === 'ended' && !hasShownModal) {
             console.log('🎉 オークション終了を検知');
+            hasShownModal = true;
 
             // 落札者かどうかを判定
             const userIsWinner = supabaseUser && updatedAuction.winner_user_id === supabaseUser.id;
@@ -205,7 +208,7 @@ export default function TalkDetail() {
             setShowAuctionCompleteModal(true);
 
             console.log(userIsWinner ? '🏆 あなたが落札者です！' : '😢 別の方が落札されました');
-            return; // ポーリング終了
+            // returnを削除してポーリングを続行（価格更新のため）
           }
 
           // 最高入札額が変わった場合のみ更新
@@ -243,7 +246,7 @@ export default function TalkDetail() {
       console.log('🔵 ポーリング停止:', auctionId);
       clearInterval(intervalId);
     };
-  }, [auctionId, supabaseUser, currentHighestBid, isMyBid, showAuctionCompleteModal]);
+  }, [auctionId, supabaseUser, currentHighestBid, isMyBid]);
 
   if (isLoading) {
     return (

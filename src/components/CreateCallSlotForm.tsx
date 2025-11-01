@@ -171,7 +171,7 @@ export default function CreateCallSlotForm({
     setFormData((prev) => ({
       ...prev,
       [name]: name.includes('_minutes') || name.includes('price') || name.includes('increment')
-        ? Number(value)
+        ? (value === '' ? prev[name as keyof typeof prev] : Number(value))
         : value,
     }));
   };

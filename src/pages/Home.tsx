@@ -127,8 +127,10 @@ export default function Home() {
     if (aIsFollowing && !bIsFollowing) return -1;
     if (!aIsFollowing && bIsFollowing) return 1;
 
-    // 同じグループ内では元の順序を維持（オークション締切時間順）
-    return 0;
+    // 同じグループ内ではオークション終了時刻が近い順にソート
+    const aEndTime = new Date(a.auction_end_time).getTime();
+    const bEndTime = new Date(b.auction_end_time).getTime();
+    return aEndTime - bEndTime;
   });
 
   return (
