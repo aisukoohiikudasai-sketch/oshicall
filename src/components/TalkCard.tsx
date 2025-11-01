@@ -118,10 +118,10 @@ export default function TalkCard({ talk, onSelect, isFollowing: initialIsFollowi
           )}
         </div>
 
-        {/* Host Message - Bottom */}
+        {/* Talk Title - Bottom */}
         <div className="absolute bottom-4 left-4 right-4">
-          <p className="text-sm leading-relaxed text-white drop-shadow-md opacity-95 line-clamp-2">
-            {talk.host_message || talk.influencer.description || talk.description}
+          <p className="text-sm leading-relaxed text-white drop-shadow-md opacity-95 line-clamp-2 font-semibold">
+            {talk.title}
           </p>
         </div>
       </div>

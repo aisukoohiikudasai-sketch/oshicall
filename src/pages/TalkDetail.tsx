@@ -846,7 +846,7 @@ export default function TalkDetail() {
                 <p className="font-bold mb-1">💡 お支払いのタイミング</p>
                 <p className="text-xs leading-relaxed">
                   入札時点では料金は発生しません。<br />
-                  <span className="font-bold">オークション終了後、最高入札者として落札した場合のみ</span>、登録済みのカードから自動決済されます。
+                  <span className="font-bold">最終落札者として落札し、Talkが実施されたあと</span>に登録済みのクレジットカードから決済されます。
                 </p>
               </div>
             </div>
@@ -927,15 +927,23 @@ export default function TalkDetail() {
               </span>
             )}
           </div>
-          <CountdownTimer 
-            targetTime={talk.auction_end_time} 
-            className="text-sm" 
+          <CountdownTimer
+            targetTime={talk.auction_end_time}
+            className="text-sm"
             showSeconds={true}
           />
         </div>
         <p className="text-lg font-medium text-gray-800 mt-2">
           {formatDate(talk.start_time)} - {formatDate(talk.end_time)}
         </p>
+        {talk.description && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">Talk枠の説明</h3>
+            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+              {talk.description}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Custom Bid Input Modal */}
