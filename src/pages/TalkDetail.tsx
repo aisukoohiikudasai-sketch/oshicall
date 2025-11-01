@@ -709,12 +709,12 @@ export default function TalkDetail() {
                   オークションに落札されました
                 </p>
                 <p className="text-gray-600 mb-6">
-                  マイページのTalkタブで予定を確認できます。<br />
+                  Talk一覧で予定を確認できます。<br />
                   通話開始時刻になりましたら、通知が届きます。
                 </p>
               </div>
               <button
-                onClick={() => navigate('/mypage')}
+                onClick={() => navigate('/talk')}
                 className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg"
               >
                 Talk予定を確認する
