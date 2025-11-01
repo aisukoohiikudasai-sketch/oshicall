@@ -109,6 +109,8 @@ git push heroku main
 - [Stripe セットアップ](./docs/setup/STRIPE_SETUP_STEP_BY_STEP.md)
 - [統合デプロイメント](./docs/setup/UNIFIED_DEPLOYMENT.md)
 - [マルチ環境セットアップ](./docs/setup/MULTI_ENVIRONMENT_SETUP.md)
+- **[マイグレーション管理](./docs/setup/MIGRATION_MANAGEMENT.md)** ⭐ 重要
+- [マイグレーション クイックスタート](./docs/setup/MIGRATION_QUICKSTART.md)
 
 ### 機能ガイド
 - [管理者ガイド](./docs/guides/ADMIN_GUIDE.md)
@@ -122,10 +124,12 @@ git push heroku main
 - [技術スタック](./docs/TECH_STACK.md)
 - [次のステップ](./docs/NEXT_STEPS.md)
 
-### SQLスクリプト
-- マイグレーション: `sql/migrations/`
-- 修正スクリプト: `sql/fixes/`
-- テストスクリプト: `sql/tests/`
+### データベース管理
+- **現在のマイグレーション**: `supabase/migrations/` (Supabase CLI管理)
+- レガシーSQL: `sql/` ([詳細](./sql/README.md))
+  - `sql/migrations/` - 過去のマイグレーション（参照用）
+  - `sql/fixes/` - バグ修正スクリプト（参照用）
+  - `sql/tests/` - テスト・検証スクリプト（参照用）
 
 ## ライセンス
 
