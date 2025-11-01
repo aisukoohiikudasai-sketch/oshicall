@@ -28,64 +28,74 @@ export interface RankingStats {
 // インフルエンサーランキングを取得（総獲得金額順）
 export const getInfluencerRankings = async (limit: number = 10): Promise<InfluencerRanking[]> => {
   try {
-    // 1. 全インフルエンサーを取得
-    const { data: influencers, error: influencersError } = await supabase
-      .from('influencers')
-      .select('id, name, username, avatar_url, follower_count, rating');
+    // 1. purchased_slotsからcall_slotsを結合してuser_idと価格を取得
+    const { data: purchases, error: purchasesError } = await supabase
+      .from('purchased_slots')
+      .select(`
+        price,
+        call_slots!inner (
+          user_id
+        )
+      `);
 
-    if (influencersError) throw influencersError;
+    if (purchasesError) {
+      console.error('Error fetching purchases:', purchasesError);
+      throw purchasesError;
+    }
 
-    if (!influencers || influencers.length === 0) {
+    if (!purchases || purchases.length === 0) {
+      console.log('No purchases found');
       return [];
     }
 
-    // 2. 各インフルエンサーの総獲得金額とTalk数を計算
-    const rankingsWithStats = await Promise.all(
-      influencers.map(async (influencer) => {
-        // インフルエンサーのcall_slotsを取得
-        const { data: callSlots, error: callSlotsError } = await supabase
-          .from('call_slots')
-          .select('id')
-          .eq('user_id', influencer.id);
+    // 2. user_idごとに集計
+    const userStats = purchases.reduce((acc, purchase: any) => {
+      const userId = purchase.call_slots?.user_id;
+      if (!userId) return acc;
 
-        if (callSlotsError || !callSlots || callSlots.length === 0) {
-          return {
-            ...influencer,
-            total_earned: 0,
-            total_talks: 0,
-          };
-        }
-
-        const callSlotIds = callSlots.map(slot => slot.id);
-
-        // purchased_slotsから総獲得金額を計算
-        const { data: purchasedSlots, error: purchasedError } = await supabase
-          .from('purchased_slots')
-          .select('price')
-          .in('call_slot_id', callSlotIds);
-
-        if (purchasedError) {
-          console.error('Error fetching purchased slots:', purchasedError);
-          return {
-            ...influencer,
-            total_earned: 0,
-            total_talks: 0,
-          };
-        }
-
-        const totalEarned = purchasedSlots?.reduce((sum, slot) => sum + (slot.price || 0), 0) || 0;
-        const totalTalks = purchasedSlots?.length || 0;
-
-        return {
-          ...influencer,
-          total_earned: totalEarned,
-          total_talks: totalTalks,
+      if (!acc[userId]) {
+        acc[userId] = {
+          total_earned: 0,
+          total_talks: 0,
         };
-      })
-    );
+      }
+      acc[userId].total_earned += purchase.price || 0;
+      acc[userId].total_talks += 1;
+      return acc;
+    }, {} as Record<string, { total_earned: number; total_talks: number }>);
 
-    // 3. 総獲得金額でソートしてlimit数だけ返す
-    return rankingsWithStats
+    console.log('User stats:', userStats);
+
+    // 3. インフルエンサー情報を取得
+    const userIds = Object.keys(userStats);
+    if (userIds.length === 0) {
+      return [];
+    }
+
+    const { data: influencers, error: influencersError } = await supabase
+      .from('influencers')
+      .select('id, name, username, avatar_url, follower_count, rating')
+      .in('id', userIds);
+
+    if (influencersError) {
+      console.error('Error fetching influencers:', influencersError);
+      throw influencersError;
+    }
+
+    if (!influencers || influencers.length === 0) {
+      console.log('No influencers found for user IDs:', userIds);
+      return [];
+    }
+
+    // 4. ランキングデータを構築
+    const rankings: InfluencerRanking[] = influencers.map(influencer => ({
+      ...influencer,
+      total_earned: userStats[influencer.id].total_earned,
+      total_talks: userStats[influencer.id].total_talks,
+    }));
+
+    // 5. 総獲得金額でソートしてlimit数だけ返す
+    return rankings
       .sort((a, b) => b.total_earned - a.total_earned)
       .slice(0, limit);
 
@@ -103,11 +113,17 @@ export const getBidderRankings = async (limit: number = 10): Promise<BidderRanki
       .from('purchased_slots')
       .select('user_id, price');
 
-    if (purchasesError) throw purchasesError;
+    if (purchasesError) {
+      console.error('Error fetching purchases for bidders:', purchasesError);
+      throw purchasesError;
+    }
 
     if (!purchases || purchases.length === 0) {
+      console.log('No purchases found for bidders');
       return [];
     }
+
+    console.log(`Found ${purchases.length} purchases for bidder rankings`);
 
     // 2. ユーザーごとに集計
     const userStats = purchases.reduce((acc, purchase) => {
@@ -164,10 +180,15 @@ export const getRankingStats = async (): Promise<RankingStats> => {
       .from('purchased_slots')
       .select('price');
 
-    if (purchasesError) throw purchasesError;
+    if (purchasesError) {
+      console.error('Error fetching purchases for stats:', purchasesError);
+      throw purchasesError;
+    }
 
     const totalTransactionAmount = purchases?.reduce((sum, p) => sum + (p.price || 0), 0) || 0;
     const totalTalksCompleted = purchases?.length || 0;
+
+    console.log('Stats:', { totalTransactionAmount, totalTalksCompleted, purchaseCount: purchases?.length || 0 });
 
     // 平均評価を取得（全インフルエンサーの平均）
     const { data: influencers, error: influencersError } = await supabase

@@ -77,7 +77,7 @@ export default function Rankings() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 px-4 md:px-6">
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 px-4 md:px-6 pt-6 md:pt-8">
       {/* Header */}
       <div className="text-center relative">
         <div className="absolute inset-0 bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 opacity-10 rounded-3xl blur-3xl"></div>
