@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   User as UserIcon, 
   Calendar, 
@@ -44,10 +44,13 @@ import type { CallSlot } from '../lib/supabase';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { calculateOshiRank, calculatePoints } from '../data/mockData';
+import { getUpcomingPurchasedTalks, getCompletedPurchasedTalks } from '../api/purchasedTalks';
+import type { TalkSession } from '../types';
 
 export default function MyPage() {
   const { user, supabaseUser, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'profile' | 'rank' | 'badges' | 'activity' | 'collection' | 'privacy'>('profile');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -81,6 +84,11 @@ export default function MyPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [dashboardError, setDashboardError] = useState('');
   const [talkSlotsTab, setTalkSlotsTab] = useState<'scheduled' | 'completed'>('scheduled');
+
+  // ファン向け：落札済みTalk用の状態
+  const [purchasedTalks, setPurchasedTalks] = useState<TalkSession[]>([]);
+  const [isLoadingPurchasedTalks, setIsLoadingPurchasedTalks] = useState(false);
+  const [purchasedTalksTab, setPurchasedTalksTab] = useState<'upcoming' | 'completed'>('upcoming');
 
   // Talk枠編集用の状態
   const [editingCallSlot, setEditingCallSlot] = useState<CallSlot | null>(null);
@@ -129,6 +137,14 @@ export default function MyPage() {
     }
   }, [user, supabaseUser, navigate]);
 
+  // URLパラメータからタブを読み取る
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['profile', 'rank', 'badges', 'activity', 'collection', 'privacy'].includes(tabParam)) {
+      setActiveTab(tabParam as 'profile' | 'rank' | 'badges' | 'activity' | 'collection' | 'privacy');
+    }
+  }, [searchParams]);
+
   // 初回ユーザー検出ロジック
   useEffect(() => {
     if (supabaseUser) {
@@ -158,6 +174,9 @@ export default function MyPage() {
       if (supabaseUser.is_influencer) {
         checkStripeAccountStatus();
         loadCallSlots();
+      } else {
+        // ファンの場合、落札済みTalkを読み込む
+        loadPurchasedTalks();
       }
     }
   }, [supabaseUser]);
@@ -392,6 +411,31 @@ export default function MyPage() {
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ja-JP').format(price);
+  };
+
+  // 落札済みTalkをフィルタリング
+  const upcomingPurchasedTalks = purchasedTalks.filter(talk => talk.status === 'won');
+  const completedPurchasedTalks = purchasedTalks.filter(talk => talk.status === 'completed');
+
+  // ファン向け：落札済みTalkを読み込む
+  const loadPurchasedTalks = async () => {
+    if (!supabaseUser || supabaseUser.is_influencer) return;
+
+    try {
+      setIsLoadingPurchasedTalks(true);
+      const [upcoming, completed] = await Promise.all([
+        getUpcomingPurchasedTalks(supabaseUser.id),
+        getCompletedPurchasedTalks(supabaseUser.id)
+      ]);
+
+      // 両方を結合して保存
+      setPurchasedTalks([...upcoming, ...completed]);
+      console.log('📚 落札済みTalk:', { upcoming: upcoming.length, completed: completed.length });
+    } catch (err) {
+      console.error('落札済みTalk取得エラー:', err);
+    } finally {
+      setIsLoadingPurchasedTalks(false);
+    }
   };
 
   // インフルエンサーダッシュボード用の関数
@@ -1290,6 +1334,130 @@ export default function MyPage() {
               <div className="text-xs text-gray-600">枠数</div>
               <div className="text-sm font-bold text-pink-600">
                 {callSlots.length}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ファン向け：落札済みTalk枠セクション */}
+      {supabaseUser && !supabaseUser.is_influencer && (
+        <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
+          <div className="flex justify-between items-center p-6 border-b border-gray-200">
+            <h3 className="text-lg font-bold text-gray-800">落札済みTalk</h3>
+          </div>
+
+          {/* Talk枠タブ */}
+          <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b border-gray-200">
+            <div className="flex border border-gray-300 rounded-lg mx-6 my-4 overflow-hidden">
+              <button
+                onClick={() => setPurchasedTalksTab('upcoming')}
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors border-r border-gray-300 ${
+                  purchasedTalksTab === 'upcoming'
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                }`}
+              >
+                予定 ({upcomingPurchasedTalks.length})
+              </button>
+              <button
+                onClick={() => setPurchasedTalksTab('completed')}
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                  purchasedTalksTab === 'completed'
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                }`}
+              >
+                履歴 ({completedPurchasedTalks.length})
+              </button>
+            </div>
+
+            <div>
+              {isLoadingPurchasedTalks ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse bg-gray-100 h-16"></div>
+                  ))}
+                </div>
+              ) : (purchasedTalksTab === 'upcoming' ? upcomingPurchasedTalks : completedPurchasedTalks).length === 0 ? (
+                <div className="text-center py-6">
+                  <Calendar className="h-8 w-8 mx-auto text-gray-300 mb-2" />
+                  <p className="text-gray-600 text-sm">
+                    {purchasedTalksTab === 'upcoming' ? '予定のTalkがありません' : '完了したTalkがありません'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {(purchasedTalksTab === 'upcoming' ? upcomingPurchasedTalks : completedPurchasedTalks).map((talk) => {
+                    return (
+                      <div
+                        key={talk.id}
+                        className="border-b-2 border-blue-200 p-4 hover:bg-white/10 transition-colors cursor-pointer"
+                        onClick={() => navigate(`/talk/${talk.id}`)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <h5 className="text-sm font-bold text-gray-900 truncate">{talk.title}</h5>
+                              <span className={`px-2 py-1 text-xs font-medium ${
+                                talk.status === 'won' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                              }`}>
+                                {talk.status === 'won' ? '✓ 予定' : '✓ 完了'}
+                              </span>
+                            </div>
+
+                            {/* 予定日時 */}
+                            <div className="bg-blue-50 p-2 mb-2">
+                              <div className="flex items-center space-x-2">
+                                <Calendar className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm font-bold text-blue-800">
+                                  {format(new Date(talk.start_time), 'yyyy年MM月dd日 HH:mm', { locale: ja })}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* インフルエンサー情報 */}
+                            <div className="flex items-center space-x-2">
+                              <img
+                                src={talk.influencer.avatar_url}
+                                alt={talk.influencer.name}
+                                className="h-6 w-6 rounded-full"
+                              />
+                              <span className="text-sm text-gray-600">{talk.influencer.name}</span>
+                              <span className="text-sm text-pink-600 font-bold">
+                                ¥{formatPrice(talk.current_highest_bid)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 統計情報 */}
+          <div className="grid grid-cols-3">
+            <div className="p-3 text-center border-r-2 border-blue-200">
+              <div className="text-xs text-gray-600">総支払額</div>
+              <div className="text-sm font-bold text-pink-600">
+                ¥{formatPrice(supabaseUser.total_spent || 0)}
+              </div>
+            </div>
+
+            <div className="p-3 text-center border-r-2 border-blue-200">
+              <div className="text-xs text-gray-600">通話数</div>
+              <div className="text-sm font-bold text-green-600">
+                {purchasedTalks.length}
+              </div>
+            </div>
+
+            <div className="p-3 text-center">
+              <div className="text-xs text-gray-600">予定</div>
+              <div className="text-sm font-bold text-blue-600">
+                {upcomingPurchasedTalks.length}
               </div>
             </div>
           </div>

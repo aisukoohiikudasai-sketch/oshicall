@@ -46,14 +46,14 @@ export const getUserCollection = async (userId: string): Promise<UserCollection[
 
     if (error) throw error;
 
-    return data.map(item => ({
+    return (data || []).map(item => ({
       id: item.id,
-      title: item.call_slots.title,
-      description: item.call_slots.description,
-      thumbnail: item.call_slots.thumbnail_url,
-      duration: item.call_slots.duration_minutes,
-      influencer_name: item.users.display_name,
-      influencer_image: item.users.profile_image_url,
+      title: item.call_slots?.title || 'タイトルなし',
+      description: item.call_slots?.description || '',
+      thumbnail: item.call_slots?.thumbnail_url || '/images/default-thumbnail.jpg',
+      duration: item.call_slots?.duration_minutes || 30,
+      influencer_name: item.users?.display_name || '不明',
+      influencer_image: item.users?.profile_image_url || '/images/default-avatar.png',
       purchased_at: item.purchased_at,
       call_status: item.call_status,
       rating: item.reviews?.[0]?.rating,
@@ -97,14 +97,14 @@ export const getInfluencerCollection = async (userId: string): Promise<UserColle
 
     if (error) throw error;
 
-    return data.map(item => ({
+    return (data || []).map(item => ({
       id: item.id,
-      title: item.call_slots.title,
-      description: item.call_slots.description,
-      thumbnail: item.call_slots.thumbnail_url,
-      duration: item.call_slots.duration_minutes,
-      influencer_name: item.users.display_name,
-      influencer_image: item.users.profile_image_url,
+      title: item.call_slots?.title || 'タイトルなし',
+      description: item.call_slots?.description || '',
+      thumbnail: item.call_slots?.thumbnail_url || '/images/default-thumbnail.jpg',
+      duration: item.call_slots?.duration_minutes || 30,
+      influencer_name: item.users?.display_name || '不明',
+      influencer_image: item.users?.profile_image_url || '/images/default-avatar.png',
       purchased_at: item.purchased_at,
       call_status: item.call_status,
       rating: item.reviews?.[0]?.rating,

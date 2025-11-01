@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
     // 1. 終了したオークションを取得
     const now = new Date().toISOString();
 
-    // 一時的に、既に終了済み(ended)のオークションでpurchased_slotsがないものも処理
+    // activeステータスのオークションのみを対象にする（処理済みのendedは除外）
     const { data: endedAuctions, error: auctionsError } = await supabase
       .from('auctions')
       .select(`
@@ -191,7 +191,7 @@ Deno.serve(async (req) => {
         status,
         call_slots!inner(user_id)
       `)
-      .in('status', ['active', 'ended'])
+      .eq('status', 'active')
       .lte('end_time', now);
 
     if (auctionsError) {
@@ -237,11 +237,11 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        console.log(`🔵 最高入札: ¥${highestBid.bid_amount} by ${highestBid.fan_id}`);
+        console.log(`🔵 最高入札: ¥${highestBid.bid_amount} by ${highestBid.user_id}`);
 
-        // bids.fan_idは既にusersテーブルのIDを格納している
+        // bids.user_idは既にusersテーブルのIDを格納している
         // try-catchの両方で使用するため、ここで定義
-        const fanUserId = highestBid.fan_id;
+        const fanUserId = highestBid.user_id;
         console.log(`🔵 ファンユーザーID: ${fanUserId}, インフルエンサーユーザーID: ${influencerUserId}`);
 
         // プラットフォーム手数料計算（20%）- try-catchの両方で使用
@@ -392,15 +392,15 @@ Deno.serve(async (req) => {
             // 8. オークションを終了状態に更新
             await supabase
               .from('auctions')
-              .update({ status: 'ended', current_winner_id: highestBid.fan_id })
+              .update({ status: 'ended', current_winner_id: highestBid.user_id })
               .eq('id', auctionId);
 
             // 9. 他の入札者の与信をキャンセル
             const { data: otherBids } = await supabase
               .from('bids')
-              .select('stripe_payment_intent_id, fan_id')
+              .select('stripe_payment_intent_id, user_id')
               .eq('auction_id', auctionId)
-              .neq('fan_id', highestBid.fan_id);
+              .neq('user_id', highestBid.user_id);
 
             if (otherBids && otherBids.length > 0) {
               console.log(`🔵 他の入札者の与信をキャンセル: ${otherBids.length}件`);
@@ -418,7 +418,7 @@ Deno.serve(async (req) => {
 
             // 10. ユーザー統計を更新
             await supabase.rpc('update_user_statistics', {
-              p_fan_id: highestBid.fan_id,
+              p_fan_id: highestBid.user_id,
               p_influencer_id: influencerId,
               p_amount: highestBid.bid_amount,
             });
@@ -426,7 +426,7 @@ Deno.serve(async (req) => {
             results.push({
               auction_id: auctionId,
               status: 'success',
-              winner_id: highestBid.fan_id,
+              winner_id: highestBid.user_id,
               amount: highestBid.bid_amount,
             });
 
@@ -488,13 +488,13 @@ Deno.serve(async (req) => {
               // オークションを終了状態に更新
               await supabase
                 .from('auctions')
-                .update({ status: 'ended', current_winner_id: highestBid.fan_id })
+                .update({ status: 'ended', current_winner_id: highestBid.user_id })
                 .eq('id', auctionId);
 
               results.push({
                 auction_id: auctionId,
                 status: 'already_captured',
-                winner_id: highestBid.fan_id,
+                winner_id: highestBid.user_id,
               });
             } else {
               results.push({
