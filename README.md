@@ -110,6 +110,7 @@ git push heroku main
 - [統合デプロイメント](./docs/setup/UNIFIED_DEPLOYMENT.md)
 - [マルチ環境セットアップ](./docs/setup/MULTI_ENVIRONMENT_SETUP.md)
 - **[データベースマイグレーション管理](./docs/setup/DATABASE_MIGRATIONS.md)** ⭐ 重要
+- **[マイグレーション運用戦略](./docs/setup/MIGRATION_STRATEGY.md)** - 今後の運用方針
 - [Supabase CLI 認証](./docs/setup/SUPABASE_CLI_AUTH.md) - `supabase login` vs 環境変数
 
 ### 機能ガイド
