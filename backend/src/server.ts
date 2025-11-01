@@ -606,6 +606,246 @@ app.post('/api/stripe/create-connect-account', async (req: Request, res: Respons
 });
 
 // ============================================
+// インフルエンサーの売上データ取得
+// ============================================
+app.post('/api/stripe/influencer-earnings', async (req: Request, res: Response) => {
+  try {
+    const { authUserId } = req.body;
+
+    console.log('🔵 インフルエンサー売上データ取得:', { authUserId });
+
+    // ユーザー情報を取得
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, stripe_connect_account_id')
+      .eq('auth_user_id', authUserId)
+      .single();
+
+    if (userError || !user) {
+      console.error('❌ ユーザー取得エラー:', userError);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // payment_transactionsから売上データを集計
+    const { data: transactions, error: txError } = await supabase
+      .from('payment_transactions')
+      .select(`
+        *,
+        purchased_slots!inner (
+          influencer_user_id,
+          fan_user_id,
+          call_slots (
+            title
+          )
+        )
+      `)
+      .eq('purchased_slots.influencer_user_id', user.id)
+      .eq('status', 'captured')
+      .order('created_at', { ascending: false });
+
+    if (txError) {
+      console.error('❌ 取引データ取得エラー:', txError);
+      throw txError;
+    }
+
+    // 集計計算
+    const totalEarnings = transactions?.reduce((sum, tx) => sum + (tx.influencer_payout || 0), 0) || 0;
+    const totalCallCount = transactions?.length || 0;
+
+    // 今月の売上を計算
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const currentMonthTx = transactions?.filter(tx =>
+      new Date(tx.created_at) >= currentMonthStart
+    ) || [];
+
+    const previousMonthTx = transactions?.filter(tx => {
+      const txDate = new Date(tx.created_at);
+      return txDate >= previousMonthStart && txDate < currentMonthStart;
+    }) || [];
+
+    const currentMonthEarnings = currentMonthTx.reduce((sum, tx) => sum + (tx.influencer_payout || 0), 0);
+    const previousMonthEarnings = previousMonthTx.reduce((sum, tx) => sum + (tx.influencer_payout || 0), 0);
+
+    // Stripeから残高情報を取得（Connect Accountがある場合）
+    let availableBalance = 0;
+    let pendingBalance = 0;
+
+    if (user.stripe_connect_account_id) {
+      try {
+        const balance = await stripe.balance.retrieve({
+          stripeAccount: user.stripe_connect_account_id,
+        });
+
+        availableBalance = balance.available.reduce((sum, b) => sum + b.amount, 0) / 100;
+        pendingBalance = balance.pending.reduce((sum, b) => sum + b.amount, 0) / 100;
+      } catch (balanceError) {
+        console.warn('⚠️ 残高取得エラー（継続）:', balanceError);
+      }
+    }
+
+    // 直近5件の取引履歴を整形
+    const recentTransactions = (transactions?.slice(0, 5) || []).map(tx => ({
+      id: tx.id,
+      talkTitle: tx.purchased_slots?.call_slots?.title || '通話',
+      amount: tx.influencer_payout || 0,
+      platformFee: tx.platform_fee || 0,
+      grossAmount: tx.amount || 0,
+      completedAt: tx.created_at,
+      status: tx.status,
+    }));
+
+    res.json({
+      totalEarnings,
+      availableBalance,
+      pendingBalance,
+      recentTransactions,
+      monthlyStats: {
+        currentMonth: {
+          earnings: currentMonthEarnings,
+          callCount: currentMonthTx.length,
+          averagePrice: currentMonthTx.length > 0 ? currentMonthEarnings / currentMonthTx.length : 0,
+        },
+        previousMonth: {
+          earnings: previousMonthEarnings,
+          callCount: previousMonthTx.length,
+        },
+      },
+      totalCallCount,
+    });
+
+  } catch (error: any) {
+    console.error('❌ 売上データ取得エラー:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// Stripe Express Dashboardリンク生成
+// ============================================
+app.post('/api/stripe/create-login-link', async (req: Request, res: Response) => {
+  try {
+    const { authUserId } = req.body;
+
+    console.log('🔵 Express Dashboard Link生成:', { authUserId });
+
+    // ユーザー情報を取得
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('stripe_connect_account_id')
+      .eq('auth_user_id', authUserId)
+      .single();
+
+    if (userError || !user?.stripe_connect_account_id) {
+      console.error('❌ Connect Account IDが見つかりません:', userError);
+      return res.status(404).json({ error: 'Stripe Connect Account not found' });
+    }
+
+    // Express Dashboard Linkを生成
+    const loginLink = await stripe.accounts.createLoginLink(
+      user.stripe_connect_account_id
+    );
+
+    console.log('✅ Login Link生成成功:', loginLink.url);
+
+    res.json({
+      url: loginLink.url,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5分有効
+    });
+
+  } catch (error: any) {
+    console.error('❌ Login Link生成エラー:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// オンボーディング作成/再開（途中離脱対応）
+// ============================================
+app.post('/api/stripe/create-or-resume-onboarding', async (req: Request, res: Response) => {
+  try {
+    const { authUserId, email } = req.body;
+
+    console.log('🔵 オンボーディング作成/再開:', { authUserId, email });
+
+    // 既存のアカウントIDを確認
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('stripe_connect_account_id, stripe_connect_account_status')
+      .eq('auth_user_id', authUserId)
+      .single();
+
+    if (userError) {
+      console.error('❌ ユーザー取得エラー:', userError);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    let accountId = user?.stripe_connect_account_id;
+
+    // アカウントが存在しない場合は新規作成
+    if (!accountId) {
+      console.log('🔵 新規Connect Account作成');
+      const account = await stripe.accounts.create({
+        type: 'express',
+        email,
+        capabilities: {
+          transfers: { requested: true },
+        },
+        metadata: {
+          auth_user_id: authUserId,
+        },
+      });
+      accountId = account.id;
+
+      // DBを更新
+      await supabase
+        .from('users')
+        .update({
+          stripe_connect_account_id: accountId,
+          stripe_connect_account_status: 'pending',
+        })
+        .eq('auth_user_id', authUserId);
+
+      console.log('✅ Connect Account作成成功:', accountId);
+    }
+
+    // 既存アカウントの状態を確認
+    const stripeAccount = await stripe.accounts.retrieve(accountId);
+
+    // 完了済みの場合はダッシュボードリンクを返す
+    if (stripeAccount.charges_enabled && stripeAccount.payouts_enabled) {
+      console.log('✅ アカウント設定完了済み - Dashboard Link生成');
+      const loginLink = await stripe.accounts.createLoginLink(accountId);
+
+      return res.json({
+        status: 'complete',
+        dashboardUrl: loginLink.url,
+      });
+    }
+
+    // 未完了の場合はオンボーディングリンクを返す
+    console.log('🔵 オンボーディングリンク生成（未完了/再開）');
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${process.env.FRONTEND_URL}/mypage?stripe_refresh=true`,
+      return_url: `${process.env.FRONTEND_URL}/mypage?stripe_complete=true`,
+      type: 'account_onboarding',
+    });
+
+    res.json({
+      status: stripeAccount.details_submitted ? 'pending' : 'incomplete',
+      onboardingUrl: accountLink.url,
+    });
+
+  } catch (error: any) {
+    console.error('❌ オンボーディング作成/再開エラー:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
 // インフルエンサーのStripe状態確認
 // ============================================
 app.post('/api/stripe/influencer-status', async (req: Request, res: Response) => {

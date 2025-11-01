@@ -36,9 +36,10 @@ import { getUserBadges, getAvailableBadges } from '../api/userBadges';
 import { getUserActivity } from '../api/userActivity';
 import { getUserCollection, getInfluencerCollection } from '../api/userCollection';
 import { validateImageFile, getImagePreviewUrl } from '../lib/storage';
-import { createConnectAccount, getInfluencerStripeStatus } from '../api/stripe';
+import { createConnectAccount, getInfluencerStripeStatus, createOrResumeOnboarding } from '../api/stripe';
 import { supabase } from '../lib/supabase';
 import CreateCallSlotForm from '../components/CreateCallSlotForm';
+import { InfluencerEarningsDashboard } from '../components/InfluencerEarningsDashboard';
 import { getInfluencerCallSlots, deleteCallSlot, toggleCallSlotPublish } from '../api/callSlots';
 import type { CallSlot } from '../lib/supabase';
 import { format } from 'date-fns';
@@ -319,53 +320,53 @@ export default function MyPage() {
     }
   };
 
-  // Stripe Connect アカウント作成
+  // Stripe Connect オンボーディング開始/再開（途中離脱対応）
   const handleSetupStripeConnect = async () => {
     if (!supabaseUser) return;
-    
-    // デバッグ: ユーザー情報をコンソールに出力
-    console.log('🔍 ユーザー情報:', {
+
+    console.log('🔍 オンボーディング開始/再開:', {
       id: supabaseUser.id,
       auth_user_id: supabaseUser.auth_user_id,
-      display_name: supabaseUser.display_name,
-      is_influencer: supabaseUser.is_influencer
     });
-    
-    // より詳細なデバッグ情報
-    console.log('🔍 完全なユーザーオブジェクト:', supabaseUser);
-    console.log('🔍 利用可能なプロパティ:', Object.keys(supabaseUser));
-    
+
     // auth_user_id を使って Supabase Auth から実際のユーザー情報を取得
     let userEmail = '';
     try {
       const { data: authUser } = await supabase.auth.getUser();
       if (authUser?.user) {
         userEmail = authUser.user.email || '';
-        console.log('🔍 Auth ユーザー情報:', {
-          email: authUser.user.email,
-          user_metadata: authUser.user.user_metadata
-        });
       }
     } catch (error) {
       console.error('Auth ユーザー情報取得エラー:', error);
     }
-    
+
     if (!userEmail) {
       setStripeError('メールアドレスが取得できませんでした。メールアドレスを手動で入力してください。');
       setShowEmailInput(true);
       return;
     }
-    
+
     setIsSettingUpStripe(true);
     setStripeError('');
-    
+
     try {
-      // auth_user_idを使用してAPIを呼び出し
       const userId = supabaseUser.auth_user_id || supabaseUser.id;
-      console.log('🔍 Connect Account作成:', { userEmail, userId });
-      
-      const { onboardingUrl } = await createConnectAccount(userEmail, userId);
-      window.location.href = onboardingUrl;
+      console.log('🔍 オンボーディング作成/再開:', { userEmail, userId });
+
+      // 新しいAPI（途中離脱対応）を呼び出し
+      const result = await createOrResumeOnboarding(userId, userEmail);
+
+      if (result.status === 'complete') {
+        // 既に完了済み - Dashboardを開く
+        console.log('✅ アカウント設定完了済み - Dashboard表示');
+        window.open(result.dashboardUrl, '_blank');
+        // ステータスを更新
+        await checkStripeAccountStatus();
+      } else {
+        // 未完了 - オンボーディングへ遷移
+        console.log('🔵 オンボーディングへ遷移:', result.status);
+        window.location.href = result.onboardingUrl;
+      }
     } catch (error: any) {
       console.error('Stripe Connect 設定エラー:', error);
       setStripeError(error.message || 'Stripe Connect の設定に失敗しました');
@@ -380,19 +381,29 @@ export default function MyPage() {
       setStripeError('メールアドレスを入力してください');
       return;
     }
-    
+
     if (!supabaseUser) return;
-    
+
     setIsSettingUpStripe(true);
     setStripeError('');
-    
+
     try {
-      // auth_user_idを使用してAPIを呼び出し
       const userId = supabaseUser.auth_user_id || supabaseUser.id;
-      console.log('🔍 Connect Account作成（手動）:', { email: emailInput.trim(), userId });
-      
-      const { onboardingUrl } = await createConnectAccount(emailInput.trim(), userId);
-      window.location.href = onboardingUrl;
+      console.log('🔍 オンボーディング作成/再開（手動）:', { email: emailInput.trim(), userId });
+
+      // 新しいAPI（途中離脱対応）を呼び出し
+      const result = await createOrResumeOnboarding(userId, emailInput.trim());
+
+      if (result.status === 'complete') {
+        // 既に完了済み - Dashboardを開く
+        console.log('✅ アカウント設定完了済み - Dashboard表示');
+        window.open(result.dashboardUrl, '_blank');
+        await checkStripeAccountStatus();
+      } else {
+        // 未完了 - オンボーディングへ遷移
+        console.log('🔵 オンボーディングへ遷移:', result.status);
+        window.location.href = result.onboardingUrl;
+      }
     } catch (error: any) {
       console.error('Stripe Connect 設定エラー:', error);
       setStripeError(error.message || 'Stripe Connect の設定に失敗しました');
@@ -1157,17 +1168,81 @@ export default function MyPage() {
 
       {/* Talk枠管理 - スッキリ版 */}
       {supabaseUser?.is_influencer && (
-        <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
-          <div className="flex justify-between items-center p-6 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white text-sm font-medium rounded-lg hover:bg-purple-600 transition-colors shadow-md"
-            >
-              <Plus className="h-4 w-4" />
-              <span>新規作成</span>
-            </button>
+        <>
+          {/* Stripe Connect設定セクション */}
+          <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200 p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">💳 銀行口座設定</h3>
+
+            {stripeAccountStatus === 'not_setup' && (
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                <p className="text-sm text-yellow-800 mb-3">
+                  売上を受け取るには銀行口座の登録が必要です
+                </p>
+                <button
+                  onClick={handleSetupStripeConnect}
+                  disabled={isSettingUpStripe}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+                >
+                  {isSettingUpStripe ? '設定中...' : '銀行口座を登録する'}
+                </button>
+                {stripeError && (
+                  <p className="mt-2 text-sm text-red-600">{stripeError}</p>
+                )}
+              </div>
+            )}
+
+            {stripeAccountStatus === 'incomplete' && (
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                <p className="text-sm text-blue-800 mb-3">
+                  銀行口座の登録が完了していません。登録を再開してください
+                </p>
+                <button
+                  onClick={handleSetupStripeConnect}
+                  disabled={isSettingUpStripe}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {isSettingUpStripe ? '設定中...' : '登録を完了する'}
+                </button>
+              </div>
+            )}
+
+            {stripeAccountStatus === 'pending' && (
+              <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+                <p className="text-sm text-orange-800">
+                  審査中です（通常1-2営業日）
+                </p>
+              </div>
+            )}
+
+            {stripeAccountStatus === 'active' && (
+              <div className="bg-green-50 border border-green-200 p-4 rounded-lg flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-600">✓</span>
+                  <span className="text-sm text-green-800 font-medium">銀行口座設定完了</span>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* 売上ダッシュボード */}
+          {stripeAccountStatus === 'active' && (
+            <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200 p-6">
+              <InfluencerEarningsDashboard authUserId={supabaseUser.auth_user_id || supabaseUser.id} />
+            </div>
+          )}
+
+          {/* Talk枠セクション */}
+          <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white text-sm font-medium rounded-lg hover:bg-purple-600 transition-colors shadow-md"
+              >
+                <Plus className="h-4 w-4" />
+                <span>新規作成</span>
+              </button>
+            </div>
 
           {/* エラー表示 */}
           {dashboardError && (
@@ -1365,6 +1440,7 @@ export default function MyPage() {
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* ファン向け：落札済みTalk枠セクション */}

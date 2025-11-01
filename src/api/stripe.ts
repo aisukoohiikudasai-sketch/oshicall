@@ -155,26 +155,26 @@ export const getInfluencerStripeStatus = async (authUserId: string) => {
     url: `${API_BASE_URL}/api/stripe/influencer-status`,
     authUserId
   });
-  
+
   try {
     const response = await fetch(`${API_BASE_URL}/api/stripe/influencer-status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ authUserId }),
     });
-    
+
     console.log('🔍 API応答:', {
       status: response.status,
       statusText: response.statusText,
       ok: response.ok
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ API エラー:', errorText);
       throw new Error(`インフルエンサー状態の取得に失敗しました: ${response.status} ${response.statusText}`);
     }
-    
+
     const data = await response.json();
     console.log('✅ API データ:', data);
     return data;
@@ -182,6 +182,54 @@ export const getInfluencerStripeStatus = async (authUserId: string) => {
     console.error('❌ API呼び出しエラー:', error);
     throw error;
   }
+};
+
+// インフルエンサーの売上データを取得
+export const getInfluencerEarnings = async (authUserId: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/stripe/influencer-earnings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ authUserId }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`売上データ取得に失敗しました: ${errorText}`);
+  }
+
+  return response.json();
+};
+
+// Stripe Express Dashboardリンクを生成
+export const createStripeDashboardLink = async (authUserId: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/stripe/create-login-link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ authUserId }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Dashboardリンク生成に失敗しました: ${errorText}`);
+  }
+
+  return response.json();
+};
+
+// オンボーディング作成/再開
+export const createOrResumeOnboarding = async (authUserId: string, email: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/stripe/create-or-resume-onboarding`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ authUserId, email }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`オンボーディング作成に失敗しました: ${errorText}`);
+  }
+
+  return response.json();
 };
 
 
