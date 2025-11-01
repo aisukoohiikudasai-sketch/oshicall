@@ -178,6 +178,8 @@ Deno.serve(async (req) => {
 
     // 1. 終了したオークションを取得
     const now = new Date().toISOString();
+
+    // 一時的に、既に終了済み(ended)のオークションでpurchased_slotsがないものも処理
     const { data: endedAuctions, error: auctionsError } = await supabase
       .from('auctions')
       .select(`
@@ -189,7 +191,7 @@ Deno.serve(async (req) => {
         status,
         call_slots!inner(user_id)
       `)
-      .eq('status', 'active')
+      .in('status', ['active', 'ended'])
       .lte('end_time', now);
 
     if (auctionsError) {
@@ -432,10 +434,51 @@ Deno.serve(async (req) => {
           } catch (captureError: any) {
             console.error(`❌ 決済確定エラー: ${captureError.message}`);
 
-            // 既にキャプチャ済みの場合は、オークションを終了状態に更新
+            // 既にキャプチャ済みの場合は、purchased_slotsにレコードを作成
             if (captureError.message && captureError.message.includes('already been captured')) {
-              console.log(`⚠️ 既にキャプチャ済み: ${auctionId} - オークションを終了状態に更新`);
+              console.log(`⚠️ 既にキャプチャ済み: ${auctionId} - purchased_slotsレコードを作成`);
 
+              try {
+                // プラットフォーム手数料計算（20%）
+                const platformFee = Math.round(highestBid.bid_amount * 0.2);
+                const influencerPayout = highestBid.bid_amount - platformFee;
+
+                // purchased_slotsに既にレコードがあるかチェック
+                const { data: existingSlot } = await supabase
+                  .from('purchased_slots')
+                  .select('id')
+                  .eq('auction_id', auctionId)
+                  .single();
+
+                if (!existingSlot) {
+                  // レコードが存在しない場合のみ作成
+                  const { data: purchasedSlot, error: purchaseError } = await supabase
+                    .from('purchased_slots')
+                    .insert({
+                      call_slot_id: auction.call_slot_id,
+                      fan_user_id: fanUserId,
+                      influencer_user_id: influencerUserId,
+                      auction_id: auctionId,
+                      winning_bid_amount: highestBid.bid_amount,
+                      platform_fee: platformFee,
+                      influencer_payout: influencerPayout,
+                    })
+                    .select()
+                    .single();
+
+                  if (purchaseError) {
+                    console.error(`❌ purchased_slots作成エラー:`, purchaseError);
+                  } else {
+                    console.log(`✅ purchased_slots作成成功: ${purchasedSlot.id}`);
+                  }
+                } else {
+                  console.log(`ℹ️ purchased_slotsレコードは既に存在: ${existingSlot.id}`);
+                }
+              } catch (slotError: any) {
+                console.error(`❌ purchased_slots処理エラー: ${slotError.message}`);
+              }
+
+              // オークションを終了状態に更新
               await supabase
                 .from('auctions')
                 .update({ status: 'ended', current_winner_id: highestBid.fan_id })
