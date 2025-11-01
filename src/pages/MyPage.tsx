@@ -756,7 +756,7 @@ export default function MyPage() {
       if (dbError) throw dbError;
 
       // バックエンドにメール送信リクエスト
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/send-influencer-application`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || ''}/api/send-influencer-application`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
