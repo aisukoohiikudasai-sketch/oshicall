@@ -65,15 +65,27 @@ router.post('/create-room', async (req: Request, res: Response) => {
     }
 
     // 4. 時刻確認（15分前から入室可能）
-    const callSlot = Array.isArray(purchasedSlot.call_slots) 
-      ? purchasedSlot.call_slots[0] 
+    const callSlot = Array.isArray(purchasedSlot.call_slots)
+      ? purchasedSlot.call_slots[0]
       : purchasedSlot.call_slots;
-    
+
+    if (!callSlot) {
+      console.error('❌ call_slotsが見つかりません');
+      return res.status(400).json({ error: 'Talk枠情報が見つかりません' });
+    }
+
     const scheduledTime = new Date(callSlot.scheduled_start_time);
     const now = new Date();
     const minutesUntilStart = (scheduledTime.getTime() - now.getTime()) / 60000;
 
+    console.log('🔵 時刻確認:', {
+      scheduled_start_time: callSlot.scheduled_start_time,
+      now: now.toISOString(),
+      minutesUntilStart: minutesUntilStart.toFixed(2),
+    });
+
     if (minutesUntilStart > 15) {
+      console.warn(`⚠️ 時間外アクセス: ${minutesUntilStart}分前`);
       return res.status(400).json({
         error: `通話は${Math.ceil(minutesUntilStart)}分後に開始できます`,
         time_until_start: Math.ceil(minutesUntilStart),
@@ -85,29 +97,44 @@ router.post('/create-room', async (req: Request, res: Response) => {
 
     // 5. ルームが未作成の場合は作成
     if (!roomName) {
-      const room = await createDailyRoom(
-        purchasedSlotId,
-        scheduledTime,
-        callSlot.duration_minutes
-      );
-      
-      roomName = room.roomName;
-      roomUrl = room.roomUrl;
+      console.log('🔵 新規ルーム作成開始');
+      try {
+        const room = await createDailyRoom(
+          purchasedSlotId,
+          scheduledTime,
+          callSlot.duration_minutes
+        );
 
-      // Supabaseに保存
-      await supabase
-        .from('purchased_slots')
-        .update({ 
-          video_call_room_id: roomName,
-          call_status: 'ready',
-        })
-        .eq('id', purchasedSlotId);
+        roomName = room.roomName;
+        roomUrl = room.roomUrl;
+        console.log('✅ Daily.coルーム作成完了:', { roomName, roomUrl });
 
-      console.log('✅ ルーム情報をSupabaseに保存:', roomName);
+        // Supabaseに保存
+        const { error: updateError } = await supabase
+          .from('purchased_slots')
+          .update({
+            video_call_room_id: roomName,
+            call_status: 'ready',
+          })
+          .eq('id', purchasedSlotId);
+
+        if (updateError) {
+          console.error('❌ Supabase更新エラー:', updateError);
+          throw updateError;
+        }
+
+        console.log('✅ ルーム情報をSupabaseに保存:', roomName);
+      } catch (roomError: any) {
+        console.error('❌ ルーム作成エラー:', roomError);
+        return res.status(500).json({
+          error: 'ルーム作成に失敗しました',
+          details: roomError.message,
+        });
+      }
     } else {
       // 既存のルームURLを構築
       const domain = process.env.DAILY_DOMAIN || 'oshicall.daily.co';
-      roomUrl = domain.includes('.daily.co') 
+      roomUrl = domain.includes('.daily.co')
         ? `https://${domain}/${roomName}`
         : `https://${domain}.daily.co/${roomName}`;
       console.log('⚠️ 既存のルームを使用:', roomName);
@@ -139,8 +166,15 @@ router.post('/create-room', async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    console.error('❌ 通話ルーム作成エラー:', error);
-    res.status(500).json({ error: error.message || 'ルーム作成に失敗しました' });
+    console.error('❌ 通話ルーム作成エラー:', {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data,
+    });
+    res.status(500).json({
+      error: error.message || 'ルーム作成に失敗しました',
+      details: error.response?.data || error.toString(),
+    });
   }
 });
 

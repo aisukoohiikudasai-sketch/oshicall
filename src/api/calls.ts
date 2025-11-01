@@ -46,6 +46,8 @@ export const createCallRoom = async (
   purchasedSlotId: string,
   userId: string
 ): Promise<CreateRoomResponse> => {
+  console.log('🔵 createCallRoom API呼び出し:', { purchasedSlotId, userId, apiUrl: `${API_BASE_URL}/api/calls/create-room` });
+
   const response = await fetch(`${API_BASE_URL}/api/calls/create-room`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -54,10 +56,17 @@ export const createCallRoom = async (
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'ルーム作成に失敗しました');
+    console.error('❌ createCallRoom APIエラー:', {
+      status: response.status,
+      error: error,
+    });
+    const errorMessage = error.details || error.error || 'ルーム作成に失敗しました';
+    throw new Error(errorMessage);
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log('✅ createCallRoom API成功:', result);
+  return result;
 };
 
 /**
