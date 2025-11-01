@@ -77,9 +77,9 @@ export default function TalkDetail() {
 
         console.log('📦 取得したデータ:', { auctionData, error });
 
-        // call_slotsは配列として返されるので、最初の要素を取得
-        const callSlot = auctionData?.call_slots?.[0];
-        const user = callSlot?.users?.[0];
+        // call_slotsとusersは多対一のリレーションなので、オブジェクトとして返される
+        const callSlot = auctionData?.call_slots;
+        const user = callSlot?.users;
 
         console.log('📊 展開したデータ:', { callSlot, user });
 
