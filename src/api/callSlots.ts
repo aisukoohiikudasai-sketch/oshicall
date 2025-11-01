@@ -80,6 +80,47 @@ export const createCallSlot = async (
     throw auctionError;
   }
 
+  // 3. フォロワーへの通知メールを送信（Edge Functionを呼び出し）
+  try {
+    console.log('📧 フォロワー通知Edge Function呼び出し開始');
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const { data: { session } } = await supabase.auth.getSession();
+    const functionUrl = `${supabaseUrl}/functions/v1/notify-new-talk-slot`;
+
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        record: {
+          id: callSlot.id,
+          user_id: callSlot.user_id,
+          title: callSlot.title,
+          description: callSlot.description,
+          scheduled_start_time: callSlot.scheduled_start_time,
+          duration_minutes: callSlot.duration_minutes,
+          starting_price: callSlot.starting_price,
+          is_published: callSlot.is_published,
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ フォロワー通知Edge Function呼び出しエラー:', errorText);
+      // エラーでもTalk枠作成自体は成功させる
+    } else {
+      const result = await response.json();
+      console.log('✅ フォロワー通知Edge Function呼び出し成功:', result);
+    }
+  } catch (notifyError: any) {
+    console.error('❌ フォロワー通知処理でエラー:', notifyError.message);
+    // エラーでもTalk枠作成自体は成功させる
+  }
+
   return { callSlot, auction };
 };
 

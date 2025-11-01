@@ -15,6 +15,7 @@ interface AuctionWinEmailData {
   finalPrice: number;
   influencerName: string;
   influencerImage?: string;
+  talkThumbnail?: string;
   appUrl: string;
 }
 
@@ -46,6 +47,15 @@ function generateAuctionWinEmail(data: AuctionWinEmailData): string {
                 おめでとうございます！オークションで見事落札されました。<br>
                 以下のTalk枠が確保されました。
               </p>
+              ${data.talkThumbnail ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td align="center">
+                    <img src="${data.talkThumbnail}" alt="${data.talkTitle}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);" />
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
               <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #fce7f3 0%, #e9d5ff 100%); border-radius: 8px; margin-bottom: 30px;">
                 <tr>
                   <td style="padding: 24px;">
@@ -139,6 +149,178 @@ ${data.winnerName} 様
 予約済みTalk枠を確認: ${data.appUrl}/purchased-talks
 
 素敵なTalk体験をお楽しみください！
+ご不明な点がございましたら、お気軽にお問い合わせください。
+
+━━━━━━━━━━━━━━━━━━━━━━
+このメールは OshiTalk から自動送信されています
+© ${new Date().getFullYear()} OshiTalk. All rights reserved.
+  `.trim();
+}
+
+// === インフルエンサー向けメールテンプレート ===
+
+interface InfluencerNotificationEmailData {
+  influencerName: string;
+  talkTitle: string;
+  talkDate: string;
+  talkTime: string;
+  talkDuration: number;
+  winnerName: string;
+  totalAmount: number;
+  platformFee: number;
+  influencerPayout: number;
+  appUrl: string;
+}
+
+function generateInfluencerNotificationEmail(data: InfluencerNotificationEmailData): string {
+  return `
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talk枠が落札されました</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f9fafb;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
+          <tr>
+            <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">💰 Talk枠が売れました！</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 20px; color: #374151; font-size: 16px; line-height: 1.6;">
+                ${data.influencerName} 様
+              </p>
+              <p style="margin: 0 0 30px; color: #374151; font-size: 16px; line-height: 1.6;">
+                あなたのTalk枠が落札されました！<br>
+                ファンとの素敵な時間をお楽しみください。
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 8px; margin-bottom: 30px;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <h2 style="margin: 0 0 16px; color: #065f46; font-size: 20px; font-weight: bold;">
+                      📅 ${data.talkTitle}
+                    </h2>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #065f46; font-size: 14px; font-weight: 500;">落札者:</td>
+                        <td style="padding: 8px 0; color: #065f46; font-size: 14px; text-align: right;">${data.winnerName}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #065f46; font-size: 14px; font-weight: 500;">日時:</td>
+                        <td style="padding: 8px 0; color: #065f46; font-size: 14px; text-align: right;">${data.talkDate} ${data.talkTime}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #065f46; font-size: 14px; font-weight: 500;">通話時間:</td>
+                        <td style="padding: 8px 0; color: #065f46; font-size: 14px; text-align: right;">${data.talkDuration}分</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; margin-bottom: 30px;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <h3 style="margin: 0 0 16px; color: #92400e; font-size: 18px; font-weight: bold;">💵 収益内訳</h3>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #92400e; font-size: 14px; font-weight: 500;">落札金額:</td>
+                        <td style="padding: 8px 0; color: #92400e; font-size: 14px; text-align: right;">¥${data.totalAmount.toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #92400e; font-size: 14px; font-weight: 500;">プラットフォーム手数料 (20%):</td>
+                        <td style="padding: 8px 0; color: #92400e; font-size: 14px; text-align: right;">- ¥${data.platformFee.toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; border-top: 2px solid #fbbf24; color: #78350f; font-size: 16px; font-weight: bold;">あなたの収入:</td>
+                        <td style="padding: 8px 0; border-top: 2px solid #fbbf24; color: #78350f; font-size: 20px; font-weight: bold; text-align: right;">¥${data.influencerPayout.toLocaleString()}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; margin-bottom: 30px; border-radius: 4px;">
+                <h3 style="margin: 0 0 12px; color: #1e40af; font-size: 16px; font-weight: bold;">📝 次のステップ</h3>
+                <ol style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
+                  <li>マイページから予定されているTalk枠を確認</li>
+                  <li>開始時刻の15分前から通話ルームに入室可能</li>
+                  <li>時間になったらファンとのTalkを開始してください</li>
+                  <li>収益は自動的にアカウントに反映されます</li>
+                </ol>
+              </div>
+
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding: 20px 0;">
+                    <a href="${data.appUrl}/mypage" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                      マイページを確認
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 30px 0 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                ファンとの素敵な時間をお過ごしください！<br>
+                ご不明な点がございましたら、お気軽にお問い合わせください。
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 10px; color: #6b7280; font-size: 14px;">このメールは OshiTalk から自動送信されています</p>
+              <p style="margin: 0; color: #9ca3af; font-size: 12px;">© ${new Date().getFullYear()} OshiTalk. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+}
+
+function generateInfluencerNotificationEmailPlainText(data: InfluencerNotificationEmailData): string {
+  return `
+💰 Talk枠が売れました！
+
+${data.influencerName} 様
+
+あなたのTalk枠が落札されました！
+ファンとの素敵な時間をお楽しみください。
+
+━━━━━━━━━━━━━━━━━━━━━━
+📅 ${data.talkTitle}
+
+落札者: ${data.winnerName}
+日時: ${data.talkDate} ${data.talkTime}
+通話時間: ${data.talkDuration}分
+━━━━━━━━━━━━━━━━━━━━━━
+
+💵 収益内訳
+━━━━━━━━━━━━━━━━━━━━━━
+落札金額: ¥${data.totalAmount.toLocaleString()}
+プラットフォーム手数料 (20%): - ¥${data.platformFee.toLocaleString()}
+────────────────────────
+あなたの収入: ¥${data.influencerPayout.toLocaleString()}
+━━━━━━━━━━━━━━━━━━━━━━
+
+📝 次のステップ:
+1. マイページから予定されているTalk枠を確認
+2. 開始時刻の15分前から通話ルームに入室可能
+3. 時間になったらファンとのTalkを開始してください
+4. 収益は自動的にアカウントに反映されます
+
+マイページを確認: ${data.appUrl}/mypage
+
+ファンとの素敵な時間をお過ごしください！
 ご不明な点がございましたら、お気軽にお問い合わせください。
 
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -309,14 +491,14 @@ Deno.serve(async (req) => {
               // Call Slot情報を取得
               const { data: callSlot, error: slotError } = await supabase
                 .from('call_slots')
-                .select('title, scheduled_start_time, duration_minutes')
+                .select('title, scheduled_start_time, duration_minutes, thumbnail_url')
                 .eq('id', auction.call_slot_id)
                 .single();
 
               // インフルエンサー情報を取得
               const { data: influencerUserData, error: influencerError } = await supabase
                 .from('users')
-                .select('display_name, profile_image_url')
+                .select('display_name, profile_image_url, auth_user_id')
                 .eq('id', influencerUserId)
                 .single();
 
@@ -330,7 +512,7 @@ Deno.serve(async (req) => {
               }
 
               if (!userError && winnerUserData && winnerEmail && !slotError && callSlot && !influencerError && influencerUserData) {
-                console.log(`📧 メール送信開始: ${winnerEmail}`);
+                console.log(`📧 落札者メール送信開始: ${winnerEmail}`);
 
                 const scheduledDate = new Date(callSlot.scheduled_start_time);
                 const emailData = {
@@ -350,6 +532,7 @@ Deno.serve(async (req) => {
                   finalPrice: highestBid.bid_amount,
                   influencerName: influencerUserData.display_name || 'インフルエンサー',
                   influencerImage: influencerUserData.profile_image_url,
+                  talkThumbnail: callSlot.thumbnail_url,
                   appUrl,
                 };
 
@@ -372,10 +555,92 @@ Deno.serve(async (req) => {
 
                 if (!response.ok) {
                   const errorData = await response.json();
-                  console.error(`❌ メール送信エラー:`, errorData);
+                  console.error(`❌ 落札者メール送信エラー:`, errorData);
                 } else {
                   const emailResult = await response.json();
-                  console.log(`✅ メール送信成功: ${emailResult.id}`);
+                  console.log(`✅ 落札者メール送信成功: ${emailResult.id}`);
+                }
+
+                // インフルエンサーにメールを送信
+                try {
+                  console.log('📧 インフルエンサーへのメール送信処理開始');
+                  console.log(`📧 インフルエンサーUserData:`, JSON.stringify(influencerUserData, null, 2));
+
+                  // インフルエンサーのemailを取得
+                  let influencerEmail = null;
+                  if (influencerUserData?.auth_user_id) {
+                    console.log(`📧 インフルエンサーauth_user_id: ${influencerUserData.auth_user_id}`);
+                    const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(influencerUserData.auth_user_id);
+                    if (authError) {
+                      console.error(`❌ インフルエンサーauth取得エラー:`, authError);
+                    }
+                    if (!authError && authUser?.user?.email) {
+                      influencerEmail = authUser.user.email;
+                      console.log(`✅ インフルエンサーemail取得成功: ${influencerEmail}`);
+                    } else {
+                      console.warn(`⚠️ インフルエンサーemail取得失敗: authUser=${JSON.stringify(authUser)}`);
+                    }
+                  } else {
+                    console.warn(`⚠️ インフルエンサーauth_user_idが存在しません`);
+                  }
+
+                  if (influencerEmail) {
+                    console.log(`📧 インフルエンサーメール送信開始: ${influencerEmail}`);
+
+                    // プラットフォーム手数料を計算（20%）
+                    const totalAmount = highestBid.bid_amount;
+
+                    const influencerEmailData = {
+                      influencerName: influencerUserData.display_name || 'インフルエンサー様',
+                      talkTitle: callSlot.title,
+                      talkDate: scheduledDate.toLocaleDateString('ja-JP', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        weekday: 'short',
+                      }),
+                      talkTime: scheduledDate.toLocaleTimeString('ja-JP', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }),
+                      talkDuration: callSlot.duration_minutes,
+                      winnerName: winnerUserData.display_name || 'ファン',
+                      totalAmount,
+                      platformFee,
+                      influencerPayout,
+                      appUrl,
+                    };
+
+                    // Resend APIでインフルエンサーにメール送信
+                    const influencerResponse = await fetch('https://api.resend.com/emails', {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${resendApiKey}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        from: fromEmail,
+                        to: influencerEmail,
+                        reply_to: 'info@oshi-talk.com',
+                        subject: `💰 Talk枠が売れました！${callSlot.title}`,
+                        html: generateInfluencerNotificationEmail(influencerEmailData),
+                        text: generateInfluencerNotificationEmailPlainText(influencerEmailData),
+                      }),
+                    });
+
+                    if (!influencerResponse.ok) {
+                      const errorData = await influencerResponse.json();
+                      console.error(`❌ インフルエンサーメール送信エラー:`, errorData);
+                    } else {
+                      const emailResult = await influencerResponse.json();
+                      console.log(`✅ インフルエンサーメール送信成功: ${emailResult.id}`);
+                    }
+                  } else {
+                    console.warn(`⚠️ インフルエンサーメール送信スキップ: emailが取得できませんでした`);
+                  }
+                } catch (influencerEmailError: any) {
+                  console.error(`❌ インフルエンサーメール処理エラー: ${influencerEmailError.message}`);
+                  // メールエラーでも処理は継続
                 }
               } else {
                 console.warn(`⚠️ メール送信スキップ: ユーザー情報が不完全`, {
