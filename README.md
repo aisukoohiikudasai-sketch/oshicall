@@ -111,6 +111,7 @@ git push heroku main
 - [マルチ環境セットアップ](./docs/setup/MULTI_ENVIRONMENT_SETUP.md)
 - **[マイグレーション管理](./docs/setup/MIGRATION_MANAGEMENT.md)** ⭐ 重要
 - [マイグレーション クイックスタート](./docs/setup/MIGRATION_QUICKSTART.md)
+- [マイグレーション 環境変数設定](./docs/setup/MIGRATION_ENV_SETUP.md)
 
 ### 機能ガイド
 - [管理者ガイド](./docs/guides/ADMIN_GUIDE.md)
