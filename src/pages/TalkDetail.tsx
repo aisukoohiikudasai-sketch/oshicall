@@ -37,6 +37,8 @@ export default function TalkDetail() {
       try {
         setIsLoading(true);
 
+        console.log('🔍 Talk詳細を取得中...', { talkId });
+
         // auctionsとcall_slotsから直接取得（activeとended両方を取得）
         const { data: auctionData, error } = await supabase
           .from('auctions')
@@ -73,9 +75,13 @@ export default function TalkDetail() {
           .eq('call_slot_id', talkId)
           .single();
 
+        console.log('📦 取得したデータ:', { auctionData, error });
+
         // call_slotsは配列として返されるので、最初の要素を取得
         const callSlot = auctionData?.call_slots?.[0];
         const user = callSlot?.users?.[0];
+
+        console.log('📊 展開したデータ:', { callSlot, user });
 
         const data = auctionData && callSlot ? {
           auction_id: auctionData.id,
