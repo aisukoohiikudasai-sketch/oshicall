@@ -66,32 +66,51 @@ export const getInfluencerRankings = async (limit: number = 10): Promise<Influen
 
     console.log('User stats:', userStats);
 
-    // 3. インフルエンサー情報を取得
+    // 3. ユーザー情報を取得（usersテーブルから）
     const userIds = Object.keys(userStats);
     if (userIds.length === 0) {
       return [];
     }
 
-    const { data: influencers, error: influencersError } = await supabase
-      .from('influencers')
-      .select('id, name, username, avatar_url, follower_count, rating')
+    console.log('Looking up users:', userIds);
+
+    // usersテーブルとinfluencersテーブルを結合して取得
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select(`
+        id,
+        username,
+        avatar_url,
+        influencers!inner (
+          name,
+          follower_count,
+          rating
+        )
+      `)
       .in('id', userIds);
 
-    if (influencersError) {
-      console.error('Error fetching influencers:', influencersError);
-      throw influencersError;
+    if (usersError) {
+      console.error('Error fetching users with influencer data:', usersError);
+      throw usersError;
     }
 
-    if (!influencers || influencers.length === 0) {
-      console.log('No influencers found for user IDs:', userIds);
+    if (!users || users.length === 0) {
+      console.log('No users/influencers found for user IDs:', userIds);
       return [];
     }
 
+    console.log('Found users:', users);
+
     // 4. ランキングデータを構築
-    const rankings: InfluencerRanking[] = influencers.map(influencer => ({
-      ...influencer,
-      total_earned: userStats[influencer.id].total_earned,
-      total_talks: userStats[influencer.id].total_talks,
+    const rankings: InfluencerRanking[] = users.map((user: any) => ({
+      id: user.id,
+      name: user.influencers?.name || user.username || 'Unknown',
+      username: user.username || 'unknown',
+      avatar_url: user.avatar_url || '',
+      follower_count: user.influencers?.follower_count || 0,
+      rating: user.influencers?.rating || 0,
+      total_earned: userStats[user.id].total_earned,
+      total_talks: userStats[user.id].total_talks,
     }));
 
     // 5. 総獲得金額でソートしてlimit数だけ返す
