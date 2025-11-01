@@ -459,6 +459,7 @@ Deno.serve(async (req) => {
           }
         }
 
+        // 落札者へのメール送信
         if (!userError && winnerUserData && winnerEmail && !slotError && callSlot && !influencerError && influencerUserData) {
           console.log(`📧 落札者メール送信開始: ${winnerEmail}`);
 
@@ -508,11 +509,21 @@ Deno.serve(async (req) => {
             const emailResult = await response.json();
             console.log(`✅ 落札者メール送信成功: ${emailResult.id}`);
           }
+        } else {
+          console.warn(`⚠️ 落札者メール送信スキップ: ユーザー情報が不完全`, {
+            userError,
+            slotError,
+            influencerError,
+          });
+        }
 
-          // 5. インフルエンサーにメールを送信
+        // 5. インフルエンサーにメールを送信（落札者のメール送信とは独立）
+        if (!slotError && callSlot && !influencerError && influencerUserData) {
           try {
             console.log('📧 インフルエンサーへのメール送信処理開始');
             console.log(`📧 インフルエンサーUserData:`, JSON.stringify(influencerUserData, null, 2));
+
+            const scheduledDate = new Date(callSlot.scheduled_start_time);
 
             // インフルエンサーのemailを取得
             let influencerEmail = null;
@@ -554,7 +565,7 @@ Deno.serve(async (req) => {
                   minute: '2-digit',
                 }),
                 talkDuration: callSlot.duration_minutes,
-                winnerName: winnerUserData.display_name || 'ファン',
+                winnerName: winnerUserData?.display_name || 'ファン',
                 totalAmount,
                 platformFee,
                 influencerPayout,
@@ -593,8 +604,7 @@ Deno.serve(async (req) => {
             // メールエラーでも処理は継続
           }
         } else {
-          console.warn(`⚠️ メール送信スキップ: ユーザー情報が不完全`, {
-            userError,
+          console.warn(`⚠️ インフルエンサーメール送信スキップ: 必要な情報が取得できません`, {
             slotError,
             influencerError,
           });

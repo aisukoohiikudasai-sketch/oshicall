@@ -101,8 +101,12 @@ export default function MyPage() {
     minimum_bid_increment: 0,
     buy_now_price: null as number | null,
     auction_end_time: '',
+    thumbnail_url: undefined as string | undefined,
   });
   const [editHasBuyNowPrice, setEditHasBuyNowPrice] = useState(false);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string>('');
+  const [uploadingEditImage, setUploadingEditImage] = useState(false);
 
   // 編集用の状態
   const [editedDisplayName, setEditedDisplayName] = useState('');
@@ -493,8 +497,11 @@ export default function MyPage() {
       minimum_bid_increment: slot.minimum_bid_increment,
       buy_now_price: slot.buy_now_price,
       auction_end_time: slot.auction_end_time?.slice(0, 16) || '',
+      thumbnail_url: slot.thumbnail_url || undefined,
     });
     setEditHasBuyNowPrice(slot.buy_now_price !== null && slot.buy_now_price !== undefined);
+    setEditImageFile(null);
+    setEditImagePreview(slot.thumbnail_url || '');
   };
 
   const handleSaveCallSlot = async () => {
@@ -502,6 +509,25 @@ export default function MyPage() {
 
     try {
       setSaving(true);
+
+      // 画像をアップロード（新しい画像が選択されている場合）
+      let thumbnailUrl = editForm.thumbnail_url;
+      if (editImageFile) {
+        try {
+          setUploadingEditImage(true);
+          const { uploadImage } = await import('../lib/storage');
+          thumbnailUrl = await uploadImage(editImageFile, 'talk-images', 'thumbnails');
+          console.log('✅ 画像アップロード成功:', thumbnailUrl);
+        } catch (uploadError: any) {
+          console.error('画像アップロードエラー:', uploadError);
+          alert(`画像のアップロードに失敗しました: ${uploadError.message}`);
+          setSaving(false);
+          setUploadingEditImage(false);
+          return;
+        } finally {
+          setUploadingEditImage(false);
+        }
+      }
 
       // Call Slotを更新
       const { updateCallSlot } = await import('../api/callSlots');
@@ -513,6 +539,7 @@ export default function MyPage() {
         starting_price: editForm.starting_price,
         minimum_bid_increment: editForm.minimum_bid_increment,
         buy_now_price: editHasBuyNowPrice ? editForm.buy_now_price : null,
+        thumbnail_url: thumbnailUrl,
       });
 
       // オークション終了時間を更新（変更されている場合）
@@ -2225,6 +2252,64 @@ export default function MyPage() {
                     </p>
                   </div>
                 )}
+              </div>
+
+              {/* サムネイル画像 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  サムネイル画像
+                </label>
+                <div className="space-y-3">
+                  {editImagePreview && (
+                    <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
+                      <img
+                        src={editImagePreview}
+                        alt="プレビュー"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">クリックして画像を選択</span>
+                      </p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF (最大 10MB)</p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const { validateImageFile, getImagePreviewUrl } = await import('../lib/storage');
+                          const validation = validateImageFile(file);
+                          if (!validation.valid) {
+                            alert(validation.error || '画像ファイルが無効です');
+                            return;
+                          }
+                          setEditImageFile(file);
+                          setEditImagePreview(getImagePreviewUrl(file));
+                        }
+                      }}
+                    />
+                  </label>
+                  {editImagePreview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditImageFile(null);
+                        setEditImagePreview('');
+                        setEditForm({ ...editForm, thumbnail_url: undefined });
+                      }}
+                      className="text-sm text-red-600 hover:text-red-700"
+                    >
+                      画像を削除
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* オークション終了時間 */}
