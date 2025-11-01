@@ -73,7 +73,11 @@ export default function TalkDetail() {
           .eq('call_slot_id', talkId)
           .single();
 
-        const data = auctionData ? {
+        // call_slotsは配列として返されるので、最初の要素を取得
+        const callSlot = auctionData?.call_slots?.[0];
+        const user = callSlot?.users?.[0];
+
+        const data = auctionData && callSlot ? {
           auction_id: auctionData.id,
           call_slot_id: auctionData.call_slot_id,
           status: auctionData.status,
@@ -81,23 +85,34 @@ export default function TalkDetail() {
           current_highest_bid: auctionData.current_highest_bid,
           current_winner_id: auctionData.current_winner_id,
           winner_user_id: auctionData.winner_user_id,
-          ...auctionData.call_slots,
-          influencer_id: auctionData.call_slots.user_id,
-          influencer_name: auctionData.call_slots.users?.display_name,
-          influencer_bio: auctionData.call_slots.users?.bio,
-          influencer_image: auctionData.call_slots.users?.profile_image_url,
-          total_calls_completed: auctionData.call_slots.users?.total_calls_completed,
-          average_rating: auctionData.call_slots.users?.average_rating,
+          ...callSlot,
+          influencer_id: callSlot.user_id,
+          influencer_name: user?.display_name,
+          influencer_bio: user?.bio,
+          influencer_image: user?.profile_image_url,
+          total_calls_completed: user?.total_calls_completed,
+          average_rating: user?.average_rating,
         } : null;
 
         if (error) {
           console.error('Talk詳細取得エラー:', error);
+          console.error('talkId:', talkId);
           // フォールバック: モックデータから取得
           const mockTalk = mockTalkSessions.find(t => t.id === talkId);
           if (mockTalk) {
             setTalk(mockTalk);
             setCurrentHighestBid(mockTalk.current_highest_bid);
           }
+          return;
+        }
+
+        if (!data) {
+          console.error('❌ データが取得できませんでした:', {
+            talkId,
+            auctionData,
+            callSlot,
+            user,
+          });
           return;
         }
 
