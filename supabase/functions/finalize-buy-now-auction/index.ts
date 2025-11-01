@@ -39,7 +39,7 @@ function generateAuctionWinEmail(data: AuctionWinEmailData): string {
           <tr>
             <td style="padding: 40px 30px;">
               <p style="margin: 0 0 20px; color: #374151; font-size: 16px; line-height: 1.6;">
-                \${data.winnerName} 様
+                ${data.winnerName} 様
               </p>
               <p style="margin: 0 0 30px; color: #374151; font-size: 16px; line-height: 1.6;">
                 即決購入が完了しました！<br>
@@ -49,24 +49,24 @@ function generateAuctionWinEmail(data: AuctionWinEmailData): string {
                 <tr>
                   <td style="padding: 24px;">
                     <h2 style="margin: 0 0 16px; color: #831843; font-size: 20px; font-weight: bold;">
-                      📅 \${data.talkTitle}
+                      📅 ${data.talkTitle}
                     </h2>
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding: 8px 0; color: #831843; font-size: 14px; font-weight: 500;">インフルエンサー:</td>
-                        <td style="padding: 8px 0; color: #831843; font-size: 14px; text-align: right;">\${data.influencerName}</td>
+                        <td style="padding: 8px 0; color: #831843; font-size: 14px; text-align: right;">${data.influencerName}</td>
                       </tr>
                       <tr>
                         <td style="padding: 8px 0; color: #831843; font-size: 14px; font-weight: 500;">日時:</td>
-                        <td style="padding: 8px 0; color: #831843; font-size: 14px; text-align: right;">\${data.talkDate} \${data.talkTime}</td>
+                        <td style="padding: 8px 0; color: #831843; font-size: 14px; text-align: right;">${data.talkDate} ${data.talkTime}</td>
                       </tr>
                       <tr>
                         <td style="padding: 8px 0; color: #831843; font-size: 14px; font-weight: 500;">通話時間:</td>
-                        <td style="padding: 8px 0; color: #831843; font-size: 14px; text-align: right;">\${data.talkDuration}分</td>
+                        <td style="padding: 8px 0; color: #831843; font-size: 14px; text-align: right;">${data.talkDuration}分</td>
                       </tr>
                       <tr>
                         <td style="padding: 8px 0; border-top: 2px solid #f3e8ff; color: #581c87; font-size: 16px; font-weight: bold;">購入価格:</td>
-                        <td style="padding: 8px 0; border-top: 2px solid #f3e8ff; color: #581c87; font-size: 20px; font-weight: bold; text-align: right;">¥\${data.finalPrice.toLocaleString()}</td>
+                        <td style="padding: 8px 0; border-top: 2px solid #f3e8ff; color: #581c87; font-size: 20px; font-weight: bold; text-align: right;">¥${data.finalPrice.toLocaleString()}</td>
                       </tr>
                     </table>
                   </td>
@@ -84,7 +84,7 @@ function generateAuctionWinEmail(data: AuctionWinEmailData): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding: 20px 0;">
-                    <a href="\${data.appUrl}/mypage?tab=collection" style="display: inline-block; background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <a href="${data.appUrl}/mypage?tab=collection" style="display: inline-block; background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                       予約済みTalk枠を確認
                     </a>
                   </td>
@@ -99,7 +99,7 @@ function generateAuctionWinEmail(data: AuctionWinEmailData): string {
           <tr>
             <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0 0 10px; color: #6b7280; font-size: 14px;">このメールは OshiTalk から自動送信されています</p>
-              <p style="margin: 0; color: #9ca3af; font-size: 12px;">© \${new Date().getFullYear()} OshiTalk. All rights reserved.</p>
+              <p style="margin: 0; color: #9ca3af; font-size: 12px;">© ${new Date().getFullYear()} OshiTalk. All rights reserved.</p>
             </td>
           </tr>
         </table>
@@ -115,18 +115,18 @@ function generateAuctionWinEmailPlainText(data: AuctionWinEmailData): string {
   return `
 ✨ 即決購入完了！
 
-\${data.winnerName} 様
+${data.winnerName} 様
 
 即決購入が完了しました！
 以下のTalk枠が確保されました。
 
 ━━━━━━━━━━━━━━━━━━━━━━
-📅 \${data.talkTitle}
+📅 ${data.talkTitle}
 
-インフルエンサー: \${data.influencerName}
-日時: \${data.talkDate} \${data.talkTime}
-通話時間: \${data.talkDuration}分
-購入価格: ¥\${data.finalPrice.toLocaleString()}
+インフルエンサー: ${data.influencerName}
+日時: ${data.talkDate} ${data.talkTime}
+通話時間: ${data.talkDuration}分
+購入価格: ¥${data.finalPrice.toLocaleString()}
 ━━━━━━━━━━━━━━━━━━━━━━
 
 📝 次のステップ:
@@ -135,14 +135,14 @@ function generateAuctionWinEmailPlainText(data: AuctionWinEmailData): string {
 3. 開始時刻の15分前から通話ルームに入室できます
 4. 時間になったらアプリから通話を開始してください
 
-予約済みTalk枠を確認: \${data.appUrl}/mypage?tab=collection
+予約済みTalk枠を確認: ${data.appUrl}/mypage?tab=collection
 
 素敵なTalk体験をお楽しみください！
 ご不明な点がございましたら、お気軽にお問い合わせください。
 
 ━━━━━━━━━━━━━━━━━━━━━━
 このメールは OshiTalk から自動送信されています
-© \${new Date().getFullYear()} OshiTalk. All rights reserved.
+© ${new Date().getFullYear()} OshiTalk. All rights reserved.
   `.trim();
 }
 
