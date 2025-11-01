@@ -379,33 +379,26 @@ app.post('/api/buy-now', async (req: Request, res: Response) => {
 
     console.log('✅ payment_transactions記録成功');
 
-    // 5. オークションを終了状態に更新
-    await supabase
-      .from('auctions')
-      .update({ status: 'ended', winner_user_id: userId })
-      .eq('id', auctionId);
+    // 5. Edge Functionを呼び出してオークションを終了
+    console.log('🔵 オークション終了Edge Functionを呼び出し');
+    const edgeFunctionUrl = `${process.env.SUPABASE_URL}/functions/v1/finalize-buy-now-auction`;
 
-    console.log('✅ オークション終了処理完了');
+    try {
+      const finalizeResponse = await fetch(edgeFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ auctionId }),
+      });
 
-    // 6. 他の入札者の与信をキャンセル
-    const { data: otherBids } = await supabase
-      .from('bids')
-      .select('stripe_payment_intent_id')
-      .eq('auction_id', auctionId)
-      .neq('user_id', userId);
-
-    if (otherBids && otherBids.length > 0) {
-      console.log(`🔵 他の入札者の与信をキャンセル: ${otherBids.length}件`);
-      for (const bid of otherBids) {
-        if (bid.stripe_payment_intent_id) {
-          try {
-            await stripe.paymentIntents.cancel(bid.stripe_payment_intent_id);
-            console.log(`✅ 与信キャンセル: ${bid.stripe_payment_intent_id}`);
-          } catch (cancelError) {
-            console.warn(`⚠️ 与信キャンセル失敗（継続）:`, cancelError);
-          }
-        }
+      if (!finalizeResponse.ok) {
+        console.warn('⚠️ オークション終了処理でエラー（継続）:', await finalizeResponse.text());
+      } else {
+        console.log('✅ オークション終了処理完了');
       }
+    } catch (finalizeError) {
+      console.warn('⚠️ オークション終了処理失敗（継続）:', finalizeError);
     }
 
     // 7. ユーザー統計を更新

@@ -639,8 +639,8 @@ export default function TalkDetail() {
     try {
       await processBuyNow(buyNowPrice);
       alert(`✅ ¥${formatPrice(buyNowPrice)} で即決落札しました！`);
-      // オークション詳細ページから購入済みページへリダイレクト
-      navigate('/mypage?tab=collection');
+      // ページをリロードしてオークション終了画面を表示
+      window.location.reload();
     } catch (error: any) {
       alert(`即決落札に失敗しました: ${error.message}`);
     }
