@@ -103,6 +103,11 @@ export default function TalkDetail() {
           // 実際のauction_idを保存
           setAuctionId(data.auction_id);
 
+          console.log('📊 取得したTalk時刻データ:', {
+            scheduled_start_time: (data as any).scheduled_start_time,
+            duration_minutes: (data as any).duration_minutes,
+          });
+
           // ビューデータをTalkSession形式に変換
           const talkSession: TalkSession = {
             id: data.call_slot_id,
@@ -133,6 +138,11 @@ export default function TalkDetail() {
             detail_image_url: data.thumbnail_url || data.influencer_image || '/images/talks/default.jpg',
             is_female_only: false,
           };
+
+          console.log('📊 変換後のTalk時刻:', {
+            start_time: talkSession.start_time,
+            end_time: talkSession.end_time,
+          });
 
           setTalk(talkSession);
           setCurrentHighestBid(talkSession.current_highest_bid);
@@ -203,7 +213,7 @@ export default function TalkDetail() {
             hasShownModal = true;
 
             // 落札者かどうかを判定
-            const userIsWinner = supabaseUser && updatedAuction.winner_user_id === supabaseUser.id;
+            const userIsWinner = !!(supabaseUser && updatedAuction.winner_user_id === supabaseUser.id);
             setIsWinner(userIsWinner);
             setShowAuctionCompleteModal(true);
 
@@ -211,23 +221,27 @@ export default function TalkDetail() {
             // returnを削除してポーリングを続行（価格更新のため）
           }
 
-          // 最高入札額が変わった場合のみ更新
-          if (updatedAuction.current_highest_bid !== currentHighestBid) {
-            console.log('🔔 新しい入札を検知:', {
-              old: currentHighestBid,
-              new: updatedAuction.current_highest_bid,
-              winner_id: updatedAuction.current_winner_id
-            });
-            setCurrentHighestBid(updatedAuction.current_highest_bid);
-          }
+          // 最高入札額を更新（依存配列の問題を避けるため常に更新）
+          setCurrentHighestBid(prevBid => {
+            if (updatedAuction.current_highest_bid !== prevBid) {
+              console.log('🔔 新しい入札を検知:', {
+                old: prevBid,
+                new: updatedAuction.current_highest_bid,
+                winner_id: updatedAuction.current_winner_id
+              });
+            }
+            return updatedAuction.current_highest_bid;
+          });
 
           // 自分が最高入札者かチェック
           if (supabaseUser) {
             const isWinning = updatedAuction.current_winner_id === supabaseUser.id;
-            if (isWinning !== isMyBid) {
-              setIsMyBid(isWinning);
-              console.log(isWinning ? '✅ あなたが最高入札者です' : '⚠️ 他のユーザーが最高入札者です');
-            }
+            setIsMyBid(prevIsMyBid => {
+              if (isWinning !== prevIsMyBid) {
+                console.log(isWinning ? '✅ あなたが最高入札者です' : '⚠️ 他のユーザーが最高入札者です');
+              }
+              return isWinning;
+            });
           }
         }
       } catch (err) {
@@ -246,7 +260,7 @@ export default function TalkDetail() {
       console.log('🔵 ポーリング停止:', auctionId);
       clearInterval(intervalId);
     };
-  }, [auctionId, supabaseUser, currentHighestBid, isMyBid]);
+  }, [auctionId, supabaseUser]);
 
   if (isLoading) {
     return (
@@ -277,13 +291,16 @@ export default function TalkDetail() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString('ja-JP', {
+    const formatted = date.toLocaleString('ja-JP', {
       timeZone: 'Asia/Tokyo',
-      month: 'short',
-      day: 'numeric',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
     });
+    console.log('📅 Talk時刻表示:', { input: dateString, output: formatted });
+    return formatted;
   };
 
   const formatPrice = (price: number) => {
