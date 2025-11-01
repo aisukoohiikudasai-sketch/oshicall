@@ -77,14 +77,14 @@ app.use('/health', corsMiddleware);
 
 // CSP ヘッダーを設定
 app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy', 
+  res.setHeader('Content-Security-Policy',
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com; " +
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://*.daily.co; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com; " +
     "img-src 'self' data: https: blob:; " +
-    "connect-src 'self' https://wioealhsienyubwegvdu.supabase.co https://api.stripe.com; " +
-    "frame-src 'self' https://js.stripe.com; " +
+    "connect-src 'self' https://wioealhsienyubwegvdu.supabase.co https://api.stripe.com https://*.daily.co wss://*.daily.co; " +
+    "frame-src 'self' https://js.stripe.com https://*.daily.co; " +
     "object-src 'none'; " +
     "base-uri 'self'; " +
     "form-action 'self'"
