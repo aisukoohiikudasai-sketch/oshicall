@@ -240,8 +240,13 @@ Deno.serve(async (req) => {
         console.log(`🔵 最高入札: ¥${highestBid.bid_amount} by ${highestBid.fan_id}`);
 
         // bids.fan_idは既にusersテーブルのIDを格納している
+        // try-catchの両方で使用するため、ここで定義
         const fanUserId = highestBid.fan_id;
         console.log(`🔵 ファンユーザーID: ${fanUserId}, インフルエンサーユーザーID: ${influencerUserId}`);
+
+        // プラットフォーム手数料計算（20%）- try-catchの両方で使用
+        const platformFee = Math.round(highestBid.bid_amount * 0.2);
+        const influencerPayout = highestBid.bid_amount - platformFee;
 
         // 3. 落札者の与信を決済確定（capture）
         if (highestBid.stripe_payment_intent_id) {
@@ -251,10 +256,6 @@ Deno.serve(async (req) => {
               highestBid.stripe_payment_intent_id
             );
             console.log(`✅ 決済確定成功: ¥${capturedPayment.amount}`);
-
-            // 4. プラットフォーム手数料計算（20%）
-            const platformFee = Math.round(highestBid.bid_amount * 0.2);
-            const influencerPayout = highestBid.bid_amount - platformFee;
 
             // 5. purchased_slotsテーブルに記録
             const { data: purchasedSlot, error: purchaseError } = await supabase
@@ -439,18 +440,22 @@ Deno.serve(async (req) => {
               console.log(`⚠️ 既にキャプチャ済み: ${auctionId} - purchased_slotsレコードを作成`);
 
               try {
-                // プラットフォーム手数料計算（20%）
-                const platformFee = Math.round(highestBid.bid_amount * 0.2);
-                const influencerPayout = highestBid.bid_amount - platformFee;
+                console.log(`🔵 already_captured処理開始: fanUserId=${fanUserId}, influencerUserId=${influencerUserId}`);
 
-                // purchased_slotsに既にレコードがあるかチェック
-                const { data: existingSlot } = await supabase
+                // purchased_slotsに既にレコードがあるかチェック（maybeSingle()を使用）
+                const { data: existingSlot, error: checkError } = await supabase
                   .from('purchased_slots')
                   .select('id')
                   .eq('auction_id', auctionId)
-                  .single();
+                  .maybeSingle();
+
+                if (checkError) {
+                  console.error(`❌ purchased_slotsチェックエラー:`, checkError);
+                  throw checkError;
+                }
 
                 if (!existingSlot) {
+                  console.log(`🔵 purchased_slotsレコードを新規作成`);
                   // レコードが存在しない場合のみ作成
                   const { data: purchasedSlot, error: purchaseError } = await supabase
                     .from('purchased_slots')
@@ -467,7 +472,8 @@ Deno.serve(async (req) => {
                     .single();
 
                   if (purchaseError) {
-                    console.error(`❌ purchased_slots作成エラー:`, purchaseError);
+                    console.error(`❌ purchased_slots作成エラー:`, JSON.stringify(purchaseError, null, 2));
+                    throw purchaseError;
                   } else {
                     console.log(`✅ purchased_slots作成成功: ${purchasedSlot.id}`);
                   }
@@ -476,6 +482,7 @@ Deno.serve(async (req) => {
                 }
               } catch (slotError: any) {
                 console.error(`❌ purchased_slots処理エラー: ${slotError.message}`);
+                console.error(`❌ エラー詳細:`, JSON.stringify(slotError, null, 2));
               }
 
               // オークションを終了状態に更新
