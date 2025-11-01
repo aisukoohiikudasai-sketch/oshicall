@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Talk from './pages/Talk';
 import LiveTalk from './pages/LiveTalk';
 import TalkDetail from './pages/TalkDetail';
+import AuctionComplete from './pages/AuctionComplete';
 import BidHistory from './pages/BidHistory';
 import MyPage from './pages/MyPage';
 import Rankings from './pages/Rankings';
@@ -37,6 +38,7 @@ function AppContent() {
         <Route path="/i/:influencerId" element={<InfluencerPage />} />
         <Route path="/talk" element={<Talk />} />
         <Route path="/talk/:talkId" element={<TalkDetail />} />
+        <Route path="/auction-complete/:talkId" element={<AuctionComplete />} />
         <Route path="/live-talk/:talkId" element={<LiveTalk />} />
         <Route path="/bid-history/:talkId" element={<BidHistory />} />
         <Route path="/call/:purchasedSlotId" element={<CallPage />} />
