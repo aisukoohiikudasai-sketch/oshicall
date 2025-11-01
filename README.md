@@ -119,6 +119,12 @@ git push heroku main
 - [インフルエンサー管理](./docs/guides/INFLUENCER_MANAGEMENT.md)
 - [Daily.co セットアップ](./docs/guides/DAILY_SETUP_GUIDE.md)
 
+### 機能別要件定義
+- [機能ドキュメント一覧](./docs/functions/) - オークション、Talk、決済、認証など各機能の詳細仕様
+
+### テスト
+- [テストガイド](./docs/test/) - E2Eテスト、テストアカウント、テストカード情報
+
 ### 開発リファレンス
 - [開発ガイド](./docs/DEVELOPMENT.md)
 - [クイックスタート](./docs/QUICK_START.md)

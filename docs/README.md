@@ -10,19 +10,21 @@
 ### 機能別要件定義
 
 #### コア機能
-- **[auction.md](./auction.md)** - オークション機能（入札、即決購入、終了処理）
-- **[talk.md](./talk.md)** - Talk（通話）機能（枠作成、予約、通話実施）
-- **[payment.md](./payment.md)** - 決済・カード登録機能（Stripe連携、与信確保・決済確定）
+- **[auction.md](./functions/auction.md)** - オークション機能（入札、即決購入、終了処理）
+- **[talk.md](./functions/talk.md)** - Talk（通話）機能（枠作成、予約、通話実施）
+- **[payment.md](./functions/payment.md)** - 決済・カード登録機能（Stripe連携、与信確保・決済確定）
 
 #### ユーザー機能
-- **[authentication.md](./authentication.md)** - ユーザー認証機能（Supabase Auth、メール認証、OAuth）
-- **[influencer.md](./influencer.md)** - インフルエンサー管理機能（ダッシュボード、売上管理）
-- **[follow.md](./follow.md)** - フォロー機能（フォロー/アンフォロー、優先表示）
-- **[ranking.md](./ranking.md)** - ランキング機能（インフルエンサーランキング、人気Talk枠）
+- **[authentication.md](./functions/authentication.md)** - ユーザー認証機能（Supabase Auth、メール認証、OAuth）
+- **[influencer.md](./functions/influencer.md)** - インフルエンサー管理機能（ダッシュボード、売上管理）
+- **[follow.md](./functions/follow.md)** - フォロー機能（フォロー/アンフォロー、優先表示）
+- **[ranking.md](./functions/ranking.md)** - ランキング機能（インフルエンサーランキング、人気Talk枠）
 
 ### テスト・QA
-- **[E2E_TEST_GUIDE.md](./E2E_TEST_GUIDE.md)** - E2Eテストガイド
-- **[STAGING_E2E_TEST_GUIDE.md](./STAGING_E2E_TEST_GUIDE.md)** - ステージング環境テストガイド
+- **[E2E_TEST_GUIDE.md](./test/E2E_TEST_GUIDE.md)** - E2Eテストガイド
+- **[STAGING_E2E_TEST_GUIDE.md](./test/STAGING_E2E_TEST_GUIDE.md)** - ステージング環境テストガイド
+- **[TEST_ACCOUNTS.md](./test/TEST_ACCOUNTS.md)** - テストアカウント情報
+- **[TEST_CARD_REGISTRATION.md](./test/TEST_CARD_REGISTRATION.md)** - テストカード登録ガイド
 
 ## 🗂️ ドキュメント構成
 
@@ -84,12 +86,12 @@
 
 | テーブル名 | 説明 | 詳細ドキュメント |
 |-----------|------|----------------|
-| `users` | ユーザー情報 | [authentication.md](./authentication.md) |
-| `call_slots` | Talk枠 | [talk.md](./talk.md) |
-| `auctions` | オークション | [auction.md](./auction.md) |
-| `bids` | 入札履歴 | [auction.md](./auction.md) |
-| `purchased_slots` | 購入済みTalk枠 | [talk.md](./talk.md) |
-| `follows` | フォロー関係 | [follow.md](./follow.md) |
+| `users` | ユーザー情報 | [authentication.md](./functions/authentication.md) |
+| `call_slots` | Talk枠 | [talk.md](./functions/talk.md) |
+| `auctions` | オークション | [auction.md](./functions/auction.md) |
+| `bids` | 入札履歴 | [auction.md](./functions/auction.md) |
+| `purchased_slots` | 購入済みTalk枠 | [talk.md](./functions/talk.md) |
+| `follows` | フォロー関係 | [follow.md](./functions/follow.md) |
 
 ### API エンドポイント一覧
 
