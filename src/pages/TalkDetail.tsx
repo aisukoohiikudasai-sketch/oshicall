@@ -174,30 +174,39 @@ export default function TalkDetail() {
           setCurrentHighestBid(talkSession.current_highest_bid);
 
           // オークションステータスを設定
+          console.log('🎯 オークションステータス:', data.status);
           setAuctionStatus(data.status as 'active' | 'ended');
+          console.log('🎯 auctionStatusをセット:', data.status);
 
           // オークション終了後の状態を設定
-          if (data.status === 'ended' && supabaseUser) {
-            // 落札者かどうかを判定（current_winner_idを使用）
-            const userIsWinner = data.current_winner_id === supabaseUser.id;
-            setIsWinner(userIsWinner);
+          if (data.status === 'ended') {
+            console.log('🏁 オークション終了を検知');
 
-            // ユーザーが入札したかどうかを確認
-            const { data: userBids, error: bidsError } = await supabase
-              .from('bids')
-              .select('id')
-              .eq('auction_id', data.auction_id)
-              .eq('user_id', supabaseUser.id)
-              .limit(1);
+            if (!supabaseUser) {
+              console.log('⚠️ ログインしていないユーザー');
+              // ログインしていないユーザーの場合も終了画面を表示
+            } else {
+              // 落札者かどうかを判定（current_winner_idを使用）
+              const userIsWinner = data.current_winner_id === supabaseUser.id;
+              setIsWinner(userIsWinner);
 
-            if (!bidsError && userBids && userBids.length > 0) {
-              setUserHasBid(true);
+              // ユーザーが入札したかどうかを確認
+              const { data: userBids, error: bidsError } = await supabase
+                .from('bids')
+                .select('id')
+                .eq('auction_id', data.auction_id)
+                .eq('user_id', supabaseUser.id)
+                .limit(1);
+
+              if (!bidsError && userBids && userBids.length > 0) {
+                setUserHasBid(true);
+              }
+
+              console.log('🏁 オークション終了状態:', {
+                isWinner: userIsWinner,
+                hasBid: userBids && userBids.length > 0,
+              });
             }
-
-            console.log('🏁 オークション終了状態:', {
-              isWinner: userIsWinner,
-              hasBid: userBids && userBids.length > 0,
-            });
           }
 
           // 現在のユーザーが最高入札者かチェック（アクティブな場合のみ）
