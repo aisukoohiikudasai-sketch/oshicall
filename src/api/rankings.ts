@@ -32,7 +32,7 @@ export const getInfluencerRankings = async (limit: number = 10): Promise<Influen
     const { data: purchases, error: purchasesError } = await supabase
       .from('purchased_slots')
       .select(`
-        price,
+        winning_bid_amount,
         call_slots!inner (
           user_id
         )
@@ -59,7 +59,7 @@ export const getInfluencerRankings = async (limit: number = 10): Promise<Influen
           total_talks: 0,
         };
       }
-      acc[userId].total_earned += purchase.price || 0;
+      acc[userId].total_earned += purchase.winning_bid_amount || 0;
       acc[userId].total_talks += 1;
       return acc;
     }, {} as Record<string, { total_earned: number; total_talks: number }>);
@@ -130,7 +130,7 @@ export const getBidderRankings = async (limit: number = 10): Promise<BidderRanki
     // 1. purchased_slotsから支払いデータを取得
     const { data: purchases, error: purchasesError } = await supabase
       .from('purchased_slots')
-      .select('user_id, price');
+      .select('fan_user_id, winning_bid_amount');
 
     if (purchasesError) {
       console.error('Error fetching purchases for bidders:', purchasesError);
@@ -146,14 +146,14 @@ export const getBidderRankings = async (limit: number = 10): Promise<BidderRanki
 
     // 2. ユーザーごとに集計
     const userStats = purchases.reduce((acc, purchase) => {
-      const userId = purchase.user_id;
+      const userId = purchase.fan_user_id;
       if (!acc[userId]) {
         acc[userId] = {
           total_spent: 0,
           successful_bids: 0,
         };
       }
-      acc[userId].total_spent += purchase.price || 0;
+      acc[userId].total_spent += purchase.winning_bid_amount || 0;
       acc[userId].successful_bids += 1;
       return acc;
     }, {} as Record<string, { total_spent: number; successful_bids: number }>);
@@ -197,14 +197,14 @@ export const getRankingStats = async (): Promise<RankingStats> => {
     // 総取引額と完了したTalk数を取得
     const { data: purchases, error: purchasesError } = await supabase
       .from('purchased_slots')
-      .select('price');
+      .select('winning_bid_amount');
 
     if (purchasesError) {
       console.error('Error fetching purchases for stats:', purchasesError);
       throw purchasesError;
     }
 
-    const totalTransactionAmount = purchases?.reduce((sum, p) => sum + (p.price || 0), 0) || 0;
+    const totalTransactionAmount = purchases?.reduce((sum, p) => sum + (p.winning_bid_amount || 0), 0) || 0;
     const totalTalksCompleted = purchases?.length || 0;
 
     console.log('Stats:', { totalTransactionAmount, totalTalksCompleted, purchaseCount: purchases?.length || 0 });
