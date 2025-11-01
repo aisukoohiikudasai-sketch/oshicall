@@ -640,7 +640,7 @@ export default function TalkDetail() {
       await processBuyNow(buyNowPrice);
       alert(`✅ ¥${formatPrice(buyNowPrice)} で即決落札しました！`);
       // オークション詳細ページから購入済みページへリダイレクト
-      navigate('/purchased-talks');
+      navigate('/mypage?tab=collection');
     } catch (error: any) {
       alert(`即決落札に失敗しました: ${error.message}`);
     }
@@ -714,7 +714,7 @@ export default function TalkDetail() {
                 </p>
               </div>
               <button
-                onClick={() => navigate('/mypage?tab=talks')}
+                onClick={() => navigate('/mypage?tab=collection')}
                 className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg"
               >
                 Talk予定を確認する

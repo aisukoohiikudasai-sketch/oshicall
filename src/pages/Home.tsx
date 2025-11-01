@@ -43,11 +43,41 @@ export default function Home() {
       try {
         setIsLoading(true);
 
-        // active_auctions_view から取得
+        // active_auctions_view から取得（activeとended両方）
+        // 完了済みも含めて表示するため、直接auctionsテーブルとjoinして取得
         const { data: auctionData, error: auctionError } = await supabase
-          .from('active_auctions_view')
-          .select('*')
-          .order('end_time', { ascending: true });
+          .from('auctions')
+          .select(`
+            id,
+            call_slot_id,
+            status,
+            start_time,
+            end_time,
+            current_highest_bid,
+            current_winner_id,
+            call_slots!inner(
+              id,
+              user_id,
+              title,
+              description,
+              scheduled_start_time,
+              duration_minutes,
+              starting_price,
+              minimum_bid_increment,
+              buy_now_price,
+              thumbnail_url,
+              users!call_slots_user_id_fkey(
+                id,
+                display_name,
+                bio,
+                profile_image_url,
+                total_calls_completed,
+                average_rating
+              )
+            )
+          `)
+          .in('status', ['active', 'ended'])
+          .order('end_time', { ascending: false });
 
         if (auctionError) {
           console.error('オークションデータ取得エラー:', auctionError);
@@ -57,36 +87,41 @@ export default function Home() {
         console.log('📊 Supabaseから取得したデータ:', auctionData);
         console.log(`📊 取得件数: ${auctionData?.length || 0}件`);
 
-          // ビューデータをTalkSession形式に変換
-          const talkSessions: TalkSession[] = (auctionData || []).map((item: any) => ({
-            id: item.call_slot_id,
-            influencer_id: item.influencer_id,
-            influencer: {
-              id: item.influencer_id,
-              name: item.influencer_name,
-              username: item.influencer_name, // display_nameを使用
-              avatar_url: item.influencer_image || '/images/talks/default.jpg',
-              description: item.influencer_bio || '',
-              follower_count: 0,
-              total_earned: 0,
-              total_talks: item.total_calls_completed || 0,
-              rating: item.average_rating || 0,
+          // auctionsテーブルのデータをTalkSession形式に変換
+          const talkSessions: TalkSession[] = (auctionData || []).map((item: any) => {
+            const callSlot = item.call_slots;
+            const user = callSlot?.users;
+
+            return {
+              id: item.call_slot_id,
+              influencer_id: callSlot?.user_id,
+              influencer: {
+                id: callSlot?.user_id,
+                name: user?.display_name || '不明',
+                username: user?.display_name || '不明',
+                avatar_url: user?.profile_image_url || '/images/talks/default.jpg',
+                description: user?.bio || '',
+                follower_count: 0,
+                total_earned: 0,
+                total_talks: user?.total_calls_completed || 0,
+                rating: user?.average_rating || 0,
+                created_at: new Date().toISOString(),
+              },
+              title: callSlot?.title || `${user?.display_name}とのTalk`,
+              description: callSlot?.description || '',
+              host_message: user?.bio || callSlot?.description || `${user?.display_name}とお話ししましょう！`,
+              start_time: callSlot?.scheduled_start_time,
+              end_time: new Date(new Date(callSlot?.scheduled_start_time).getTime() + (callSlot?.duration_minutes || 30) * 60000).toISOString(),
+              auction_end_time: item.end_time,
+              starting_price: callSlot?.starting_price,
+              current_highest_bid: item.current_highest_bid || callSlot?.starting_price,
+              status: item.status === 'active' ? 'upcoming' : 'ended',
+              auction_status: item.status,
               created_at: new Date().toISOString(),
-            },
-            title: item.title || `${item.influencer_name}とのTalk`,
-            description: item.description || '',
-            host_message: item.influencer_bio || item.description || `${item.influencer_name}とお話ししましょう！`,
-            start_time: item.scheduled_start_time,
-            end_time: new Date(new Date(item.scheduled_start_time).getTime() + item.duration_minutes * 60000).toISOString(),
-            auction_end_time: item.auction_end_time || item.end_time,
-            starting_price: item.starting_price,
-            current_highest_bid: item.current_highest_bid || item.starting_price,
-            status: item.status === 'active' ? 'upcoming' : 'ended',
-            auction_status: item.status, // オークションの実際のステータスを保持
-            created_at: new Date().toISOString(),
-            detail_image_url: item.thumbnail_url || item.influencer_image || '/images/talks/default.jpg',
-            is_female_only: false,
-          }));
+              detail_image_url: callSlot?.thumbnail_url || user?.profile_image_url || '/images/talks/default.jpg',
+              is_female_only: false,
+            };
+          });
 
         console.log(`✅ ${talkSessions.length}件のTalk枠に変換しました`);
         setTalks(talkSessions);

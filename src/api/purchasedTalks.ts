@@ -10,7 +10,7 @@ export const getPurchasedTalks = async (userId: string) => {
         id,
         purchased_at,
         call_status,
-        price,
+        winning_bid_amount,
         call_slots (
           id,
           title,
@@ -72,8 +72,8 @@ export const getPurchasedTalks = async (userId: string) => {
           ? new Date(new Date(callSlot.scheduled_start_time).getTime() + (callSlot.duration_minutes || 30) * 60000).toISOString()
           : new Date().toISOString(),
         auction_end_time: callSlot?.scheduled_start_time || new Date().toISOString(),
-        starting_price: slot.price || 0,
-        current_highest_bid: slot.price || 0,
+        starting_price: slot.winning_bid_amount || 0,
+        current_highest_bid: slot.winning_bid_amount || 0,
         status: isUpcoming ? 'won' : 'completed',
         created_at: slot.purchased_at || new Date().toISOString(),
         detail_image_url: callSlot?.thumbnail_url || influencer?.profile_image_url || '/images/talks/default.jpg',
