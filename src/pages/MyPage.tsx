@@ -108,6 +108,7 @@ export default function MyPage() {
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string>('');
   const [uploadingEditImage, setUploadingEditImage] = useState(false);
+  const [isTalkSlotsExpanded, setIsTalkSlotsExpanded] = useState(true); // アコーディオンの開閉状態
 
   // 編集用の状態
   const [editedDisplayName, setEditedDisplayName] = useState('');
@@ -1226,10 +1227,21 @@ export default function MyPage() {
 
           {/* Talk枠セクション */}
           <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
+            <div
+              className="flex justify-between items-center p-6 border-b border-gray-200 cursor-pointer hover:bg-white/10 transition"
+              onClick={() => setIsTalkSlotsExpanded(!isTalkSlotsExpanded)}
+            >
+              <div className="flex items-center space-x-2">
+                <h3 className="text-lg font-bold text-gray-800">Talk枠</h3>
+                <span className="text-sm text-gray-500">
+                  {isTalkSlotsExpanded ? '▼' : '▶'}
+                </span>
+              </div>
               <button
-                onClick={() => setShowCreateForm(true)}
+                onClick={(e) => {
+                  e.stopPropagation(); // 親のクリックイベントを防ぐ
+                  setShowCreateForm(true);
+                }}
                 className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white text-sm font-medium rounded-lg hover:bg-purple-600 transition-colors shadow-md"
               >
                 <Plus className="h-4 w-4" />
@@ -1237,6 +1249,9 @@ export default function MyPage() {
               </button>
             </div>
 
+          {/* コンテンツ（開いている時のみ表示） */}
+          {isTalkSlotsExpanded && (
+            <>
           {/* エラー表示 */}
           {dashboardError && (
             <div className="bg-red-50 p-2 mx-4">
@@ -1432,6 +1447,8 @@ export default function MyPage() {
               </div>
             </div>
           </div>
+          </>
+          )}
         </div>
         </>
       )}
