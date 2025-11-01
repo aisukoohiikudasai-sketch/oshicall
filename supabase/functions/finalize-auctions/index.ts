@@ -214,43 +214,6 @@ Deno.serve(async (req) => {
 
         console.log(`🔵 オークション処理: ${auctionId}`);
 
-        // インフルエンサーのauth_user_idを取得
-        const { data: influencerUser, error: influencerUserError } = await supabase
-          .from('users')
-          .select('auth_user_id')
-          .eq('id', influencerUserId)
-          .single();
-
-        if (influencerUserError || !influencerUser) {
-          console.error(`❌ インフルエンサーユーザー取得エラー: ${influencerUserError?.message}`);
-          results.push({
-            auction_id: auctionId,
-            status: 'error',
-            error: 'Influencer user not found',
-          });
-          continue;
-        }
-
-        // influencersテーブルのIDと情報を取得
-        const { data: influencer, error: influencerError } = await supabase
-          .from('influencers')
-          .select('id, display_name, profile_image_url')
-          .eq('auth_user_id', influencerUser.auth_user_id)
-          .single();
-
-        if (influencerError || !influencer) {
-          console.error(`❌ インフルエンサー取得エラー: ${influencerError?.message}`);
-          results.push({
-            auction_id: auctionId,
-            status: 'error',
-            error: 'Influencer not found',
-          });
-          continue;
-        }
-
-        const influencerId = influencer.id;
-        console.log(`🔵 インフルエンサーID: ${influencerId}`);
-
         // 2. 最高入札を取得
         const { data: highestBid, error: bidError } = await supabase
           .from('bids')
@@ -274,6 +237,43 @@ Deno.serve(async (req) => {
 
         console.log(`🔵 最高入札: ¥${highestBid.bid_amount} by ${highestBid.fan_id}`);
 
+        // ファンのauth_user_idを取得
+        const { data: fan, error: fanError } = await supabase
+          .from('fans')
+          .select('auth_user_id')
+          .eq('id', highestBid.fan_id)
+          .single();
+
+        if (fanError || !fan) {
+          console.error(`❌ ファン取得エラー: ${fanError?.message}`);
+          results.push({
+            auction_id: auctionId,
+            status: 'error',
+            error: 'Fan not found',
+          });
+          continue;
+        }
+
+        // usersテーブルのIDを取得（ファン）
+        const { data: fanUser, error: fanUserError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('auth_user_id', fan.auth_user_id)
+          .single();
+
+        if (fanUserError || !fanUser) {
+          console.error(`❌ ファンユーザー取得エラー: ${fanUserError?.message}`);
+          results.push({
+            auction_id: auctionId,
+            status: 'error',
+            error: 'Fan user not found',
+          });
+          continue;
+        }
+
+        const fanUserId = fanUser.id;
+        console.log(`🔵 ファンユーザーID: ${fanUserId}, インフルエンサーユーザーID: ${influencerUserId}`);
+
         // 3. 落札者の与信を決済確定（capture）
         if (highestBid.stripe_payment_intent_id) {
           try {
@@ -292,8 +292,8 @@ Deno.serve(async (req) => {
               .from('purchased_slots')
               .insert({
                 call_slot_id: auction.call_slot_id,
-                fan_id: highestBid.fan_id,
-                influencer_id: influencerId,
+                fan_user_id: fanUserId,
+                influencer_user_id: influencerUserId,
                 auction_id: auctionId,
                 winning_bid_amount: highestBid.bid_amount,
                 platform_fee: platformFee,
@@ -333,7 +333,7 @@ Deno.serve(async (req) => {
               const { data: winnerUserData, error: userError } = await supabase
                 .from('users')
                 .select('id, display_name, auth_user_id')
-                .eq('id', highestBid.fan_id)
+                .eq('id', fanUserId)
                 .single();
 
               // Call Slot情報を取得
@@ -341,6 +341,13 @@ Deno.serve(async (req) => {
                 .from('call_slots')
                 .select('title, scheduled_start_time, duration_minutes')
                 .eq('id', auction.call_slot_id)
+                .single();
+
+              // インフルエンサー情報を取得
+              const { data: influencerUserData, error: influencerError } = await supabase
+                .from('users')
+                .select('display_name, profile_image_url')
+                .eq('id', influencerUserId)
                 .single();
 
               // auth.usersからemailを取得
@@ -352,7 +359,7 @@ Deno.serve(async (req) => {
                 }
               }
 
-              if (!userError && winnerUserData && winnerEmail && !slotError && callSlot) {
+              if (!userError && winnerUserData && winnerEmail && !slotError && callSlot && !influencerError && influencerUserData) {
                 console.log(`📧 メール送信開始: ${winnerEmail}`);
 
                 const scheduledDate = new Date(callSlot.scheduled_start_time);
@@ -371,8 +378,8 @@ Deno.serve(async (req) => {
                   }),
                   talkDuration: callSlot.duration_minutes,
                   finalPrice: highestBid.bid_amount,
-                  influencerName: influencer.display_name || 'インフルエンサー',
-                  influencerImage: influencer.profile_image_url,
+                  influencerName: influencerUserData.display_name || 'インフルエンサー',
+                  influencerImage: influencerUserData.profile_image_url,
                   appUrl,
                 };
 
@@ -404,6 +411,7 @@ Deno.serve(async (req) => {
                 console.warn(`⚠️ メール送信スキップ: ユーザー情報が不完全`, {
                   userError,
                   slotError,
+                  influencerError,
                 });
               }
             } catch (emailError: any) {
