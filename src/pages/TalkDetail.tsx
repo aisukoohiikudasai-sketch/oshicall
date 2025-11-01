@@ -75,7 +75,24 @@ export default function TalkDetail() {
           .eq('call_slot_id', talkId)
           .single();
 
-        console.log('📦 取得したデータ:', { auctionData, error });
+        if (error) {
+          console.error('❌ Talk詳細取得エラー:', error);
+          console.error('エラーメッセージ:', error.message);
+          console.error('エラーコード:', error.code);
+          console.error('エラー詳細:', JSON.stringify(error, null, 2));
+          console.error('talkId:', talkId);
+          // フォールバック: モックデータから取得
+          const mockTalk = mockTalkSessions.find(t => t.id === talkId);
+          if (mockTalk) {
+            setTalk(mockTalk);
+            setCurrentHighestBid(mockTalk.current_highest_bid);
+          }
+          return;
+        }
+
+        console.log('📦 取得したデータ:', { auctionData });
+        console.log('📦 auctionData型:', typeof auctionData);
+        console.log('📦 call_slots型:', typeof auctionData?.call_slots);
 
         // call_slotsとusersは多対一のリレーションなので、オブジェクトとして返される
         const callSlot = auctionData?.call_slots;
@@ -83,7 +100,17 @@ export default function TalkDetail() {
 
         console.log('📊 展開したデータ:', { callSlot, user });
 
-        const data = auctionData && callSlot ? {
+        if (!auctionData || !callSlot) {
+          console.error('❌ データが取得できませんでした:', {
+            talkId,
+            auctionData,
+            callSlot,
+            user,
+          });
+          return;
+        }
+
+        const data = {
           auction_id: auctionData.id,
           call_slot_id: auctionData.call_slot_id,
           status: auctionData.status,
@@ -98,29 +125,7 @@ export default function TalkDetail() {
           influencer_image: user?.profile_image_url,
           total_calls_completed: user?.total_calls_completed,
           average_rating: user?.average_rating,
-        } : null;
-
-        if (error) {
-          console.error('Talk詳細取得エラー:', error);
-          console.error('talkId:', talkId);
-          // フォールバック: モックデータから取得
-          const mockTalk = mockTalkSessions.find(t => t.id === talkId);
-          if (mockTalk) {
-            setTalk(mockTalk);
-            setCurrentHighestBid(mockTalk.current_highest_bid);
-          }
-          return;
-        }
-
-        if (!data) {
-          console.error('❌ データが取得できませんでした:', {
-            talkId,
-            auctionData,
-            callSlot,
-            user,
-          });
-          return;
-        }
+        };
 
         if (data) {
           // 実際のauction_idを保存
