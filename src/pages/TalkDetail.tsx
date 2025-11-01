@@ -50,7 +50,6 @@ export default function TalkDetail() {
             end_time,
             current_highest_bid,
             current_winner_id,
-            winner_user_id,
             call_slots!inner(
               id,
               user_id,
@@ -117,7 +116,6 @@ export default function TalkDetail() {
           end_time: auctionData.end_time,
           current_highest_bid: auctionData.current_highest_bid,
           current_winner_id: auctionData.current_winner_id,
-          winner_user_id: auctionData.winner_user_id,
           ...callSlot,
           influencer_id: callSlot.user_id,
           influencer_name: user?.display_name,
@@ -180,8 +178,8 @@ export default function TalkDetail() {
 
           // オークション終了後の状態を設定
           if (data.status === 'ended' && supabaseUser) {
-            // 落札者かどうかを判定
-            const userIsWinner = data.winner_user_id === supabaseUser.id;
+            // 落札者かどうかを判定（current_winner_idを使用）
+            const userIsWinner = data.current_winner_id === supabaseUser.id;
             setIsWinner(userIsWinner);
 
             // ユーザーが入札したかどうかを確認
@@ -257,7 +255,7 @@ export default function TalkDetail() {
         // オークション情報を取得
         const { data: updatedAuction, error } = await supabase
           .from('auctions')
-          .select('current_highest_bid, current_winner_id, status, winner_user_id')
+          .select('current_highest_bid, current_winner_id, status')
           .eq('id', auctionId)
           .single();
 
@@ -270,9 +268,9 @@ export default function TalkDetail() {
             // オークション終了状態を設定
             setAuctionStatus('ended');
 
-            // 落札者かどうかを判定
+            // 落札者かどうかを判定（current_winner_idを使用）
             if (supabaseUser) {
-              const userIsWinner = updatedAuction.winner_user_id === supabaseUser.id;
+              const userIsWinner = updatedAuction.current_winner_id === supabaseUser.id;
               setIsWinner(userIsWinner);
 
               // ユーザーが入札したかどうかを確認
