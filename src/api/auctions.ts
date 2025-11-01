@@ -76,22 +76,22 @@ export const placeBid = async (
     .from('bids')
     .insert({
       auction_id: auctionId,
-      fan_id: fanId,
+      user_id: fanId,
       bid_amount: bidAmount,
       stripe_payment_intent_id: paymentIntentId,
     })
     .select()
     .single();
-  
+
   if (bidError) throw bidError;
-  
+
   // オークション情報を更新
   const { error: updateError } = await supabase.rpc(
     'update_auction_highest_bid',
     {
       p_auction_id: auctionId,
       p_bid_amount: bidAmount,
-      p_fan_id: fanId,
+      p_user_id: fanId,
     }
   );
   
