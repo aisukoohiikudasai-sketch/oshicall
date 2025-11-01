@@ -599,7 +599,62 @@ export default function TalkDetail() {
         
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
-        
+
+        {/* Auction Complete Overlay */}
+        {showAuctionCompleteModal && (
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-20 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-8 w-full max-w-md text-center animate-bounce-in shadow-2xl">
+              {isWinner ? (
+                <>
+                  {/* 落札者向けメッセージ */}
+                  <div className="mb-6">
+                    <div className="text-6xl mb-4 animate-bounce">🎉</div>
+                    <h2 className="text-3xl font-bold text-pink-600 mb-2">おめでとうございます！</h2>
+                    <p className="text-lg text-gray-700 mb-4">
+                      あなたがこのTalkの落札者です
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Talk予定画面を確認してください
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAuctionCompleteModal(false);
+                      navigate('/mypage?tab=talks');
+                    }}
+                    className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg"
+                  >
+                    Talkタブへ移動
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* 落札者以外向けメッセージ */}
+                  <div className="mb-6">
+                    <div className="text-6xl mb-4">😢</div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">残念！</h2>
+                    <p className="text-lg text-gray-700 mb-4">
+                      このTalkは別の方が落札されました
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      次回は落札できますように！
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAuctionCompleteModal(false);
+                      navigate('/');
+                    }}
+                    className="w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white py-4 rounded-xl font-bold text-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-lg"
+                  >
+                    トップページへ
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Top Bar with Back Button and Host Name */}
         <div className="absolute top-16 left-4 right-4 z-10 flex items-center space-x-4">
           {/* Back Button */}
@@ -799,60 +854,6 @@ export default function TalkDetail() {
         onSuccess={handleCardRegistrationSuccess}
       />
 
-      {/* Auction Complete Modal */}
-      {showAuctionCompleteModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-8 w-full max-w-md text-center animate-bounce-in shadow-2xl">
-            {isWinner ? (
-              <>
-                {/* 落札者向けメッセージ */}
-                <div className="mb-6">
-                  <div className="text-6xl mb-4">🎉</div>
-                  <h2 className="text-3xl font-bold text-pink-600 mb-2">おめでとうございます！</h2>
-                  <p className="text-lg text-gray-700 mb-4">
-                    あなたがこのTalkの落札者です
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Talk予定画面を確認してください
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowAuctionCompleteModal(false);
-                    navigate('/mypage?tab=talks');
-                  }}
-                  className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg"
-                >
-                  Talkタブへ移動
-                </button>
-              </>
-            ) : (
-              <>
-                {/* 落札者以外向けメッセージ */}
-                <div className="mb-6">
-                  <div className="text-6xl mb-4">😢</div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">残念！</h2>
-                  <p className="text-lg text-gray-700 mb-4">
-                    このTalkは別の方が落札されました
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    次回は落札できますように！
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowAuctionCompleteModal(false);
-                    navigate('/');
-                  }}
-                  className="w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white py-4 rounded-xl font-bold text-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-lg"
-                >
-                  トップページへ
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
