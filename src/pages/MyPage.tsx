@@ -1169,62 +1169,55 @@ export default function MyPage() {
       {/* Talk枠管理 - スッキリ版 */}
       {supabaseUser?.is_influencer && (
         <>
-          {/* Stripe Connect設定セクション */}
-          <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200 p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">💳 銀行口座設定</h3>
+          {/* Stripe Connect設定セクション（未完了の場合のみ表示） */}
+          {stripeAccountStatus !== 'active' && (
+            <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200 p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">💳 銀行口座設定</h3>
 
-            {stripeAccountStatus === 'not_setup' && (
-              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-                <p className="text-sm text-yellow-800 mb-3">
-                  売上を受け取るには銀行口座の登録が必要です
-                </p>
-                <button
-                  onClick={handleSetupStripeConnect}
-                  disabled={isSettingUpStripe}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
-                >
-                  {isSettingUpStripe ? '設定中...' : '銀行口座を登録する'}
-                </button>
-                {stripeError && (
-                  <p className="mt-2 text-sm text-red-600">{stripeError}</p>
-                )}
-              </div>
-            )}
-
-            {stripeAccountStatus === 'incomplete' && (
-              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                <p className="text-sm text-blue-800 mb-3">
-                  銀行口座の登録が完了していません。登録を再開してください
-                </p>
-                <button
-                  onClick={handleSetupStripeConnect}
-                  disabled={isSettingUpStripe}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                >
-                  {isSettingUpStripe ? '設定中...' : '登録を完了する'}
-                </button>
-              </div>
-            )}
-
-            {stripeAccountStatus === 'pending' && (
-              <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
-                <p className="text-sm text-orange-800">
-                  審査中です（通常1-2営業日）
-                </p>
-              </div>
-            )}
-
-            {stripeAccountStatus === 'active' && (
-              <div className="bg-green-50 border border-green-200 p-4 rounded-lg flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-green-600">✓</span>
-                  <span className="text-sm text-green-800 font-medium">銀行口座設定完了</span>
+              {stripeAccountStatus === 'not_setup' && (
+                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                  <p className="text-sm text-yellow-800 mb-3">
+                    売上を受け取るには銀行口座の登録が必要です
+                  </p>
+                  <button
+                    onClick={handleSetupStripeConnect}
+                    disabled={isSettingUpStripe}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+                  >
+                    {isSettingUpStripe ? '設定中...' : '銀行口座を登録する'}
+                  </button>
+                  {stripeError && (
+                    <p className="mt-2 text-sm text-red-600">{stripeError}</p>
+                  )}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
 
-          {/* 売上ダッシュボード */}
+              {stripeAccountStatus === 'incomplete' && (
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                  <p className="text-sm text-blue-800 mb-3">
+                    銀行口座の登録が完了していません。登録を再開してください
+                  </p>
+                  <button
+                    onClick={handleSetupStripeConnect}
+                    disabled={isSettingUpStripe}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {isSettingUpStripe ? '設定中...' : '登録を完了する'}
+                  </button>
+                </div>
+              )}
+
+              {stripeAccountStatus === 'pending' && (
+                <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+                  <p className="text-sm text-orange-800">
+                    審査中です（通常1-2営業日）
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 売上ダッシュボード（完了済みの場合のみ表示） */}
           {stripeAccountStatus === 'active' && (
             <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-100 border-b-2 border-blue-200 p-6">
               <InfluencerEarningsDashboard authUserId={supabaseUser.auth_user_id || supabaseUser.id} />

@@ -39,6 +39,7 @@ export const InfluencerEarningsDashboard: React.FC<Props> = ({ authUserId }) => 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [isOpeningDashboard, setIsOpeningDashboard] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true); // アコーディオンの開閉状態
 
   useEffect(() => {
     loadEarnings();
@@ -121,18 +122,33 @@ export const InfluencerEarningsDashboard: React.FC<Props> = ({ authUserId }) => 
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      {/* ヘッダー */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">💰 売上サマリー</h2>
+    <div className="bg-white rounded-lg shadow-md">
+      {/* ヘッダー（クリックで開閉） */}
+      <div
+        className="flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center space-x-2">
+          <h2 className="text-2xl font-bold text-gray-900">💰 売上サマリー</h2>
+          <span className="text-sm text-gray-500">
+            {isExpanded ? '▼' : '▶'}
+          </span>
+        </div>
         <button
-          onClick={handleOpenStripeDashboard}
+          onClick={(e) => {
+            e.stopPropagation(); // 親のクリックイベントを防ぐ
+            handleOpenStripeDashboard();
+          }}
           disabled={isOpeningDashboard}
           className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isOpeningDashboard ? '読み込み中...' : '詳細を見る →'}
         </button>
       </div>
+
+      {/* コンテンツ（開いている時のみ表示） */}
+      {isExpanded && (
+        <div className="p-6 pt-0">
 
       {/* 残高取得エラー警告 */}
       {earnings.balanceError && (
@@ -265,6 +281,8 @@ export const InfluencerEarningsDashboard: React.FC<Props> = ({ authUserId }) => 
           </ul>
         </div>
       </div>
+      </div>
+      )}
     </div>
   );
 };
