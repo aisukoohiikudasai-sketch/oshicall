@@ -2,19 +2,17 @@ import { supabase } from '../lib/supabase';
 
 export interface InfluencerRanking {
   id: string;
-  name: string;
-  username: string;
-  avatar_url: string;
-  follower_count: number;
-  rating: number;
+  display_name: string;
+  profile_image_url: string;
   total_earned: number;
   total_talks: number;
+  average_rating: number;
 }
 
 export interface BidderRanking {
   id: string;
-  username: string;
-  avatar_url: string;
+  display_name: string;
+  profile_image_url: string;
   total_spent: number;
   successful_bids: number;
 }
@@ -74,28 +72,20 @@ export const getInfluencerRankings = async (limit: number = 10): Promise<Influen
 
     console.log('Looking up users:', userIds);
 
-    // usersテーブルとinfluencersテーブルを結合して取得
+    // usersテーブルから情報を取得（インフルエンサーのみ）
     const { data: users, error: usersError } = await supabase
       .from('users')
-      .select(`
-        id,
-        username,
-        avatar_url,
-        influencers!inner (
-          name,
-          follower_count,
-          rating
-        )
-      `)
-      .in('id', userIds);
+      .select('id, display_name, profile_image_url, average_rating')
+      .in('id', userIds)
+      .eq('is_influencer', true);
 
     if (usersError) {
-      console.error('Error fetching users with influencer data:', usersError);
+      console.error('Error fetching users:', usersError);
       throw usersError;
     }
 
     if (!users || users.length === 0) {
-      console.log('No users/influencers found for user IDs:', userIds);
+      console.log('No influencer users found for user IDs:', userIds);
       return [];
     }
 
@@ -104,11 +94,9 @@ export const getInfluencerRankings = async (limit: number = 10): Promise<Influen
     // 4. ランキングデータを構築
     const rankings: InfluencerRanking[] = users.map((user: any) => ({
       id: user.id,
-      name: user.influencers?.name || user.username || 'Unknown',
-      username: user.username || 'unknown',
-      avatar_url: user.avatar_url || '',
-      follower_count: user.influencers?.follower_count || 0,
-      rating: user.influencers?.rating || 0,
+      display_name: user.display_name || 'Unknown',
+      profile_image_url: user.profile_image_url || '',
+      average_rating: user.average_rating || 0,
       total_earned: userStats[user.id].total_earned,
       total_talks: userStats[user.id].total_talks,
     }));
@@ -162,7 +150,7 @@ export const getBidderRankings = async (limit: number = 10): Promise<BidderRanki
     const userIds = Object.keys(userStats);
     const { data: users, error: usersError } = await supabase
       .from('users')
-      .select('id, username, avatar_url')
+      .select('id, display_name, profile_image_url')
       .in('id', userIds);
 
     if (usersError) throw usersError;
@@ -174,8 +162,8 @@ export const getBidderRankings = async (limit: number = 10): Promise<BidderRanki
     // 4. ランキングデータを構築
     const rankings: BidderRanking[] = users.map(user => ({
       id: user.id,
-      username: user.username || 'Unknown',
-      avatar_url: user.avatar_url || '',
+      display_name: user.display_name || 'Unknown',
+      profile_image_url: user.profile_image_url || '',
       total_spent: userStats[user.id].total_spent,
       successful_bids: userStats[user.id].successful_bids,
     }));
@@ -211,13 +199,14 @@ export const getRankingStats = async (): Promise<RankingStats> => {
 
     // 平均評価を取得（全インフルエンサーの平均）
     const { data: influencers, error: influencersError } = await supabase
-      .from('influencers')
-      .select('rating');
+      .from('users')
+      .select('average_rating')
+      .eq('is_influencer', true);
 
     if (influencersError) throw influencersError;
 
     const averageRating = influencers && influencers.length > 0
-      ? influencers.reduce((sum, i) => sum + (i.rating || 0), 0) / influencers.length
+      ? influencers.reduce((sum, i) => sum + (i.average_rating || 0), 0) / influencers.length
       : 0;
 
     return {

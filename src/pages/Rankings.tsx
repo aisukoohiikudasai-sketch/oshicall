@@ -170,8 +170,8 @@ export default function Rankings() {
                       </div>
                       <div className="relative">
                         <img
-                          src={influencer.avatar_url}
-                          alt={influencer.name}
+                          src={influencer.profile_image_url || 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100'}
+                          alt={influencer.display_name}
                           className={`h-20 w-20 md:h-24 md:w-24 rounded-full object-cover border-4 shadow-xl ${
                             index < 3 ? 'border-yellow-300' : 'border-pink-300'
                           }`}
@@ -183,14 +183,10 @@ export default function Rankings() {
                         )}
                       </div>
                       <div className="text-center md:text-left">
-                        <h3 className="text-xl md:text-2xl font-black text-gray-800 mb-1">{influencer.name}</h3>
-                        <p className="text-gray-600 font-medium text-sm md:text-base">@{influencer.username}</p>
+                        <h3 className="text-xl md:text-2xl font-black text-gray-800 mb-1">{influencer.display_name}</h3>
                         <div className="flex flex-col md:flex-row items-center md:items-center space-y-2 md:space-y-0 md:space-x-6 mt-2 text-xs md:text-sm">
-                          <span className="bg-pink-100 text-pink-700 px-2 py-1 md:px-3 md:py-1 rounded-full font-bold">
-                            👥 {influencer.follower_count.toLocaleString()}
-                          </span>
                           <span className="bg-yellow-100 text-yellow-700 px-2 py-1 md:px-3 md:py-1 rounded-full font-bold">
-                            ⭐ {influencer.rating}/5.0
+                            ⭐ {influencer.average_rating ? influencer.average_rating.toFixed(1) : '0.0'}/5.0
                           </span>
                         </div>
                       </div>
@@ -251,8 +247,8 @@ export default function Rankings() {
                       </div>
                       <div className="relative">
                         <img
-                          src={bidder.avatar_url || 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100'}
-                          alt={bidder.username}
+                          src={bidder.profile_image_url || 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100'}
+                          alt={bidder.display_name}
                           className={`h-20 w-20 md:h-24 md:w-24 rounded-full object-cover border-4 shadow-xl ${
                             index < 3 ? 'border-yellow-300' : 'border-purple-300'
                           }`}
@@ -264,7 +260,7 @@ export default function Rankings() {
                         )}
                       </div>
                       <div className="text-center md:text-left">
-                        <h3 className="text-xl md:text-2xl font-black text-gray-800 mb-1">{bidder.username}</h3>
+                        <h3 className="text-xl md:text-2xl font-black text-gray-800 mb-1">{bidder.display_name}</h3>
                         <p className="text-gray-600 font-medium text-sm md:text-base">💎 VIPビッダー</p>
                         <div className="flex flex-col md:flex-row items-center md:items-center space-y-2 md:space-y-0 md:space-x-6 mt-2 text-xs md:text-sm">
                           <span className="bg-purple-100 text-purple-700 px-2 py-1 md:px-3 md:py-1 rounded-full font-bold">
