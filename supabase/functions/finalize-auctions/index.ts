@@ -237,41 +237,8 @@ Deno.serve(async (req) => {
 
         console.log(`🔵 最高入札: ¥${highestBid.bid_amount} by ${highestBid.fan_id}`);
 
-        // ファンのauth_user_idを取得
-        const { data: fan, error: fanError } = await supabase
-          .from('fans')
-          .select('auth_user_id')
-          .eq('id', highestBid.fan_id)
-          .single();
-
-        if (fanError || !fan) {
-          console.error(`❌ ファン取得エラー: ${fanError?.message}`);
-          results.push({
-            auction_id: auctionId,
-            status: 'error',
-            error: 'Fan not found',
-          });
-          continue;
-        }
-
-        // usersテーブルのIDを取得（ファン）
-        const { data: fanUser, error: fanUserError } = await supabase
-          .from('users')
-          .select('id')
-          .eq('auth_user_id', fan.auth_user_id)
-          .single();
-
-        if (fanUserError || !fanUser) {
-          console.error(`❌ ファンユーザー取得エラー: ${fanUserError?.message}`);
-          results.push({
-            auction_id: auctionId,
-            status: 'error',
-            error: 'Fan user not found',
-          });
-          continue;
-        }
-
-        const fanUserId = fanUser.id;
+        // bids.fan_idは既にusersテーブルのIDを格納している
+        const fanUserId = highestBid.fan_id;
         console.log(`🔵 ファンユーザーID: ${fanUserId}, インフルエンサーユーザーID: ${influencerUserId}`);
 
         // 3. 落札者の与信を決済確定（capture）
