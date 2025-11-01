@@ -35,19 +35,22 @@ export default function CallWaitingRoom({
     const initialize = async () => {
       try {
         setLoading(true);
+        console.log('🔵 CallWaitingRoom: ルーム作成開始', { purchasedSlotId, userId, userType });
         const result = await createCallRoom(purchasedSlotId, userId);
+        console.log('✅ CallWaitingRoom: ルーム作成成功', result);
         setRoomData(result);
         setTimeUntilStart(result.timeUntilStart);
         setCanJoin(result.timeUntilStart <= 15 * 60);
         setLoading(false);
       } catch (err: any) {
-        setError(err.message);
+        console.error('❌ CallWaitingRoom: ルーム作成エラー', err);
+        setError(err.message || 'ルーム作成に失敗しました');
         setLoading(false);
       }
     };
 
     initialize();
-  }, [purchasedSlotId, userId]);
+  }, [purchasedSlotId, userId, userType]);
 
   // ステータスポーリング
   useEffect(() => {

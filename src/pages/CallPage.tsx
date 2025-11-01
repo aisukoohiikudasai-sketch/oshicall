@@ -38,6 +38,7 @@ export default function CallPage() {
 
       try {
         setState('loading');
+        console.log('🔵 CallPage: データ取得開始', { purchasedSlotId, userId: supabaseUser.id });
 
         // purchased_slotsデータを取得
         const { data, error: fetchError } = await supabase
@@ -57,17 +58,29 @@ export default function CallPage() {
           .single();
 
         if (fetchError || !data) {
+          console.error('❌ CallPage: データ取得エラー', fetchError);
           setError('通話情報が見つかりません');
           setState('error');
           return;
         }
+
+        console.log('✅ CallPage: データ取得成功', {
+          purchasedSlotId,
+          influencer_user_id: data.influencer_user_id,
+          fan_user_id: data.fan_user_id,
+          current_user_id: supabaseUser.id,
+          call_status: data.call_status,
+        });
 
         // ユーザー権限確認
         const callSlot = Array.isArray(data.call_slots) ? data.call_slots[0] : data.call_slots;
         const isInfluencer = data.influencer_user_id === supabaseUser.id;
         const isFan = data.fan_user_id === supabaseUser.id;
 
+        console.log('🔵 CallPage: 権限チェック', { isInfluencer, isFan });
+
         if (!isInfluencer && !isFan) {
+          console.error('❌ CallPage: アクセス権限なし');
           setError('この通話にアクセスする権限がありません');
           setState('error');
           return;

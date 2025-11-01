@@ -39,14 +39,28 @@ router.post('/create-room', async (req: Request, res: Response) => {
     const isInfluencer = purchasedSlot.influencer_user_id === userId;
     const isFan = purchasedSlot.fan_user_id === userId;
 
+    console.log('🔵 ユーザー権限確認:', {
+      userId,
+      isInfluencer,
+      isFan,
+      influencer_user_id: purchasedSlot.influencer_user_id,
+      fan_user_id: purchasedSlot.fan_user_id,
+    });
+
     if (!isInfluencer && !isFan) {
+      console.error('❌ アクセス権限なし');
       return res.status(403).json({ error: 'アクセス権限がありません' });
     }
 
     // 3. call_status確認
-    if (!['pending', 'ready'].includes(purchasedSlot.call_status)) {
-      return res.status(400).json({ 
-        error: `通話はすでに${purchasedSlot.call_status}状態です` 
+    console.log('🔵 call_status確認:', { call_status: purchasedSlot.call_status });
+
+    // 通話ルーム作成は pending, ready, in_progress 状態で許可
+    // (in_progressは片方が先に入室した場合)
+    if (!['pending', 'ready', 'in_progress'].includes(purchasedSlot.call_status)) {
+      console.warn(`⚠️ call_status不正: ${purchasedSlot.call_status}`);
+      return res.status(400).json({
+        error: `通話は${purchasedSlot.call_status}状態のため入室できません`
       });
     }
 
