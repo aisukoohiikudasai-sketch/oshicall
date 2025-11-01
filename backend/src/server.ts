@@ -672,18 +672,37 @@ app.post('/api/stripe/influencer-earnings', async (req: Request, res: Response) 
     // Stripeから残高情報を取得（Connect Accountがある場合）
     let availableBalance = 0;
     let pendingBalance = 0;
+    let balanceError: string | null = null;
 
     if (user.stripe_connect_account_id) {
       try {
+        console.log('🔵 Stripe残高取得開始:', user.stripe_connect_account_id);
+
         const balance = await stripe.balance.retrieve({
           stripeAccount: user.stripe_connect_account_id,
         });
 
+        console.log('✅ Stripe残高取得成功:', {
+          available: balance.available,
+          pending: balance.pending,
+          connect_reserved: balance.connect_reserved,
+        });
+
         availableBalance = balance.available.reduce((sum, b) => sum + b.amount, 0) / 100;
         pendingBalance = balance.pending.reduce((sum, b) => sum + b.amount, 0) / 100;
-      } catch (balanceError) {
-        console.warn('⚠️ 残高取得エラー（継続）:', balanceError);
+
+        console.log('💰 計算後の残高:', { availableBalance, pendingBalance });
+      } catch (error: any) {
+        console.error('❌ 残高取得エラー:', {
+          message: error.message,
+          type: error.type,
+          code: error.code,
+          statusCode: error.statusCode,
+        });
+        balanceError = error.message;
       }
+    } else {
+      console.warn('⚠️ Connect Account ID が未設定');
     }
 
     // 直近5件の取引履歴を整形
@@ -714,6 +733,7 @@ app.post('/api/stripe/influencer-earnings', async (req: Request, res: Response) 
         },
       },
       totalCallCount,
+      balanceError, // 残高取得エラーがあれば含める
     });
 
   } catch (error: any) {

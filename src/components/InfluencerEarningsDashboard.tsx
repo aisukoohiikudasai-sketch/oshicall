@@ -27,6 +27,7 @@ interface EarningsData {
     };
   };
   totalCallCount: number;
+  balanceError?: string | null;
 }
 
 interface Props {
@@ -132,6 +133,20 @@ export const InfluencerEarningsDashboard: React.FC<Props> = ({ authUserId }) => 
           {isOpeningDashboard ? '読み込み中...' : '詳細を見る →'}
         </button>
       </div>
+
+      {/* 残高取得エラー警告 */}
+      {earnings.balanceError && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            <span className="font-medium">⚠️ 残高情報が取得できませんでした</span>
+            <br />
+            <span className="text-xs mt-1 block">
+              テストモードのStripe Connectアカウントでは実際の残高は表示されません。
+              詳細はStripe Dashboardをご確認ください。
+            </span>
+          </p>
+        </div>
+      )}
 
       {/* サマリーカード */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
