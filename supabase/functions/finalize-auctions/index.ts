@@ -168,7 +168,7 @@ interface AuctionToFinalize {
   current_winner_id: string;
   status: string;
   call_slots: {
-    influencer_id: string;
+    user_id: string;
   };
 }
 
@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
         current_highest_bid,
         current_winner_id,
         status,
-        call_slots!inner(influencer_id)
+        call_slots!inner(user_id)
       `)
       .eq('status', 'active')
       .lte('end_time', now);
@@ -210,9 +210,46 @@ Deno.serve(async (req) => {
     for (const auction of endedAuctions) {
       try {
         const auctionId = auction.id;
-        const influencerUserId = auction.call_slots.influencer_id;
+        const influencerUserId = auction.call_slots.user_id;
 
         console.log(`🔵 オークション処理: ${auctionId}`);
+
+        // インフルエンサーのauth_user_idを取得
+        const { data: influencerUser, error: influencerUserError } = await supabase
+          .from('users')
+          .select('auth_user_id')
+          .eq('id', influencerUserId)
+          .single();
+
+        if (influencerUserError || !influencerUser) {
+          console.error(`❌ インフルエンサーユーザー取得エラー: ${influencerUserError?.message}`);
+          results.push({
+            auction_id: auctionId,
+            status: 'error',
+            error: 'Influencer user not found',
+          });
+          continue;
+        }
+
+        // influencersテーブルのIDと情報を取得
+        const { data: influencer, error: influencerError } = await supabase
+          .from('influencers')
+          .select('id, display_name, profile_image_url')
+          .eq('auth_user_id', influencerUser.auth_user_id)
+          .single();
+
+        if (influencerError || !influencer) {
+          console.error(`❌ インフルエンサー取得エラー: ${influencerError?.message}`);
+          results.push({
+            auction_id: auctionId,
+            status: 'error',
+            error: 'Influencer not found',
+          });
+          continue;
+        }
+
+        const influencerId = influencer.id;
+        console.log(`🔵 インフルエンサーID: ${influencerId}`);
 
         // 2. 最高入札を取得
         const { data: highestBid, error: bidError } = await supabase
@@ -255,8 +292,8 @@ Deno.serve(async (req) => {
               .from('purchased_slots')
               .insert({
                 call_slot_id: auction.call_slot_id,
-                fan_id: highestBid.user_id,
-                influencer_id: influencerUserId,
+                fan_id: highestBid.fan_id,
+                influencer_id: influencerId,
                 auction_id: auctionId,
                 winning_bid_amount: highestBid.bid_amount,
                 platform_fee: platformFee,
@@ -306,13 +343,6 @@ Deno.serve(async (req) => {
                 .eq('id', auction.call_slot_id)
                 .single();
 
-              // インフルエンサー情報を取得
-              const { data: influencer, error: influencerError } = await supabase
-                .from('users')
-                .select('display_name, profile_image_url')
-                .eq('id', influencerUserId)
-                .single();
-
               // auth.usersからemailを取得
               let winnerEmail = null;
               if (!userError && winnerUserData?.auth_user_id) {
@@ -322,7 +352,7 @@ Deno.serve(async (req) => {
                 }
               }
 
-              if (!userError && winnerUserData && winnerEmail && !slotError && callSlot && !influencerError && influencer) {
+              if (!userError && winnerUserData && winnerEmail && !slotError && callSlot) {
                 console.log(`📧 メール送信開始: ${winnerEmail}`);
 
                 const scheduledDate = new Date(callSlot.scheduled_start_time);
@@ -374,7 +404,6 @@ Deno.serve(async (req) => {
                 console.warn(`⚠️ メール送信スキップ: ユーザー情報が不完全`, {
                   userError,
                   slotError,
-                  influencerError,
                 });
               }
             } catch (emailError: any) {
@@ -412,7 +441,7 @@ Deno.serve(async (req) => {
             // 10. ユーザー統計を更新
             await supabase.rpc('update_user_statistics', {
               p_fan_id: highestBid.fan_id,
-              p_influencer_id: influencerUserId,
+              p_influencer_id: influencerId,
               p_amount: highestBid.bid_amount,
             });
 
