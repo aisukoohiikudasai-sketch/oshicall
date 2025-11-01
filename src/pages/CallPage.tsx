@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import CallWaitingRoom from '../components/calls/CallWaitingRoom';
 import VideoCall from '../components/calls/VideoCall';
 import CallReviewPrompt from '../components/calls/CallReviewPrompt';
+import CallCompletedScreen from '../components/calls/CallCompletedScreen';
 
 type CallPageState = 
   | 'loading'
@@ -222,6 +223,7 @@ export default function CallPage() {
         purchasedSlotId={purchasedSlotId!}
         durationMinutes={purchasedSlot.call_slots.duration_minutes}
         userId={supabaseUser!.id}
+        userType={userType}
         onCallEnd={handleCallEnd}
       />
     );
@@ -248,36 +250,40 @@ export default function CallPage() {
 
   // 通話終了・レビュー
   if (state === 'ended') {
-    // ファンのみレビュー表示
-    if (userType === 'fan' && influencer) {
+    // インフルエンサーの場合は完了画面のみ
+    if (userType === 'influencer') {
       return (
-        <CallReviewPrompt
-          influencerName={influencer.display_name}
-          influencerImage={influencer.profile_image_url || '/images/talks/default.jpg'}
-          actualDuration={duration}
-          onReviewSubmit={handleReviewSubmit}
-          onSkip={handleSkipReview}
+        <CallCompletedScreen
+          userType="influencer"
+          duration={duration}
+          title={purchasedSlot?.call_slots?.title || '通話'}
+          onNavigate={() => navigate('/influencer-dashboard')}
         />
       );
     }
 
-    // インフルエンサーは直接マイページへ
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">通話が終了しました</h2>
-          <p className="text-gray-600 mb-6">
-            通話時間: {formatDuration(duration)}
-          </p>
-          <button
-            onClick={() => navigate('/influencer-dashboard')}
-            className="px-6 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600"
-          >
-            ダッシュボードに戻る
-          </button>
+    // ファンの場合：まず完了画面、その後レビュー画面
+    // influencer情報がまだロードされていない場合は待機
+    if (!influencer) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">読み込み中...</p>
+          </div>
         </div>
-      </div>
+      );
+    }
+
+    // ファンはレビュー画面へ
+    return (
+      <CallReviewPrompt
+        influencerName={influencer.display_name}
+        influencerImage={influencer.profile_image_url || '/images/talks/default.jpg'}
+        actualDuration={duration}
+        onReviewSubmit={handleReviewSubmit}
+        onSkip={handleSkipReview}
+      />
     );
   }
 

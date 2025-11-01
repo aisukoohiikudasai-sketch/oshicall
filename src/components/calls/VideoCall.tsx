@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import DailyIframe from '@daily-co/daily-js';
 import { Clock, PhoneOff, Users } from 'lucide-react';
-import { endCall } from '../../api/calls';
+import { endCall, getCallStatus } from '../../api/calls';
 
 interface VideoCallProps {
   roomUrl: string;
@@ -9,6 +9,7 @@ interface VideoCallProps {
   purchasedSlotId: string;
   durationMinutes: number;
   userId: string;
+  userType: 'influencer' | 'fan';
   onCallEnd: (duration: number) => void;
 }
 
@@ -18,15 +19,20 @@ export default function VideoCall({
   purchasedSlotId,
   durationMinutes,
   userId,
+  userType,
   onCallEnd,
 }: VideoCallProps) {
   const callFrameRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const initializingRef = useRef(false); // 初期化中フラグ
+  const countdownStartedRef = useRef(false); // カウントダウン開始フラグ
   const [isJoined, setIsJoined] = useState(false);
   const [participantCount, setParticipantCount] = useState(0);
+  const [influencerJoined, setInfluencerJoined] = useState(false);
+  const [fanJoined, setFanJoined] = useState(false);
   const [remainingTime, setRemainingTime] = useState(durationMinutes);
   const [isEnding, setIsEnding] = useState(false);
+  const [countdownActive, setCountdownActive] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -109,25 +115,53 @@ export default function VideoCall({
     };
   }, []); // 依存配列を空にして初回のみ実行
 
-  // 残り時間カウントダウン
+  // 参加状況をポーリング
   useEffect(() => {
     if (!isJoined) return;
+
+    const pollStatus = async () => {
+      try {
+        const status = await getCallStatus(purchasedSlotId);
+        setInfluencerJoined(status.participants.influencer_joined);
+        setFanJoined(status.participants.fan_joined);
+
+        // インフルエンサーが入室したらカウントダウン開始
+        if (status.participants.influencer_joined && !countdownStartedRef.current) {
+          console.log('✅ インフルエンサーが入室 - カウントダウン開始');
+          countdownStartedRef.current = true;
+          setCountdownActive(true);
+        }
+      } catch (error) {
+        console.error('❌ 参加状況取得エラー:', error);
+      }
+    };
+
+    const interval = setInterval(pollStatus, 2000); // 2秒ごとに確認
+    pollStatus(); // 初回実行
+
+    return () => clearInterval(interval);
+  }, [isJoined, purchasedSlotId]);
+
+  // 残り時間カウントダウン（インフルエンサー入室後のみ）
+  useEffect(() => {
+    if (!countdownActive) return;
 
     const timer = setInterval(() => {
       setRemainingTime(prev => {
         const newTime = Math.max(0, prev - 1/60); // 1秒ずつ減少
-        
+
         // 時間切れで自動終了
         if (newTime <= 0) {
+          console.log('⏰ 時間切れ - 自動終了');
           handleEndCall();
         }
-        
+
         return newTime;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isJoined]);
+  }, [countdownActive]);
 
   const handleEndCall = async () => {
     if (isEnding) return;
@@ -169,14 +203,18 @@ export default function VideoCall({
             <div className="flex items-center space-x-2">
               <Users className="h-5 w-5 text-green-500" />
               <span className="text-sm font-medium text-gray-700">
-                {participantCount === 2 ? '2人参加中' : participantCount === 1 ? '1人参加中' : '待機中'}
+                {influencerJoined && fanJoined
+                  ? '2人参加中'
+                  : influencerJoined || fanJoined
+                  ? '1人参加中'
+                  : '待機中'}
               </span>
             </div>
-            
+
             <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-blue-500" />
+              <Clock className={`h-5 w-5 ${countdownActive ? 'text-blue-500' : 'text-gray-400'}`} />
               <span className="text-lg font-bold text-gray-900">
-                残り {formatTime(remainingTime)}
+                {countdownActive ? `残り ${formatTime(remainingTime)}` : 'インフルエンサー待ち'}
               </span>
             </div>
           </div>
