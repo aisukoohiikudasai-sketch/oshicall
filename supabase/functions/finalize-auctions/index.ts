@@ -255,7 +255,7 @@ Deno.serve(async (req) => {
               .from('purchased_slots')
               .insert({
                 call_slot_id: auction.call_slot_id,
-                buyer_user_id: highestBid.user_id,
+                fan_user_id: highestBid.user_id,
                 influencer_user_id: influencerUserId,
                 auction_id: auctionId,
                 purchased_price: highestBid.bid_amount,
@@ -385,7 +385,7 @@ Deno.serve(async (req) => {
             // 8. オークションを終了状態に更新
             await supabase
               .from('auctions')
-              .update({ status: 'ended', winner_user_id: highestBid.user_id })
+              .update({ status: 'ended', current_winner_id: highestBid.user_id })
               .eq('id', auctionId);
 
             // 9. 他の入札者の与信をキャンセル
@@ -427,11 +427,28 @@ Deno.serve(async (req) => {
 
           } catch (captureError: any) {
             console.error(`❌ 決済確定エラー: ${captureError.message}`);
-            results.push({
-              auction_id: auctionId,
-              status: 'capture_failed',
-              error: captureError.message,
-            });
+
+            // 既にキャプチャ済みの場合は、オークションを終了状態に更新
+            if (captureError.message && captureError.message.includes('already been captured')) {
+              console.log(`⚠️ 既にキャプチャ済み: ${auctionId} - オークションを終了状態に更新`);
+
+              await supabase
+                .from('auctions')
+                .update({ status: 'ended', current_winner_id: highestBid.user_id })
+                .eq('id', auctionId);
+
+              results.push({
+                auction_id: auctionId,
+                status: 'already_captured',
+                winner_id: highestBid.user_id,
+              });
+            } else {
+              results.push({
+                auction_id: auctionId,
+                status: 'capture_failed',
+                error: captureError.message,
+              });
+            }
           }
         }
       } catch (error: any) {
